@@ -1,0 +1,230 @@
+# PEN2PRO RMIE — The Elite AI Business Strategist
+
+> Turn your ideas into income. PEN2PRO RMIE is a business planning platform built for everyday founders — not just MBAs.
+
+---
+
+## What is PEN2PRO RMIE?
+
+PEN2PRO RMIE (Revenue Model & Income Engine) is an AI-powered business development platform that helps regular people:
+
+- Validate and structure their business ideas
+- Generate structured startup roadmaps
+- Identify licensing and compliance requirements
+- Plan launch, operations, and 12-month scaling strategies
+- Understand pricing and monetization options
+
+All outputs are structured, source-backed, and rendered as actionable cards, checklists, timelines, and budget views — not long essays.
+
+---
+
+## Tech Stack
+
+| Layer     | Technology              |
+|-----------|-------------------------|
+| Frontend  | React 19 + Vite         |
+| Backend   | FastAPI (Python)        |
+| Deployment| Render                  |
+
+---
+
+## Repository Structure
+
+```
+pen2pro-rmie-official/
+├── backend/                  # FastAPI backend
+│   ├── app/
+│   │   ├── core/             # App settings and config
+│   │   ├── routes/           # API route handlers
+│   │   │   ├── health.py     # Health check endpoint
+│   │   │   ├── ideas.py      # Business idea generation
+│   │   │   ├── pricing.py    # Pricing plans
+│   │   │   └── stripe_routes.py  # Stripe payment integration
+│   │   ├── services/         # Core business logic
+│   │   │   └── rmie_engine.py    # Roadmap generation engine
+│   │   └── main.py           # FastAPI app entry point
+│   ├── requirements.txt      # Python dependencies
+│   └── render.yaml           # Render deployment config
+├── frontend/                 # React + Vite frontend
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── pages/            # Page-level components
+│   │   ├── services/         # API service layer
+│   │   └── App.jsx           # Root application component
+│   ├── index.html
+│   └── package.json
+├── AGENTS.md                 # Copilot agent instructions
+├── PRODUCT_SPEC.md           # Full product specification
+├── INSTRUCTIONS.md           # Setup and usage guide
+└── README.md
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js** v18+ (for the frontend)
+- **Python** 3.10+ (for the backend)
+- **pip** (Python package manager)
+
+---
+
+### Backend Setup (FastAPI)
+
+```bash
+cd backend
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate       # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment variables
+cp .env.example .env            # Edit .env with your values
+
+# Start the development server
+uvicorn app.main:app --reload --port 8000
+```
+
+The API will be available at: `http://localhost:8000`
+
+---
+
+### Frontend Setup (React + Vite)
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env            # Edit .env with your values
+
+# Start the development server
+npm run dev
+```
+
+The app will be available at: `http://localhost:5173`
+
+> **Note:** The backend must be running at the URL configured in `VITE_API_BASE_URL` for the frontend to load data. Run both servers concurrently during development.
+
+---
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable            | Description                          | Default                    |
+|---------------------|--------------------------------------|----------------------------|
+| `STRIPE_SECRET_KEY` | Stripe secret key for payments       | *(empty — connect later)*  |
+| `FRONTEND_URL`      | Allowed frontend origin for CORS     | `http://localhost:5173`    |
+
+### Frontend (`frontend/.env`)
+
+| Variable            | Description                          | Default                        |
+|---------------------|--------------------------------------|--------------------------------|
+| `VITE_API_BASE_URL` | Backend API base URL                 | `http://127.0.0.1:8000`        |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint            | Description                          |
+|--------|---------------------|--------------------------------------|
+| GET    | `/`                 | API health check root message        |
+| GET    | `/api/health`       | Backend health status                |
+| GET    | `/api/ideas`        | Business idea suggestions by niche   |
+| GET    | `/api/pricing`      | Available pricing plans              |
+| GET    | `/api/stripe-status`| Stripe integration status            |
+
+### Example: Get Ideas by Niche
+
+```
+GET /api/ideas?niche=fitness
+```
+
+```json
+{
+  "niche": "fitness",
+  "ideas": [
+    "fitness lead generation system",
+    "fitness monetization blueprint",
+    "fitness AI content workflow",
+    "fitness offer creation engine",
+    "fitness customer acquisition assistant"
+  ]
+}
+```
+
+---
+
+## Roadmap Output Schema
+
+Every roadmap generated by PEN2PRO RMIE returns structured data across these sections:
+
+| Section                 | Description                                          |
+|-------------------------|------------------------------------------------------|
+| `business_snapshot`     | Summary of the idea, niche, and business type        |
+| `startup_requirements`  | What you need to get started (tools, capital, etc.)  |
+| `licenses_and_compliance` | Regulatory and licensing requirements              |
+| `tools_and_software`    | Recommended tools for this type of business          |
+| `pricing_strategy`      | Suggested pricing models and rate ranges             |
+| `launch_plan_30_days`   | Actionable 30-day launch checklist                   |
+| `operations_plan_90_days` | 90-day operations and growth plan                  |
+| `scale_plan_12_months`  | 12-month scaling strategy                            |
+| `risk_flags`            | Identified risks and mitigation suggestions          |
+| `sources`               | Citations backing all facts and recommendations      |
+
+---
+
+## Available Scripts
+
+### Frontend
+
+| Command           | Description                        |
+|-------------------|------------------------------------|
+| `npm run dev`     | Start development server           |
+| `npm run build`   | Build for production               |
+| `npm run lint`    | Run ESLint                         |
+| `npm run preview` | Preview production build locally   |
+
+### Backend
+
+| Command                                         | Description                    |
+|-------------------------------------------------|--------------------------------|
+| `uvicorn app.main:app --reload`                 | Start dev server with hot reload |
+| `uvicorn app.main:app --host 0.0.0.0 --port 8000` | Start production server      |
+
+---
+
+## Deployment
+
+This project is configured for deployment on **[Render](https://render.com)**.
+
+- Backend: deployed as a Python web service
+- Frontend: deployed as a static site
+- Configuration lives in `backend/render.yaml`
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Make your changes following the guidelines in `AGENTS.md`
+4. Commit your changes: `git commit -m "feat: add your feature"`
+5. Push to your branch: `git push origin feature/your-feature-name`
+6. Open a pull request
+
+Please read `AGENTS.md` before contributing to understand the product conventions and output structure requirements.
+
+---
+
+## License
+
+This project is private. All rights reserved by PEN2PRO RMIE.
