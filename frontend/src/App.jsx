@@ -28,15 +28,23 @@ function App() {
     }).catch(() => null);
   };
 
+  const startRoadmapQuestions = ({ source, selectedGoal }) => {
+    setGoal(selectedGoal);
+    window.location.hash = "waitlist";
+    trackEvent("start_roadmap_questions", {
+      source,
+      selected_goal: selectedGoal,
+    });
+  };
+
   const handlePlanSelect = (plan) => {
     trackEvent("pricing_cta_click", {
       plan_name: plan.name,
-      cta_label: plan.name === "Starter" ? "Start Free" : "Join Upgrade Waitlist",
+      cta_label: plan.name === "Starter" ? "Get Started Free" : "Join Upgrade Waitlist",
     });
 
     if (plan.name === "Starter") {
-      window.location.hash = "waitlist";
-      setGoal("start-free");
+      startRoadmapQuestions({ source: "starter_plan", selectedGoal: "start-free" });
       return;
     }
 
@@ -176,12 +184,14 @@ function App() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
             <a
               href="#waitlist"
-              onClick={() =>
+              onClick={(event) => {
+                event.preventDefault();
                 trackEvent("hero_cta_click", {
-                  cta_label: "Join Waitlist",
+                  cta_label: "Start your roadmap",
                   location: "hero",
-                })
-              }
+                });
+                startRoadmapQuestions({ source: "hero", selectedGoal: "launch" });
+              }}
               style={{
                 padding: "12px 16px",
                 borderRadius: "12px",
@@ -191,7 +201,7 @@ function App() {
                 fontWeight: 700,
               }}
             >
-              Join Waitlist
+              Start your roadmap
             </a>
             <a
               href="#pricing"
@@ -289,7 +299,7 @@ function App() {
         >
           <h2 style={{ fontSize: "30px", margin: "0 0 8px" }}>Join the PEN2PRO Waitlist</h2>
           <p style={{ color: "#375031", marginBottom: "18px" }}>
-            Get launch checklists, early product access, and priority onboarding for new monetization features.
+            Start your business development test questions, get launch checklists, and unlock priority onboarding.
           </p>
           <form onSubmit={submitWaitlist} style={{ display: "grid", gap: "10px", maxWidth: "540px" }}>
             <input
@@ -328,7 +338,7 @@ function App() {
               <option value="launch">I want to launch my first offer</option>
               <option value="monetize">I want to monetize faster</option>
               <option value="upgrade">I need a full execution system</option>
-              <option value="start-free">I want to start on the free plan</option>
+              <option value="start-free">I want to get started free</option>
             </select>
             <button
               type="submit"
@@ -440,7 +450,7 @@ function App() {
                   cursor: "pointer",
                 }}
               >
-                {plan.name === "Starter" ? "Start Free" : "Join Upgrade Waitlist"}
+                {plan.name === "Starter" ? "Get Started Free" : "Join Upgrade Waitlist"}
               </button>
             </div>
           ))}
