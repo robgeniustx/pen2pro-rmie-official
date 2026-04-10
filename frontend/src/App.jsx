@@ -12,6 +12,7 @@ function App() {
     error: "",
   });
   const [trafficSource, setTrafficSource] = useState("direct");
+  const [hasTrackedFormStart, setHasTrackedFormStart] = useState(false);
 
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -296,7 +297,14 @@ function App() {
               required
               placeholder="you@business.com"
               aria-label="Email address"
+              autoComplete="email"
               value={email}
+              onFocus={() => {
+                if (!hasTrackedFormStart) {
+                  trackEvent("waitlist_form_start", { placement: "homepage_waitlist" });
+                  setHasTrackedFormStart(true);
+                }
+              }}
               onChange={(event) => setEmail(event.target.value)}
               style={{
                 padding: "12px",
@@ -338,6 +346,9 @@ function App() {
             >
               {waitlistState.loading ? "Submitting..." : "Get Priority Access"}
             </button>
+            <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#4a6742" }}>
+              No spam. Only practical launch guidance and product access updates from PEN2PRO.
+            </p>
           </form>
 
           {waitlistState.message && (
