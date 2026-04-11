@@ -13,6 +13,18 @@ function App() {
   });
   const [trafficSource, setTrafficSource] = useState("direct");
   const [hasTrackedFormStart, setHasTrackedFormStart] = useState(false);
+  const [starterForm, setStarterForm] = useState({
+    business_name: "",
+    idea: "",
+    audience: "",
+    revenue_goal: "",
+    time_commitment: "",
+  });
+  const [starterState, setStarterState] = useState({
+    loading: false,
+    error: "",
+  });
+  const [starterBlueprint, setStarterBlueprint] = useState(null);
 
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -44,12 +56,61 @@ function App() {
     });
 
     if (plan.name === "Starter") {
-      startRoadmapQuestions({ source: "starter_plan", selectedGoal: "start-free" });
+      window.location.hash = "starter-onboarding";
+      trackEvent("starter_onboarding_start", {
+        source: "starter_plan",
+      });
       return;
     }
 
     window.location.hash = "waitlist";
     setGoal("upgrade");
+  };
+
+  const handleStarterFieldChange = (field) => (event) => {
+    setStarterForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const submitStarterOnboarding = async (event) => {
+    event.preventDefault();
+
+    setStarterState({ loading: true, error: "" });
+    setStarterBlueprint(null);
+
+    trackEvent("starter_onboarding_submit", {
+      has_business_name: Boolean(starterForm.business_name.trim()),
+      has_audience: Boolean(starterForm.audience.trim()),
+      has_revenue_goal: Boolean(starterForm.revenue_goal.trim()),
+    });
+
+    try {
+      const response = await fetch(`${apiBase}/api/starter-blueprint`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(starterForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Unable to generate your Starter Blueprint.");
+      }
+
+      setStarterBlueprint(data.blueprint || null);
+      setStarterState({ loading: false, error: "" });
+      trackEvent("starter_blueprint_generated", {
+        plan: "starter",
+      });
+    } catch (error) {
+      setStarterState({
+        loading: false,
+        error: error.message || "Unable to generate your Starter Blueprint.",
+      });
+
+      trackEvent("starter_blueprint_error", {
+        error: error.message || "unknown",
+      });
+    }
   };
 
   const submitWaitlist = async (event) => {
@@ -149,6 +210,9 @@ function App() {
         >
           <strong style={{ letterSpacing: "0.8px" }}>PEN2PRO</strong>
           <nav style={{ display: "flex", gap: "16px", fontWeight: 600 }}>
+            <a href="#starter-onboarding" style={{ color: "#305820", textDecoration: "none" }}>
+              Free Onboarding
+            </a>
             <a href="#pricing" style={{ color: "#305820", textDecoration: "none" }}>
               Pricing
             </a>
@@ -278,6 +342,254 @@ function App() {
           <p style={{ margin: 0, color: "#2f4a28" }}>
             Compare plans in <a href="#pricing">Pricing</a> or start your conversion path now in <a href="#waitlist">Join Waitlist</a>.
           </p>
+        </div>
+      </section>
+
+      <section
+        id="starter-onboarding"
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          padding: "8px 24px 20px",
+        }}
+      >
+        <div
+          style={{
+            borderRadius: "20px",
+            background: "linear-gradient(120deg, #f4f9ee, #e6f2da)",
+            border: "1px solid #cfe0bf",
+            padding: "24px",
+          }}
+        >
+          <h2 style={{ fontSize: "30px", margin: "0 0 8px" }}>
+            Starter / Free Forever Onboarding
+          </h2>
+          <p style={{ color: "#375031", marginBottom: "18px" }}>
+            Share your business idea and PEN2PRO will generate your Starter Business Blueprint in seconds.
+          </p>
+
+          <form onSubmit={submitStarterOnboarding} style={{ display: "grid", gap: "10px", maxWidth: "680px" }}>
+            <input
+              type="text"
+              placeholder="Business name (optional)"
+              aria-label="Business name"
+              value={starterForm.business_name}
+              onChange={handleStarterFieldChange("business_name")}
+              style={{
+                padding: "12px",
+                borderRadius: "10px",
+                border: "1px solid #9fb78f",
+                fontSize: "16px",
+              }}
+            />
+            <textarea
+              required
+              placeholder="What business idea do you want to launch?"
+              aria-label="Business idea"
+              rows={4}
+              value={starterForm.idea}
+              onChange={handleStarterFieldChange("idea")}
+              style={{
+                padding: "12px",
+                borderRadius: "10px",
+                border: "1px solid #9fb78f",
+                fontSize: "16px",
+                resize: "vertical",
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Who is your target audience? (optional)"
+              aria-label="Target audience"
+              value={starterForm.audience}
+              onChange={handleStarterFieldChange("audience")}
+              style={{
+                padding: "12px",
+                borderRadius: "10px",
+                border: "1px solid #9fb78f",
+                fontSize: "16px",
+              }}
+            />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "10px",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="First 30-day revenue goal (optional)"
+                aria-label="Revenue goal"
+                value={starterForm.revenue_goal}
+                onChange={handleStarterFieldChange("revenue_goal")}
+                style={{
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "1px solid #9fb78f",
+                  fontSize: "16px",
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Weekly time commitment (optional)"
+                aria-label="Time commitment"
+                value={starterForm.time_commitment}
+                onChange={handleStarterFieldChange("time_commitment")}
+                style={{
+                  padding: "12px",
+                  borderRadius: "10px",
+                  border: "1px solid #9fb78f",
+                  fontSize: "16px",
+                }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={starterState.loading}
+              style={{
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "none",
+                background: "#1f5a19",
+                color: "#fff",
+                fontWeight: 700,
+                cursor: "pointer",
+                width: "fit-content",
+              }}
+            >
+              {starterState.loading ? "Generating Blueprint..." : "Generate Starter Blueprint"}
+            </button>
+          </form>
+
+          {starterState.error && (
+            <p style={{ marginTop: "12px", color: "#8e1d12", fontWeight: 700 }}>
+              {starterState.error}
+            </p>
+          )}
+
+          {starterBlueprint && (
+            <div
+              style={{
+                marginTop: "20px",
+                borderRadius: "16px",
+                border: "1px solid #cadec6",
+                background: "#ffffff",
+                padding: "18px",
+                display: "grid",
+                gap: "14px",
+              }}
+            >
+              <div>
+                <p style={{ margin: 0, fontSize: "12px", fontWeight: 700, color: "#4a6742", letterSpacing: "1px" }}>
+                  {starterBlueprint.plan}
+                </p>
+                <h3 style={{ margin: "6px 0", fontSize: "24px" }}>{starterBlueprint.business_name}</h3>
+                <p style={{ margin: 0, color: "#30432a" }}>{starterBlueprint.headline}</p>
+              </div>
+
+              <div>
+                <h4 style={{ margin: "0 0 6px" }}>Positioning</h4>
+                <p style={{ margin: "0 0 4px" }}><strong>Problem:</strong> {starterBlueprint.positioning.problem}</p>
+                <p style={{ margin: "0 0 4px" }}><strong>Audience:</strong> {starterBlueprint.positioning.audience}</p>
+                <p style={{ margin: 0 }}><strong>Promise:</strong> {starterBlueprint.positioning.promise}</p>
+              </div>
+
+              <div>
+                <h4 style={{ margin: "0 0 6px" }}>Starter Offer</h4>
+                <p style={{ margin: "0 0 4px" }}><strong>Name:</strong> {starterBlueprint.offer.name}</p>
+                <p style={{ margin: "0 0 4px" }}><strong>Description:</strong> {starterBlueprint.offer.description}</p>
+                <p style={{ margin: 0 }}><strong>Price:</strong> {starterBlueprint.offer.starter_price}</p>
+              </div>
+
+              <div>
+                <h4 style={{ margin: "0 0 6px" }}>30-Day Execution Plan</h4>
+                <ol style={{ margin: 0, paddingLeft: "20px", color: "#253a1e" }}>
+                  {starterBlueprint.execution_plan.map((step) => (
+                    <li key={step} style={{ marginBottom: "6px" }}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+
+              <div>
+                <h4 style={{ margin: "0 0 6px" }}>Starter Metrics</h4>
+                <p style={{ margin: "0 0 4px" }}><strong>Revenue Target:</strong> {starterBlueprint.metrics.revenue_target}</p>
+                <p style={{ margin: "0 0 4px" }}><strong>Time Commitment:</strong> {starterBlueprint.metrics.time_commitment}</p>
+                <p style={{ margin: 0 }}><strong>North Star:</strong> {starterBlueprint.metrics.north_star}</p>
+              </div>
+
+              <div
+                style={{
+                  borderTop: "1px solid #e1ead8",
+                  paddingTop: "12px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ border: "1px solid #d4e3c8", borderRadius: "12px", padding: "12px", background: "#f8fcf4" }}>
+                  <h4 style={{ margin: "0 0 6px" }}>Upgrade to Pro</h4>
+                  <p style={{ margin: "0 0 6px", color: "#35522f" }}>{starterBlueprint.upgrade_path.pro.when_to_upgrade}</p>
+                  <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#214019" }}>Unlocks:</p>
+                  <ul style={{ margin: "0 0 10px", paddingLeft: "20px" }}>
+                    {starterBlueprint.upgrade_path.pro.unlocks.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => {
+                      window.location.hash = "waitlist";
+                      setGoal("upgrade");
+                      trackEvent("starter_upgrade_path_click", { tier: "pro" });
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "none",
+                      background: "#1f5a19",
+                      color: "#fff",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {starterBlueprint.upgrade_path.pro.cta}
+                  </button>
+                </div>
+
+                <div style={{ border: "1px solid #d4e3c8", borderRadius: "12px", padding: "12px", background: "#f8fcf4" }}>
+                  <h4 style={{ margin: "0 0 6px" }}>Upgrade to Elite</h4>
+                  <p style={{ margin: "0 0 6px", color: "#35522f" }}>{starterBlueprint.upgrade_path.elite.when_to_upgrade}</p>
+                  <p style={{ margin: "0 0 6px", fontWeight: 700, color: "#214019" }}>Unlocks:</p>
+                  <ul style={{ margin: "0 0 10px", paddingLeft: "20px" }}>
+                    {starterBlueprint.upgrade_path.elite.unlocks.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => {
+                      window.location.hash = "waitlist";
+                      setGoal("upgrade");
+                      trackEvent("starter_upgrade_path_click", { tier: "elite" });
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "none",
+                      background: "#111827",
+                      color: "#fff",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {starterBlueprint.upgrade_path.elite.cta}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
