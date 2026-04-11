@@ -728,16 +728,18 @@ function App() {
                   margin: "0 0 18px",
                 }}
               >
-                ${plan.price}
-                <span
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: "normal",
-                    color: "#6b7280",
-                  }}
-                >
-                  /month
-                </span>
+                {plan.display_price || `$${plan.price}`}
+                {plan.billing_period && (
+                  <span
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "normal",
+                      color: "#6b7280",
+                    }}
+                  >
+                    {plan.billing_period}
+                  </span>
+                )}
               </p>
 
               <p style={{ color: "#4b5563", marginBottom: "20px" }}>
