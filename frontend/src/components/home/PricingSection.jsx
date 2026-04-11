@@ -19,13 +19,15 @@ function PricingSection({ plans, isLoading, onSelectPlan }) {
             {plans.map((plan) => {
               const isBestValue = plan.name === "Pro";
               const marketingStrategy = planMarketingStrategies[plan.name];
+              const priceLabel = plan.display_price || `$${plan.price}`;
+              const billingPeriod = plan.billing_period ?? "/month";
               return (
                 <article key={plan.name} className={`card pricing-card${isBestValue ? " featured" : ""}`}>
                   {isBestValue ? <span className="best-value">Best Value</span> : null}
                   <h3>{plan.name}</h3>
                   <p className="price">
-                    ${plan.price}
-                    <span>/month</span>
+                    {priceLabel}
+                    {billingPeriod ? <span>{billingPeriod}</span> : null}
                   </p>
                   <p className="plan-summary">
                     {planDescriptions[plan.name] || "Flexible roadmap access for your business stage."}
