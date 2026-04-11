@@ -23,8 +23,16 @@ export function fetchHealth() {
 	return request("/");
 }
 
+export function fetchBackendStatus() {
+	return fetchHealth();
+}
+
 export function fetchPricing() {
 	return request("/api/pricing");
+}
+
+export function fetchPricingPlans() {
+	return fetchPricing();
 }
 
 export function trackEvent({ eventName, source = "direct", properties = {} }) {
@@ -42,6 +50,13 @@ export function joinWaitlist({ email, goal, source = "homepage" }) {
 	return request("/api/waitlist", {
 		method: "POST",
 		body: JSON.stringify({ email, goal, source }),
+	});
+}
+
+export function createFounderCheckout(tierId) {
+	return request("/api/founder-checkout", {
+		method: "POST",
+		body: JSON.stringify({ tier_id: tierId }),
 	});
 }
 

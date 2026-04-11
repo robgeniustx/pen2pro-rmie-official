@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import "./App.css";
-import Home from "./pages/Home.jsx";
+import HomePage from "./pages/HomePage.jsx";
 import StarterPage from "./pages/StarterPage.jsx";
 
 function getCurrentPath() {
@@ -51,7 +51,7 @@ function App() {
     return <StarterPage navigateTo={navigateTo} />;
   }
 
-  return <Home navigateTo={navigateTo} />;
+  return <HomePage navigateTo={navigateTo} />;
 }
 
 export default App;
