@@ -24,9 +24,10 @@ function PricingSection({ plans, isLoading, onSelectPlan }) {
               const summary = plan.tagline || planDescriptions[plan.name] || "Flexible roadmap access for your business stage.";
               const featureItems = Array.isArray(plan.features) ? plan.features : [];
               const buttonLabel = plan.cta_label || `Select ${plan.name}`;
+              const badgeText = plan.badge_text || (isBestValue ? "Best Value" : "");
               return (
                 <article key={plan.name} className={`card pricing-card${isBestValue ? " featured" : ""}`}>
-                  {isBestValue ? <span className="best-value">Best Value</span> : null}
+                  {badgeText ? <span className="best-value">{badgeText}</span> : null}
                   <h3>{plan.name}</h3>
                   <p className="price">
                     {priceLabel}

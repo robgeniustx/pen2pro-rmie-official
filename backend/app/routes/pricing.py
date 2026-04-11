@@ -19,7 +19,8 @@ def pricing():
                     "Foundational planning prompts",
                     "Email support",
                 ],
-                "cta_label": "Get Started Free",
+                "badge_text": "Free Forever",
+                "cta_label": "Start Free",
                 "featured": False,
             },
             {
@@ -36,7 +37,8 @@ def pricing():
                     "Execution timeline with milestone tracking",
                     "Priority support",
                 ],
-                "cta_label": "Choose Pro",
+                "badge_text": "Most Popular",
+                "cta_label": "Go Pro",
                 "featured": True,
             },
             {
@@ -52,7 +54,8 @@ def pricing():
                     "Dedicated strategy review cadence",
                     "Fast-lane support response",
                 ],
-                "cta_label": "Choose Elite",
+                "badge_text": "Scale Fast",
+                "cta_label": "Go Elite",
                 "featured": False,
             }
         ]
