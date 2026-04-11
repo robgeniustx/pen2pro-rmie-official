@@ -1,0 +1,160 @@
+import { useMemo, useState } from "react";
+
+import StarterIntakeForm from "../components/starter/StarterIntakeForm.jsx";
+import StarterBlueprintResult from "../components/starter/StarterBlueprintResult.jsx";
+import { generateStarterBlueprint } from "../services/api.js";
+
+const initialValues = {
+  tier: "starter",
+  businessIdea: "",
+  productOrService: "",
+  targetCustomer: "",
+  marketLocation: "",
+  startupBudget: "",
+  skillsResources: "",
+  incomeGoal: "",
+  biggestObstacle: "",
+  deliveryPreference: "",
+};
+
+const requiredFields = [
+  "businessIdea",
+  "productOrService",
+  "targetCustomer",
+  "marketLocation",
+  "startupBudget",
+  "skillsResources",
+  "incomeGoal",
+  "biggestObstacle",
+  "deliveryPreference",
+];
+
+function validate(values) {
+  return requiredFields.reduce((errors, field) => {
+    if (!String(values[field] || "").trim()) {
+      errors[field] = "This field is required.";
+    }
+
+    return errors;
+  }, {});
+}
+
+function StarterPage({ navigateTo }) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [status, setStatus] = useState("idle");
+  const [submitError, setSubmitError] = useState("");
+  const [blueprint, setBlueprint] = useState(null);
+
+  const isLoading = status === "loading";
+  const hasResult = status === "success" && blueprint;
+  const hasError = status === "error";
+
+  const pageSubtitle = useMemo(
+    () => "Turn your idea into a clear business starter plan in minutes.",
+    []
+  );
+
+  const handleChange = (field, value) => {
+    setValues((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: "" }));
+    setSubmitError("");
+    if (status === "error") {
+      setStatus("idle");
+    }
+  };
+
+  const submitBlueprint = async () => {
+    const nextErrors = validate(values);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setStatus("loading");
+    setSubmitError("");
+
+    try {
+      const data = await generateStarterBlueprint(values);
+      setBlueprint(data.blueprint || null);
+      setStatus("success");
+    } catch (error) {
+      setSubmitError(error.message || "We could not build your Starter Business Blueprint right now.");
+      setStatus("error");
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    await submitBlueprint();
+  };
+
+  return (
+    <div className="starter-page">
+      <header className="starter-page__header">
+        <div className="starter-page__nav">
+          <button className="starter-page__brand" onClick={() => navigateTo("/")}>
+            PEN2PRO
+          </button>
+          <div className="starter-page__nav-links">
+            <button onClick={() => navigateTo("/#pricing")}>Pricing</button>
+            <button onClick={() => navigateTo("/#waitlist")}>Join Waitlist</button>
+          </div>
+        </div>
+      </header>
+
+      <main className="starter-page__content">
+        <section className="starter-page__hero">
+          <p className="starter-page__eyebrow">PEN2PRO STARTER</p>
+          <h1>Starter — Free Forever</h1>
+          <p className="starter-page__subtitle">{pageSubtitle}</p>
+          <p className="starter-page__reassurance">
+            Get your niche, audience, offer, pricing direction, and first action steps free.
+          </p>
+        </section>
+
+        {!hasResult && (
+          <section className="starter-page__panel">
+            <StarterIntakeForm
+              values={values}
+              errors={errors}
+              loading={isLoading}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+            />
+
+            {isLoading && (
+              <div className="starter-state-card starter-state-card--loading">
+                <h2>Building your Starter Business Blueprint...</h2>
+                <p>
+                  PEN2PRO is organizing your inputs into a focused starter plan you can act on.
+                </p>
+              </div>
+            )}
+
+            {hasError && (
+              <div className="starter-state-card starter-state-card--error">
+                <h2>Generation failed</h2>
+                <p>{submitError || "We could not build your Starter Business Blueprint right now."}</p>
+                <button className="starter-button starter-button--secondary" onClick={submitBlueprint}>
+                  Retry
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+
+        {hasResult && (
+          <StarterBlueprintResult
+            blueprint={blueprint}
+            onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
+            onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default StarterPage;
