@@ -17,10 +17,13 @@ function PricingSection({ plans, isLoading, onSelectPlan }) {
         ) : (
           <div className="card-grid card-grid-3 pricing-grid">
             {plans.map((plan) => {
-              const isBestValue = plan.name === "Pro";
+              const isBestValue = Boolean(plan.featured) || plan.name === "Pro";
               const marketingStrategy = planMarketingStrategies[plan.name];
               const priceLabel = plan.display_price || `$${plan.price}`;
               const billingPeriod = plan.billing_period ?? "/month";
+              const summary = plan.tagline || planDescriptions[plan.name] || "Flexible roadmap access for your business stage.";
+              const featureItems = Array.isArray(plan.features) ? plan.features : [];
+              const buttonLabel = plan.cta_label || `Select ${plan.name}`;
               return (
                 <article key={plan.name} className={`card pricing-card${isBestValue ? " featured" : ""}`}>
                   {isBestValue ? <span className="best-value">Best Value</span> : null}
@@ -30,8 +33,15 @@ function PricingSection({ plans, isLoading, onSelectPlan }) {
                     {billingPeriod ? <span>{billingPeriod}</span> : null}
                   </p>
                   <p className="plan-summary">
-                    {planDescriptions[plan.name] || "Flexible roadmap access for your business stage."}
+                    {summary}
                   </p>
+                  {featureItems.length ? (
+                    <ul className="founder-benefits" aria-label={`${plan.name} plan features`}>
+                      {featureItems.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                   {marketingStrategy ? (
                     <div className="plan-strategy" aria-label={`${plan.name} social media marketing strategy`}>
                       <p className="plan-strategy-title">{marketingStrategy.title}</p>
@@ -47,7 +57,7 @@ function PricingSection({ plans, isLoading, onSelectPlan }) {
                     className={`btn ${isBestValue ? "btn-primary" : "btn-secondary"}`}
                     onClick={() => onSelectPlan(plan)}
                   >
-                    Select {plan.name}
+                    {buttonLabel}
                   </button>
                 </article>
               );
