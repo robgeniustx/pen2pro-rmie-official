@@ -39,15 +39,41 @@ function validate(values) {
   }, {});
 }
 
+function resolveBlueprint(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  if (data.blueprint && typeof data.blueprint === "object" && !Array.isArray(data.blueprint)) {
+    return data.blueprint;
+  }
+
+  if (
+    data.data &&
+    typeof data.data === "object" &&
+    data.data.blueprint &&
+    typeof data.data.blueprint === "object" &&
+    !Array.isArray(data.data.blueprint)
+  ) {
+    return data.data.blueprint;
+  }
+
+  if (!Array.isArray(data)) {
+    return data;
+  }
+
+  return null;
+}
+
 function StarterPage({ navigateTo }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("idle");
   const [submitError, setSubmitError] = useState("");
-  const [blueprint, setBlueprint] = useState(null);
+  const [blueprintResponse, setBlueprintResponse] = useState(null);
 
   const isLoading = status === "loading";
-  const hasResult = status === "success" && blueprint;
+  const hasResult = status === "success";
   const hasError = status === "error";
 
   const pageSubtitle = useMemo(
@@ -76,8 +102,18 @@ function StarterPage({ navigateTo }) {
     setSubmitError("");
 
     try {
-      const data = await generateStarterBlueprint(values);
-      setBlueprint(data.blueprint || null);
+      const response = await generateStarterBlueprint(values);
+      console.log("Starter blueprint response:", response);
+
+      const resolvedBlueprint = resolveBlueprint(response);
+      setBlueprintResponse(response);
+
+      if (!resolvedBlueprint) {
+        setSubmitError(
+          "Your blueprint was generated with missing sections. Showing available details below."
+        );
+      }
+
       setStatus("success");
     } catch (error) {
       setSubmitError(error.message || "We could not build your Starter Business Blueprint right now.");
@@ -146,11 +182,20 @@ function StarterPage({ navigateTo }) {
         )}
 
         {hasResult && (
-          <StarterBlueprintResult
-            blueprint={blueprint}
-            onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
-            onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
-          />
+          <>
+            {submitError && (
+              <div className="starter-state-card starter-state-card--error" role="alert">
+                <h2>Some blueprint sections are unavailable</h2>
+                <p>{submitError}</p>
+              </div>
+            )}
+
+            <StarterBlueprintResult
+              response={blueprintResponse}
+              onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
+              onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
+            />
+          </>
         )}
       </main>
     </div>
