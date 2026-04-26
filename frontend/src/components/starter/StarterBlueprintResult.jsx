@@ -7,7 +7,7 @@ function normalizeBlueprint(response) {
     return {};
   }
 
-  if (isPlainObject(response.blueprint)) {
+  if (isPlainObject(response.blueprint) && hasRenderableValue(response.blueprint)) {
     return response.blueprint;
   }
 
@@ -15,7 +15,16 @@ function normalizeBlueprint(response) {
     return response.data.blueprint;
   }
 
-  if (isPlainObject(response)) {
+  if (isPlainObject(response.data) && hasRenderableValue(response.data)) {
+    return response.data;
+  }
+
+  if (isPlainObject(response.result) && hasRenderableValue(response.result)) {
+    return response.result;
+  }
+
+  const topLevelBlueprintKeys = ["ventureSummary", "starterPlan", "proPlan", "elitePlan", "upgradeHooks"];
+  if (isPlainObject(response) && topLevelBlueprintKeys.some((key) => hasRenderableValue(response[key]))) {
     return response;
   }
 
@@ -102,40 +111,31 @@ function DetailList({ section, emptyMessage }) {
   );
 }
 
-function StarterBlueprintResult({ response, blueprint, onUpgradePro, onSeeElite }) {
+function StarterBlueprintResult({ response, blueprint, onUpgradePro, onSeeElite, onStartAnother }) {
   const source = response || blueprint || {};
   const normalized = normalizeBlueprint(source);
+  console.log("Starter normalized blueprint:", normalized);
   const blueprintData = isPlainObject(normalized) ? normalized : {};
 
   const ventureSummary = blueprintData.ventureSummary || {};
   const starterPlan = blueprintData.starterPlan || {};
+  const proPlan = blueprintData.proPlan || {};
+  const elitePlan = blueprintData.elitePlan || {};
   const upgradeHooks = blueprintData.upgradeHooks || {};
-
-  const ventureEntries = Object.entries(coerceToEntryMap(ventureSummary));
-  const customerPattern = /(customer|audience|target|buyer|persona|client|who)/i;
-  const offerPattern = /(offer|service|product|solution|package|deliverable|promise|value)/i;
-  const brandPattern = /(brand|position|messag|voice|angle|differen|niche|category|unique)/i;
-
-  const idealCustomer = Object.fromEntries(ventureEntries.filter(([key]) => customerPattern.test(key)));
-  const coreOffer = Object.fromEntries(ventureEntries.filter(([key]) => offerPattern.test(key)));
-  const brandPositioning = Object.fromEntries(ventureEntries.filter(([key]) => brandPattern.test(key)));
-
-  const revenueDirection = Object.fromEntries(
-    Object.entries(coerceToEntryMap(starterPlan)).filter(([key]) =>
-      /(pricing|price|revenue|monet|profit|margin|acv|arpu|ltv|pay)/i.test(key),
-    ),
-  );
 
   const actionPlan = {
     ...(hasRenderableValue(starterPlan.top3Actions) ? { top3Actions: starterPlan.top3Actions } : {}),
     ...(hasRenderableValue(starterPlan.first7Days) ? { first7Days: starterPlan.first7Days } : {}),
+    ...(hasRenderableValue(starterPlan.thirtyDayActionPlan)
+      ? { thirtyDayActionPlan: starterPlan.thirtyDayActionPlan }
+      : {}),
   };
 
   const fastestPath = {
+    ...(hasRenderableValue(starterPlan.fastestPathToFirstMoney)
+      ? { fastestPathToFirstMoney: starterPlan.fastestPathToFirstMoney }
+      : {}),
     ...(hasRenderableValue(starterPlan.strategistInsight) ? { strategistInsight: starterPlan.strategistInsight } : {}),
-    ...Object.fromEntries(
-      Object.entries(coerceToEntryMap(starterPlan)).filter(([key, value]) => /fastest.?path/i.test(key) && hasRenderableValue(value)),
-    ),
   };
 
   const upgradeRecommendation = {
@@ -146,20 +146,59 @@ function StarterBlueprintResult({ response, blueprint, onUpgradePro, onSeeElite 
   const sections = [
     [
       "Business Concept Summary",
-      <DetailList section={ventureSummary} emptyMessage="Business concept summary is not available yet." />,
+      <DetailList
+        section={{
+          ...(hasRenderableValue(ventureSummary.businessModel)
+            ? { businessModel: ventureSummary.businessModel }
+            : {}),
+          ...(hasRenderableValue(ventureSummary.marketOpportunity)
+            ? { marketOpportunity: ventureSummary.marketOpportunity }
+            : {}),
+        }}
+        emptyMessage="Business concept summary is not available yet."
+      />,
     ],
     [
       "Ideal Customer",
-      <DetailList section={idealCustomer} emptyMessage="Ideal customer details are missing." />,
+      <DetailList
+        section={{
+          ...(hasRenderableValue(ventureSummary.targetCustomer)
+            ? { targetCustomer: ventureSummary.targetCustomer }
+            : {}),
+        }}
+        emptyMessage="Ideal customer details are missing."
+      />,
     ],
-    ["Core Offer", <DetailList section={coreOffer} emptyMessage="Core offer details are missing." />],
+    [
+      "Core Offer",
+      <DetailList
+        section={{
+          ...(hasRenderableValue(ventureSummary.coreOffer) ? { coreOffer: ventureSummary.coreOffer } : {}),
+        }}
+        emptyMessage="Core offer details are missing."
+      />,
+    ],
     [
       "Revenue Direction",
-      <DetailList section={revenueDirection} emptyMessage="Revenue direction was not returned." />,
+      <DetailList
+        section={{
+          ...(hasRenderableValue(starterPlan.pricingDirection)
+            ? { pricingDirection: starterPlan.pricingDirection }
+            : {}),
+        }}
+        emptyMessage="Revenue direction was not returned."
+      />,
     ],
     [
       "Brand Positioning",
-      <DetailList section={brandPositioning} emptyMessage="Brand positioning was not returned." />,
+      <DetailList
+        section={{
+          ...(hasRenderableValue(ventureSummary.brandPositioning)
+            ? { brandPositioning: ventureSummary.brandPositioning }
+            : {}),
+        }}
+        emptyMessage="Brand positioning was not returned."
+      />,
     ],
     [
       "30-Day Starter Action Plan",
@@ -173,6 +212,19 @@ function StarterBlueprintResult({ response, blueprint, onUpgradePro, onSeeElite 
       "Upgrade Recommendation",
       <DetailList section={upgradeRecommendation} emptyMessage="Upgrade recommendation is not available yet." />,
     ],
+    [
+      "Common Risks or Mistakes",
+      <DetailList
+        section={{
+          ...(hasRenderableValue(ventureSummary.commonRisksOrMistakes)
+            ? { commonRisksOrMistakes: ventureSummary.commonRisksOrMistakes }
+            : {}),
+        }}
+        emptyMessage="Common risks or mistakes are not available yet."
+      />,
+    ],
+    ["Pro Plan (Days 8–30)", <DetailList section={proPlan} emptyMessage="Pro plan details are unavailable." />],
+    ["Elite Plan (Days 31–90)", <DetailList section={elitePlan} emptyMessage="Elite plan details are unavailable." />],
   ];
 
   return (
@@ -205,6 +257,11 @@ function StarterBlueprintResult({ response, blueprint, onUpgradePro, onSeeElite 
           <button className="starter-button starter-button--secondary" onClick={onSeeElite}>
             See Elite
           </button>
+          {typeof onStartAnother === "function" && (
+            <button className="starter-button starter-button--secondary" onClick={onStartAnother}>
+              Start Another Blueprint
+            </button>
+          )}
         </div>
       </div>
     </div>

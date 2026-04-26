@@ -83,69 +83,19 @@ export function createFounderCheckout(tierId) {
 }
 
 function normalizeBlueprintResponse(data) {
-  const blueprint = data?.blueprint;
+  const blueprint =
+    data?.blueprint ||
+    data?.data?.blueprint ||
+    data?.data ||
+    data?.result?.blueprint ||
+    data?.result ||
+    data;
 
   if (!blueprint || typeof blueprint !== "object") {
     throw new Error("Blueprint response is missing or invalid.");
   }
 
-  return {
-    blueprint: {
-      ventureSummary: {
-        businessModel: blueprint.ventureSummary?.businessModel || "",
-        coreOffer: blueprint.ventureSummary?.coreOffer || "",
-        targetCustomer: blueprint.ventureSummary?.targetCustomer || "",
-        positioning: blueprint.ventureSummary?.positioning || "",
-      },
-      starterPlan: {
-        pricingDirection: blueprint.starterPlan?.pricingDirection || "",
-        top3Actions: Array.isArray(blueprint.starterPlan?.top3Actions)
-          ? blueprint.starterPlan.top3Actions
-          : [],
-        first7Days: Array.isArray(blueprint.starterPlan?.first7Days)
-          ? blueprint.starterPlan.first7Days
-          : [],
-        strategistInsight: blueprint.starterPlan?.strategistInsight || "",
-      },
-      proPlan: {
-        days8to30: Array.isArray(blueprint.proPlan?.days8to30)
-          ? blueprint.proPlan.days8to30
-          : [],
-        leadGenerationChannels: Array.isArray(blueprint.proPlan?.leadGenerationChannels)
-          ? blueprint.proPlan.leadGenerationChannels
-          : [],
-        salesProcess: Array.isArray(blueprint.proPlan?.salesProcess)
-          ? blueprint.proPlan.salesProcess
-          : [],
-        toolsNeeded: Array.isArray(blueprint.proPlan?.toolsNeeded)
-          ? blueprint.proPlan.toolsNeeded
-          : [],
-        weeklyKpis: Array.isArray(blueprint.proPlan?.weeklyKpis)
-          ? blueprint.proPlan.weeklyKpis
-          : [],
-      },
-      elitePlan: {
-        days31to90: Array.isArray(blueprint.elitePlan?.days31to90)
-          ? blueprint.elitePlan.days31to90
-          : [],
-        scalingStrategy: Array.isArray(blueprint.elitePlan?.scalingStrategy)
-          ? blueprint.elitePlan.scalingStrategy
-          : [],
-        systemsToBuild: Array.isArray(blueprint.elitePlan?.systemsToBuild)
-          ? blueprint.elitePlan.systemsToBuild
-          : [],
-        hiringDelegation: Array.isArray(blueprint.elitePlan?.hiringDelegation)
-          ? blueprint.elitePlan.hiringDelegation
-          : [],
-        highestLeverageGrowthMove:
-          blueprint.elitePlan?.highestLeverageGrowthMove || "",
-      },
-      upgradeHooks: {
-        proReason: blueprint.upgradeHooks?.proReason || "",
-        eliteReason: blueprint.upgradeHooks?.eliteReason || "",
-      },
-    },
-  };
+  return { blueprint };
 }
 
 export async function generateStarterBlueprint(payload) {

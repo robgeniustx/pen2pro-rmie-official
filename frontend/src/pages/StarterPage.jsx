@@ -59,6 +59,14 @@ function resolveBlueprint(data) {
   }
 
   if (!Array.isArray(data)) {
+    if (data.result && typeof data.result === "object" && !Array.isArray(data.result)) {
+      return data.result.blueprint || data.result;
+    }
+
+    if (data.data && typeof data.data === "object" && !Array.isArray(data.data)) {
+      return data.data;
+    }
+
     return data;
   }
 
@@ -124,6 +132,15 @@ function StarterPage({ navigateTo }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     await submitBlueprint();
+  };
+
+  const handleStartAnother = () => {
+    setValues(initialValues);
+    setErrors({});
+    setStatus("idle");
+    setSubmitError("");
+    setBlueprintResponse(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -194,6 +211,7 @@ function StarterPage({ navigateTo }) {
               response={blueprintResponse}
               onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
               onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
+              onStartAnother={handleStartAnother}
             />
           </>
         )}

@@ -3,6 +3,10 @@ def _clean_text(value: str, fallback: str) -> str:
 	return cleaned or fallback
 
 
+def _compact(value: str) -> str:
+	return " ".join(value.split())
+
+
 def _delivery_model(preference: str) -> str:
 	if preference == "online":
 		return "online-first delivery with simple digital fulfillment"
@@ -20,6 +24,26 @@ def _pricing_direction(budget: str, delivery_preference: str) -> str:
 	return "Offer a focused starter package with one core outcome and a simple monthly or project price."
 
 
+def _build_growth_channels(delivery_preference: str, target_customer: str, market_location: str) -> list[str]:
+	if delivery_preference == "local":
+		return [
+			f"Partnerships with 3 local businesses that already serve {target_customer} in {market_location}.",
+			"Direct outreach to warm local referrals with a same-week consultation slot.",
+			"Community-led workshops or demos to convert in-person trust into paid pilots.",
+		]
+	if delivery_preference == "online":
+		return [
+			f"Niche LinkedIn or creator-led content that names the exact pain point of {target_customer}.",
+			"Outbound DM + email cadence with a one-page offer and a clear paid pilot CTA.",
+			"Retargeting or remarketing to interested visitors using proof-driven conversion assets.",
+		]
+	return [
+		f"Online outbound cadence to {target_customer} plus local referral loops in {market_location}.",
+		"One authority content channel and one direct-response channel running weekly in parallel.",
+		"Partner distribution through aligned communities, associations, or ecosystem operators.",
+	]
+
+
 def build_starter_business_blueprint(payload: dict) -> dict:
 	business_idea = _clean_text(payload.get("businessIdea", ""), "a practical business concept")
 	product_or_service = _clean_text(payload.get("productOrService", ""), "a focused service")
@@ -33,52 +57,128 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 
 	delivery_model = _delivery_model(delivery_preference)
 	pricing_direction = _pricing_direction(startup_budget, delivery_preference)
+	short_goal = _compact(income_goal)
+	short_obstacle = _compact(biggest_obstacle)
+	short_skills = _compact(skills_resources)
+	short_idea = _compact(business_idea)
+	short_offer = _compact(product_or_service)
+	channels = _build_growth_channels(delivery_preference, target_customer, market_location)
 
 	return {
-		"businessConceptSummary": {
-			"oneLiner": f"PEN2PRO Starter frames {business_idea} as a {product_or_service} business for {target_customer} in {market_location}.",
-			"starterFocus": f"Launch the simplest version first, prove demand quickly, and use {delivery_model} to reduce friction.",
+		"ventureSummary": {
+			"businessModel": (
+				f"Build {short_idea} as a focused {short_offer} venture for {target_customer} in {market_location}. "
+				f"Lead with a paid starter offer that solves one high-urgency outcome, then expand into repeat engagements "
+				"or retainers once proof is documented."
+			),
+			"targetCustomer": (
+				f"Primary segment: {target_customer}. Prioritize buyers with active pain, budget authority, and a short decision window. "
+				f"Use discovery calls to rank subsegments by urgency, willingness to pay, and ease of delivery in {market_location}."
+			),
+			"coreOffer": (
+				f"Core offer: a scoped {short_offer} package with defined inputs, timeline, and measurable result. "
+				"Package it in three tiers (starter, standard, premium) to anchor value while keeping fulfillment predictable."
+			),
+			"brandPositioning": (
+				f"Position PEN2PRO as the no-fluff execution partner for {target_customer}: clear diagnosis, specific action plan, and tracked outcomes. "
+				f"Differentiate by combining {short_skills} with fast implementation and transparent milestones."
+			),
+			"marketOpportunity": (
+				f"Market edge in {market_location}: buyers are already spending to solve {short_idea}, but many providers compete on vague promises. "
+				"Win by offering tighter scope, faster time-to-value, and strong case-based proof."
+			),
+			"commonRisksOrMistakes": [
+				"Selling broad outcomes without a precise first-result promise.",
+				f"Building assets too early instead of validating paid demand against goal: {short_goal}.",
+				f"Ignoring constraint '{short_obstacle}' instead of designing a workaround in the operating plan.",
+			],
 		},
-		"idealCustomer": {
-			"primaryCustomer": target_customer,
-			"problemContext": f"This customer is actively trying to solve the problem behind {business_idea} but needs a solution that feels practical and trustworthy.",
-			"marketLocation": market_location,
-		},
-		"coreOffer": {
-			"offerType": product_or_service,
-			"starterOffer": f"Create a starter offer that helps {target_customer} achieve one clear result related to {business_idea} without extra complexity.",
-			"deliveryModel": delivery_model,
-		},
-		"revenueDirection": {
-			"incomeGoal": income_goal,
+		"starterPlan": {
 			"pricingDirection": pricing_direction,
-			"budgetApproach": f"Use {startup_budget} carefully and put early spend only into tools or outreach that help close first customers faster.",
+			"top3Actions": [
+				"Define a single sentence value proposition with a measurable before/after outcome.",
+				"Create a one-page offer with scope, timeline, price anchor, and social proof placeholder.",
+				"Run direct outreach to 20 qualified prospects and book at least 5 discovery calls.",
+			],
+			"first7Days": [
+				f"Day 1: Tighten messaging around {short_idea} and draft qualifying questions for {target_customer}.",
+				"Day 2: Build a no-code landing page with clear CTA for a paid starter engagement.",
+				f"Day 3-4: Conduct 5 problem interviews in {market_location} and refine objections script.",
+				"Day 5: Launch first outbound batch (email/DM/referrals) and track replies in a simple CRM.",
+				"Day 6-7: Run sales calls, close paid pilot slots, and document objections and win patterns.",
+			],
+			"thirtyDayActionPlan": [
+				"Week 1: Validate messaging, finalize offer terms, and book discovery calls.",
+				"Week 2: Close first 1-2 paid clients and deliver fast wins with documented outcomes.",
+				"Week 3: Publish first proof assets (testimonial/case snapshot) and double top channel.",
+				"Week 4: Standardize delivery checklist, raise price modestly, and target repeatable pipeline.",
+			],
+			"fastestPathToFirstMoney": (
+				f"Sell a fixed-scope paid pilot for {short_offer} before building full systems. "
+				"Use direct outreach and referral asks to secure first cash in 7-14 days."
+			),
+			"strategistInsight": (
+				f"With {startup_budget}, spend only on revenue-critical assets: booking page, CRM, and follow-up automation. "
+				"Everything else is optional until you hit a repeatable close rate tied to income goal ({short_goal})."
+			),
 		},
-		"brandPositioning": {
-			"brandPromise": f"PEN2PRO should position this offer as a clear, outcome-focused way for {target_customer} to make progress without guesswork.",
-			"differentiator": f"Lean into these advantages: {skills_resources}.",
-			"trustSignal": f"Address the main buyer hesitation around {biggest_obstacle} directly in messaging and proof points.",
+		"proPlan": {
+			"days8to30": [
+				"Convert discovery feedback into a sharper ICP and objection-handling script.",
+				"Introduce a two-call sales flow (diagnostic + close) to increase conversion consistency.",
+				"Document delivery SOPs after each client so service quality remains consistent while volume grows.",
+			],
+			"leadGenerationChannels": channels,
+			"salesProcess": [
+				"Pre-call qualification form to filter low-fit leads.",
+				"Structured discovery call to quantify pain, timeline, and buying criteria.",
+				"Same-day proposal with clear scope, milestone-based payment terms, and urgency trigger.",
+			],
+			"toolsNeeded": [
+				"CRM for outreach and follow-up tracking (e.g., HubSpot Free or Pipedrive).",
+				"Calendar + intake form for frictionless booking and pre-call qualification.",
+				"Proposal/invoicing workflow with e-sign and deposit collection.",
+			],
+			"weeklyKpis": [
+				"Qualified conversations booked",
+				"Discovery-to-proposal conversion rate",
+				"Proposal-to-paid conversion rate",
+				"Average deal value and cash collected",
+				"Delivery NPS/testimonial capture rate",
+			],
 		},
-		"starterActionPlan": [
-			f"Clarify the exact outcome your {product_or_service} delivers for {target_customer} in one sentence.",
-			f"Talk to 5 people in {market_location} who match {target_customer} and collect exact language about their pain points.",
-			"Draft a one-page offer with the problem, promise, scope, delivery method, and a direct call to action.",
-			"Reach out to your first 20 qualified prospects through the fastest channel you can realistically sustain this week.",
-			"Use early conversations to tighten your message, objection handling, and pricing before expanding outreach.",
-		],
-		"fastestPathToFirstMoney": [
-			f"Sell a narrow starter version of {product_or_service} before building a bigger offer.",
-			"Ask for a paid pilot, beta package, or fixed-scope first project rather than waiting for a perfect brand or website.",
-			f"Use your current strengths in {skills_resources} to create momentum immediately.",
-		],
-		"commonRisksOrMistakes": [
-			"Trying to serve too many customer types before proving one strong niche angle.",
-			f"Overbuilding assets before validating whether buyers will pay to solve {business_idea}.",
-			f"Letting {biggest_obstacle} delay direct outreach, offer testing, or first sales conversations.",
-		],
-		"upgradeRecommendation": {
-			"summary": "Upgrade when you want deeper strategy, more automation, and a tighter execution system.",
-			"pro": "PEN2PRO Pro fits when you need better offer refinement, repeatable lead generation, and stronger monetization structure.",
-			"elite": "PEN2PRO Elite fits when you want higher-touch implementation support, advanced growth planning, and a more complete operating system.",
+		"elitePlan": {
+			"days31to90": [
+				"Productize the best-performing offer into repeatable delivery tracks.",
+				"Add authority assets (case studies, ROI calculator, webinar/workshop funnel).",
+				"Build partner referral pipeline and test one scalable paid acquisition channel.",
+			],
+			"scalingStrategy": [
+				"Move from founder-led selling to a predictable pipeline with channel specialization.",
+				"Raise pricing after every 3 successful outcomes to protect margins and brand position.",
+				"Use cohort-based or standardized delivery where possible to increase capacity.",
+			],
+			"systemsToBuild": [
+				"Lead scoring and follow-up automation with weekly pipeline reviews.",
+				"Client onboarding and delivery SOPs with quality checkpoints.",
+				"Weekly business dashboard covering pipeline, conversion, cashflow, and fulfillment.",
+			],
+			"hiringDelegation": [
+				"First delegate: admin + follow-up coordination to protect founder selling time.",
+				"Second delegate: fulfillment support for repeatable components of the core offer.",
+				"Retain strategic tasks (positioning, pricing, key sales) until process maturity is proven.",
+			],
+			"highestLeverageGrowthMove": (
+				f"Turn your top result for {target_customer} into a flagship case-study engine and partner co-selling motion in {market_location}; "
+				"this compounds trust, lead quality, and close rates faster than adding random channels."
+			),
+		},
+		"upgradeHooks": {
+			"proReason": (
+				f"Upgrade to Pro when you need a repeatable lead engine, tighter sales scripts, and operating cadence built around your constraint ({short_obstacle})."
+			),
+			"eliteReason": (
+				"Upgrade to Elite when demand is proven and your bottleneck shifts from getting clients to scaling delivery, team capacity, and margin control."
+			),
 		},
 	}
