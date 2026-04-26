@@ -143,10 +143,15 @@ function HomePage({ navigateTo }) {
     const ctaText = `${plan?.cta_label || ""}`.toLowerCase();
     const planName = `${plan?.name || ""}`.toLowerCase();
     const priceLabel = `${plan?.display_price || ""}`.toLowerCase();
+    const badgeText = `${plan?.badge_text || ""}`.toLowerCase();
+    const tagline = `${plan?.tagline || ""}`.toLowerCase();
     const starterCtaKeywords = ["start your roadmap", "get started", "start now", "start free", "build my blueprint"];
     const isStarterFlowPlan =
       planName === "starter" ||
+      planName.includes("free forever") ||
       priceLabel.includes("free forever") ||
+      badgeText.includes("free forever") ||
+      tagline.includes("free forever") ||
       starterCtaKeywords.some((keyword) => ctaText.includes(keyword));
 
     if (isStarterFlowPlan) {
