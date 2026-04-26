@@ -12,7 +12,7 @@ import Footer from "../components/home/Footer";
 import { fetchBackendStatus, fetchPricingPlans, createFounderCheckout } from "../services/api";
 import "./HomePage.css";
 
-function HomePage() {
+function HomePage({ navigateTo }) {
   const [backendMessage, setBackendMessage] = useState("Loading backend...");
   const [plans, setPlans] = useState([]);
   const [isPricingLoading, setIsPricingLoading] = useState(true);
@@ -126,13 +126,12 @@ function HomePage() {
   };
 
   const handleStartRoadmap = () => {
-    scrollTo("#pricing");
-    setActiveNav("#pricing");
-    // TODO: Wire this action to the future intake form entry point.
+    navigateTo("/starter");
   };
 
-  const handleHowItWorks = () => {
-    scrollTo("#how-it-works");
+  const handleSeePricing = () => {
+    scrollTo("#pricing");
+    setActiveNav("#pricing");
   };
 
   const handleSampleRoadmap = () => {
@@ -141,13 +140,26 @@ function HomePage() {
   };
 
   const handleSelectPlan = (plan) => {
-    // TODO: Connect this action to auth-aware checkout and onboarding flow.
+    const ctaText = `${plan?.cta_label || ""}`.toLowerCase();
+    const planName = `${plan?.name || ""}`.toLowerCase();
+    const priceLabel = `${plan?.display_price || ""}`.toLowerCase();
+    const starterCtaKeywords = ["start your roadmap", "get started", "start now", "start free", "build my blueprint"];
+    const isStarterFlowPlan =
+      planName === "starter" ||
+      priceLabel.includes("free forever") ||
+      starterCtaKeywords.some((keyword) => ctaText.includes(keyword));
+
+    if (isStarterFlowPlan) {
+      navigateTo("/starter");
+      return;
+    }
+
+    // TODO: Connect non-starter plans to auth-aware checkout and onboarding flow.
     setPendingAction(`Plan selected: ${plan.name}. Checkout hook is ready.`);
   };
 
   const handleFooterCta = () => {
-    scrollTo("#founders");
-    setActiveNav("#founders");
+    navigateTo("/starter");
   };
 
   const handleFounderTierSelect = async (tier) => {
@@ -177,7 +189,7 @@ function HomePage() {
         <HeroSection
           backendMessage={backendMessage}
           onPrimaryCta={handleStartRoadmap}
-          onSecondaryCta={handleHowItWorks}
+          onSecondaryCta={handleSeePricing}
         />
         <HowItWorks />
         <FeatureCards />
