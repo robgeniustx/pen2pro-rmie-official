@@ -15,10 +15,10 @@ function HeroSection({ backendMessage, onPrimaryCta, onSecondaryCta }) {
 
           <div className="hero-actions" role="group" aria-label="Hero actions">
             <button type="button" className="btn btn-primary" onClick={onPrimaryCta}>
-              Start Your Roadmap
+              Start Free Business Blueprint
             </button>
             <button type="button" className="btn btn-secondary" onClick={onSecondaryCta}>
-              How It Works
+              See Pricing
             </button>
           </div>
 
