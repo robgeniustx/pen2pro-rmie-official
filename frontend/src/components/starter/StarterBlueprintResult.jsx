@@ -415,7 +415,55 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
             </button>
           )}
         </div>
-      </div>
+      <div className="starter-result__cta-block">
+  <p className="starter-result__cta-copy">
+    Ready for deeper strategy, automation, and execution tools?
+  </p>
+
+  <div className="starter-result__cta-actions">
+    <button
+      type="button"
+      className="starter-button starter-button--secondary"
+      onClick={handlePrintBlueprint}
+    >
+      Print / Save PDF
+    </button>
+
+    <button
+      type="button"
+      className="starter-button starter-button--secondary"
+      onClick={handleEmailBlueprint}
+    >
+      Email Task Plan
+    </button>
+
+    <button
+      type="button"
+      className="starter-button starter-button--primary"
+      onClick={onUpgradePro}
+    >
+      Upgrade to Pro
+    </button>
+
+    <button
+      type="button"
+      className="starter-button starter-button--secondary"
+      onClick={onSeeElite}
+    >
+      See Elite
+    </button>
+
+    {typeof onStartAnother === "function" && (
+      <button
+        type="button"
+        className="starter-button starter-button--secondary"
+        onClick={onStartAnother}
+      >
+        Start Another Blueprint
+      </button>
+    )}
+  </div>
+</div>
     </div>
   );
 }
