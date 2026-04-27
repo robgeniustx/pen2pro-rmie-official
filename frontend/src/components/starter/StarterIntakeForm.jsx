@@ -4,12 +4,30 @@ const deliveryOptions = [
   { value: "both", label: "Both" },
 ];
 
+const accessTiers = [
+  { value: "free", label: "Free (limited strategist output)" },
+  { value: "pro", label: "Pro (full strategist breakdown)" },
+  { value: "elite", label: "Elite (advanced insights + projections)" },
+];
+
+const urgencyOptions = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "urgent", label: "Urgent" },
+];
+
 const fields = [
   {
     name: "businessIdea",
     label: "Business idea",
     placeholder: "Describe the business idea you want to turn into a real offer.",
     type: "textarea",
+  },
+  {
+    name: "businessType",
+    label: "Business type",
+    placeholder: "Local service, e-commerce, consulting, SaaS, etc.",
   },
   {
     name: "productOrService",
@@ -22,14 +40,39 @@ const fields = [
     placeholder: "Who is most likely to buy this first?",
   },
   {
+    name: "location",
+    label: "Location",
+    placeholder: "City, state, or region where you will operate.",
+  },
+  {
     name: "marketLocation",
     label: "Market location",
     placeholder: "Where will you sell or operate?",
   },
   {
+    name: "budget",
+    label: "Budget",
+    placeholder: "What budget do you have for the next 30 days?",
+  },
+  {
     name: "startupBudget",
     label: "Startup budget",
     placeholder: "What budget are you starting with?",
+  },
+  {
+    name: "skillLevel",
+    label: "Skill level",
+    placeholder: "Beginner, intermediate, or advanced",
+  },
+  {
+    name: "timeAvailability",
+    label: "Time availability",
+    placeholder: "How much time can you commit weekly?",
+  },
+  {
+    name: "currentStage",
+    label: "Current stage",
+    placeholder: "Idea, pre-revenue, first clients, growth",
   },
   {
     name: "skillsResources",
@@ -106,6 +149,24 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit }) {
       </section>
 
       <div className="starter-form__grid">
+        <label className="starter-form__field">
+          <span className="starter-form__label">Strategist access</span>
+          <select
+            className="starter-form__input"
+            name="accessTier"
+            value={values.accessTier}
+            onChange={(event) => onChange("accessTier", event.target.value)}
+            disabled={loading}
+          >
+            {accessTiers.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <FieldError error={errors.accessTier} />
+        </label>
+
         {fields.map((field) => (
           <label className="starter-form__field" key={field.name}>
             <span className="starter-form__label">{field.label}</span>
@@ -132,6 +193,24 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit }) {
             <FieldError error={errors[field.name]} />
           </label>
         ))}
+
+        <label className="starter-form__field">
+          <span className="starter-form__label">Urgency level</span>
+          <select
+            className="starter-form__input"
+            name="urgencyLevel"
+            value={values.urgencyLevel}
+            onChange={(event) => onChange("urgencyLevel", event.target.value)}
+            disabled={loading}
+          >
+            {urgencyOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <FieldError error={errors.urgencyLevel} />
+        </label>
 
         <label className="starter-form__field">
           <span className="starter-form__label">Delivery preference</span>

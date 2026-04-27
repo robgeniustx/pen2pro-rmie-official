@@ -190,6 +190,20 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
   const businessIdea = (intakeValues?.businessIdea || "").trim();
   const selectedState = (intakeValues?.marketLocation || "").trim();
 
+  const ventureSummary = blueprintData.ventureSummary || {};
+  const starterPlan = blueprintData.starterPlan || {};
+  const proPlan = blueprintData.proPlan || {};
+  const elitePlan = blueprintData.elitePlan || {};
+  const upgradeHooks = blueprintData.upgradeHooks || {};
+  const strategistRecommendation = blueprintData.ai_strategist_recommendation || {};
+
+  const actionPlan = {
+    ...(hasRenderableValue(starterPlan.top3Actions) ? { top3Actions: starterPlan.top3Actions } : {}),
+    ...(hasRenderableValue(starterPlan.first7Days) ? { first7Days: starterPlan.first7Days } : {}),
+    ...(hasRenderableValue(starterPlan.thirtyDayActionPlan)
+      ? { thirtyDayActionPlan: starterPlan.thirtyDayActionPlan }
+      : {}),
+  };
   const allTasks = useMemo(() => {
     return Object.entries(blueprintData).flatMap(([sectionKey, sectionValue]) => extractTasksFromSection(sectionKey, sectionValue));
   }, [blueprintData]);
@@ -281,6 +295,44 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
         </p>
       </div>
 
+      {hasRenderableValue(strategistRecommendation) && (
+        <section className="starter-result__strategist-card">
+          <p className="starter-result__eyebrow">{strategistRecommendation.label || "AI Strategist Recommendation"}</p>
+          <h3>10M Business Strategist Engine</h3>
+          <DetailList
+            section={{
+              ...(hasRenderableValue(strategistRecommendation.next_best_move)
+                ? { nextBestMove: strategistRecommendation.next_best_move }
+                : {}),
+              ...(hasRenderableValue(strategistRecommendation.fastest_path_to_first_1k)
+                ? { fastestPathToFirst1k: strategistRecommendation.fastest_path_to_first_1k }
+                : {}),
+              ...(hasRenderableValue(strategistRecommendation.what_to_avoid)
+                ? { whatToAvoid: strategistRecommendation.what_to_avoid }
+                : {}),
+              ...(hasRenderableValue(strategistRecommendation.execution_plan)
+                ? { executionPlan: strategistRecommendation.execution_plan }
+                : {}),
+              ...(hasRenderableValue(strategistRecommendation.strategist_insight)
+                ? { strategistInsight: strategistRecommendation.strategist_insight }
+                : {}),
+              ...(hasRenderableValue(strategistRecommendation.pro_breakdown)
+                ? { proBreakdown: strategistRecommendation.pro_breakdown }
+                : {}),
+              ...(hasRenderableValue(strategistRecommendation.advanced_insights_and_projections)
+                ? { advancedInsightsAndProjections: strategistRecommendation.advanced_insights_and_projections }
+                : {}),
+            }}
+            emptyMessage="Strategist recommendation is not available yet."
+          />
+        </section>
+      )}
+
+      <div className="starter-result__grid">
+        {sections.map(([title, content]) => (
+          <section key={title} className="starter-result__card">
+            <h3>{title}</h3>
+            {content}
       <div className="starter-result__tracker" role="status" aria-live="polite">
         <div className="starter-result__tracker-row">
           <p>
