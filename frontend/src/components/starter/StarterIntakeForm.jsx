@@ -58,9 +58,53 @@ function FieldError({ error }) {
   return <p className="starter-form__error">{error}</p>;
 }
 
+const brandBuilderOptions = [
+  { id: "momentum-labs", name: "Momentum Labs" },
+  { id: "northstar-studio", name: "Northstar Studio" },
+  { id: "summit-growth", name: "Summit Growth Co." },
+];
+
 function StarterIntakeForm({ values, errors, loading, onChange, onSubmit }) {
   return (
     <form className="starter-form" onSubmit={onSubmit} noValidate>
+      <section className="starter-form__name-card" aria-label="Confirm your business name">
+        <h3>Confirm Your Business Name</h3>
+        <p className="starter-form__helper">
+          Use one of the suggested names or enter your own before printing or emailing your blueprint.
+        </p>
+
+        <label className="starter-form__field">
+          <span className="starter-form__label">Brand Builder suggestion</span>
+          <select
+            className="starter-form__input"
+            name="selectedBrandName"
+            value={values.selectedBrandName}
+            onChange={(event) => onChange("selectedBrandName", event.target.value)}
+            disabled={loading}
+          >
+            <option value="">Select a suggested brand name</option>
+            {brandBuilderOptions.map((option) => (
+              <option key={option.id} value={option.name}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="starter-form__field">
+          <span className="starter-form__label">Your Proposed Business Name</span>
+          <input
+            className="starter-form__input"
+            name="proposedBusinessName"
+            value={values.proposedBusinessName}
+            onChange={(event) => onChange("proposedBusinessName", event.target.value)}
+            placeholder="Enter your business name or select one from the Brand Builder"
+            disabled={loading}
+          />
+          <FieldError error={errors.proposedBusinessName} />
+        </label>
+      </section>
+
       <div className="starter-form__grid">
         {fields.map((field) => (
           <label className="starter-form__field" key={field.name}>

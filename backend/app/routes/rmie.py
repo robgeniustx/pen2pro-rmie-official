@@ -10,6 +10,8 @@ router = APIRouter()
 
 class StarterGenerateRequest(BaseModel):
     tier: Literal["starter"]
+    proposedBusinessName: str = Field(default="", max_length=140)
+    selectedBrandName: str = Field(default="", max_length=140)
     businessIdea: str = Field(..., min_length=3, max_length=240)
     productOrService: str = Field(..., min_length=3, max_length=180)
     targetCustomer: str = Field(..., min_length=3, max_length=180)

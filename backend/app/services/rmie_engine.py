@@ -24,6 +24,12 @@ def _pricing_direction(budget: str, delivery_preference: str) -> str:
 	return "Offer a focused starter package with one core outcome and a simple monthly or project price."
 
 
+def _resolve_business_name(payload: dict) -> str:
+	proposed_business_name = _clean_text(payload.get("proposedBusinessName", ""), "")
+	selected_brand_name = _clean_text(payload.get("selectedBrandName", ""), "")
+	return proposed_business_name or selected_brand_name or "Your Company Name"
+
+
 def _build_growth_channels(delivery_preference: str, target_customer: str, market_location: str) -> list[str]:
 	if delivery_preference == "local":
 		return [
@@ -45,6 +51,7 @@ def _build_growth_channels(delivery_preference: str, target_customer: str, marke
 
 
 def build_starter_business_blueprint(payload: dict) -> dict:
+	business_name = _resolve_business_name(payload)
 	business_idea = _clean_text(payload.get("businessIdea", ""), "a practical business concept")
 	product_or_service = _clean_text(payload.get("productOrService", ""), "a focused service")
 	target_customer = _clean_text(payload.get("targetCustomer", ""), "a clearly defined customer group")
@@ -65,9 +72,15 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	channels = _build_growth_channels(delivery_preference, target_customer, market_location)
 
 	return {
+		"businessIdentity": {
+			"proposedBusinessName": _clean_text(payload.get("proposedBusinessName", ""), ""),
+			"selectedBrandName": _clean_text(payload.get("selectedBrandName", ""), ""),
+			"displayBusinessName": business_name,
+		},
 		"ventureSummary": {
 			"businessModel": (
-				f"Build {short_idea} as a focused {short_offer} venture for {target_customer} in {market_location}. "
+				f"Build {business_name} as a focused {short_offer} venture for {target_customer} in {market_location}. "
+				f"Use {short_idea} as the core growth wedge. "
 				f"Lead with a paid starter offer that solves one high-urgency outcome, then expand into repeat engagements "
 				"or retainers once proof is documented."
 			),
@@ -80,7 +93,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				"Package it in three tiers (starter, standard, premium) to anchor value while keeping fulfillment predictable."
 			),
 			"brandPositioning": (
-				f"Position PEN2PRO as the no-fluff execution partner for {target_customer}: clear diagnosis, specific action plan, and tracked outcomes. "
+				f"Position {business_name} as the no-fluff execution partner for {target_customer}: clear diagnosis, specific action plan, and tracked outcomes. "
 				f"Differentiate by combining {short_skills} with fast implementation and transparent milestones."
 			),
 			"marketOpportunity": (
