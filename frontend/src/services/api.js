@@ -17,6 +17,30 @@ async function request(path, options = {}, config = {}) {
       signal: controller.signal,
     });
 
+    let data = null;
+    let errorPayload = null;
+
+    try {
+      data = await response.json();
+    } catch {
+      const rawText = await response.text();
+      errorPayload = { message: rawText };
+    }
+
+    if (!response.ok) {
+      const readableError =
+        errorPayload?.detail ||
+        errorPayload?.error ||
+        errorPayload?.message ||
+        data?.detail ||
+        data?.error ||
+        data?.message ||
+        `Request failed with status ${response.status}`;
+
+      throw new Error(
+        typeof readableError === "string"
+          ? readableError
+          : JSON.stringify(readableError)
     const contentType = response.headers.get("content-type") || "";
     const isJson = contentType.includes("application/json");
     let data = null;
@@ -99,6 +123,7 @@ export function createFounderCheckout(tierId) {
 }
 
 function normalizeBlueprintResponse(data) {
+  const blueprintPayload =
   const blueprintText =
     data?.blueprint ||
     data?.result ||
@@ -107,6 +132,25 @@ function normalizeBlueprintResponse(data) {
     data?.plan ||
     data?.data?.blueprint ||
     data?.data ||
+    null;
+
+  if (blueprintPayload && typeof blueprintPayload === "object") {
+    return {
+      ...data,
+      blueprint: blueprintPayload,
+    };
+  }
+
+  if (typeof blueprintPayload === "string" && blueprintPayload.trim()) {
+    return {
+      ...data,
+      blueprint: {
+        content: blueprintPayload,
+      },
+    };
+  }
+
+  throw new Error("Blueprint generated, but no blueprint text was returned.");
     data?.result?.blueprint ||
     "";
   const normalizedText = typeof blueprintText === "object" ? JSON.stringify(blueprintText, null, 2) : String(blueprintText || "").trim();
