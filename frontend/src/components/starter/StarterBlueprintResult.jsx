@@ -22,6 +22,7 @@ function stringifySection(value) {
 
 function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprintData = useMemo(() => resolveBlueprintData(response, blueprint), [response, blueprint]);
+  const blueprintText = typeof response?.blueprintText === "string" ? response.blueprintText : "";
 
   const accessLevel = (intakeValues?.accessLevel || intakeValues?.accessTier || "free").toLowerCase();
   const businessName = normalizeText(intakeValues?.proposedBusinessName, normalizeText(blueprintData?.business_snapshot?.business_name, "your business"));
@@ -35,6 +36,7 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
     { title: "Startup checklist", value: stringifySection(blueprintData.startup_requirements || blueprintData.launch_plan_30_days) },
     { title: "Next steps", value: stringifySection(blueprintData.launch_plan_30_days || blueprintData.operations_plan_90_days) },
   ];
+  const hasStructuredBlueprint = Object.keys(blueprintData || {}).length > 0;
 
   return (
     <div className="starter-result starter-reveal">
@@ -52,6 +54,12 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
             <p>{card.value}</p>
           </article>
         ))}
+        {!hasStructuredBlueprint && (
+          <article className="starter-result__bento-card starter-result__bento-card--1">
+            <h3>Generated blueprint</h3>
+            <p>{blueprintText || "Blueprint generated, but no blueprint text was returned."}</p>
+          </article>
+        )}
       </section>
 
       {accessLevel === "free" && (

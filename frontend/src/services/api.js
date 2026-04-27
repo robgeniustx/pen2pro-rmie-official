@@ -19,13 +19,29 @@ async function request(path, options = {}, config = {}) {
 
     const contentType = response.headers.get("content-type") || "";
     const isJson = contentType.includes("application/json");
-    const data = isJson ? await response.json() : null;
+    let data = null;
+
+    if (isJson) {
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+    }
 
     if (!response.ok) {
+      let errorPayload = data;
+      if (!errorPayload) {
+        const errorText = await response.text();
+        errorPayload = { message: errorText };
+      }
+      const details = errorPayload?.detail;
+      const detailText = typeof details === "string" ? details : details ? JSON.stringify(details) : "";
       throw new Error(
-        data?.detail ||
-          data?.message ||
-          `Request failed with status ${response.status}.`
+        detailText ||
+          errorPayload?.error ||
+          errorPayload?.message ||
+          `Blueprint generation failed with status ${response.status}`
       );
     }
 
@@ -83,19 +99,25 @@ export function createFounderCheckout(tierId) {
 }
 
 function normalizeBlueprintResponse(data) {
-  const blueprint =
+  const blueprintText =
     data?.blueprint ||
+    data?.result ||
+    data?.content ||
+    data?.output ||
+    data?.plan ||
     data?.data?.blueprint ||
     data?.data ||
     data?.result?.blueprint ||
-    data?.result ||
-    data;
+    "";
+  const normalizedText = typeof blueprintText === "object" ? JSON.stringify(blueprintText, null, 2) : String(blueprintText || "").trim();
+  const fallbackText = "Blueprint generated, but no blueprint text was returned.";
+  const blueprint = data?.blueprint && typeof data.blueprint === "object" ? data.blueprint : data?.result?.blueprint || data?.data?.blueprint || data?.data;
 
-  if (!blueprint || typeof blueprint !== "object") {
-    throw new Error("Blueprint response is missing or invalid.");
-  }
-
-  return { blueprint };
+  return {
+    ...data,
+    blueprintText: normalizedText || fallbackText,
+    blueprint: blueprint && typeof blueprint === "object" ? blueprint : {},
+  };
 }
 
 export async function generateStarterBlueprint(payload) {
