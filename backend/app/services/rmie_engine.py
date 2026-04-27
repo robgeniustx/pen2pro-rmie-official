@@ -70,8 +70,116 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	short_idea = _compact(business_idea)
 	short_offer = _compact(product_or_service)
 	channels = _build_growth_channels(delivery_preference, target_customer, market_location)
+	startup_requirements = [
+		{
+			"task": "Register LLC",
+			"link_label": "Secretary of State",
+			"estimated_time": "30 min",
+			"priority": "High",
+		},
+		{
+			"task": "Get EIN",
+			"link_label": "IRS",
+			"estimated_time": "10 min",
+			"priority": "High",
+		},
+		{
+			"task": "Open business bank account",
+			"suggested_banks": ["Chase", "Navy Federal"],
+			"estimated_time": "1-2 business days",
+			"priority": "High",
+		},
+	]
+	licenses_and_compliance = [
+		{
+			"requirement": "Verify state and local licensing rules",
+			"owner": "Founder",
+			"due_window": "Before first paid delivery",
+		},
+		{
+			"requirement": "Collect basic legal docs (privacy policy, terms, client agreement)",
+			"owner": "Founder + legal advisor",
+			"due_window": "Week 1",
+		},
+		{
+			"requirement": "Set up tax calendar for estimated payments and filing deadlines",
+			"owner": "Founder + CPA",
+			"due_window": "Week 2",
+		},
+	]
+	tools_and_software = [
+		{"category": "CRM", "recommended": "HubSpot Free or Pipedrive", "stage": "0-30 days"},
+		{"category": "Scheduling", "recommended": "Google Calendar + intake form", "stage": "0-7 days"},
+		{"category": "Payments", "recommended": "Stripe or Square invoicing", "stage": "0-14 days"},
+		{"category": "Bookkeeping", "recommended": "Wave or QuickBooks Simple Start", "stage": "0-30 days"},
+	]
+	sources = [
+		{"name": "IRS EIN Online", "url": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers"},
+		{"name": "SBA business guide", "url": "https://www.sba.gov/business-guide"},
+		{"name": "State Secretary of State portal", "url": "https://www.usa.gov/state-business"},
+	]
 
 	return {
+		"business_snapshot": {
+			"business_name": business_name,
+			"business_idea": business_idea,
+			"product_or_service": product_or_service,
+			"target_customer": target_customer,
+			"market_location": market_location,
+			"delivery_model": delivery_model,
+			"income_goal": income_goal,
+			"primary_constraint": biggest_obstacle,
+		},
+		"startup_requirements": startup_requirements,
+		"licenses_and_compliance": licenses_and_compliance,
+		"tools_and_software": tools_and_software,
+		"pricing_strategy": {
+			"direction": pricing_direction,
+			"model": "Three-tier offer (starter, standard, premium) with clear scope and timeline.",
+			"near_term_goal": "Validate paid demand first, then increase price after documented wins.",
+		},
+		"launch_plan_30_days": {
+			"top3_actions": [
+				"Define a single sentence value proposition with a measurable before/after outcome.",
+				"Create a one-page offer with scope, timeline, price anchor, and social proof placeholder.",
+				"Run direct outreach to 20 qualified prospects and book at least 5 discovery calls.",
+			],
+			"week_by_week": [
+				"Week 1: Validate messaging, finalize offer terms, and book discovery calls.",
+				"Week 2: Close first 1-2 paid clients and deliver fast wins with documented outcomes.",
+				"Week 3: Publish first proof assets (testimonial/case snapshot) and double top channel.",
+				"Week 4: Standardize delivery checklist, raise price modestly, and target repeatable pipeline.",
+			],
+		},
+		"operations_plan_90_days": {
+			"focus_areas": [
+				"Productize the best-performing offer into repeatable delivery tracks.",
+				"Build lead scoring, follow-up automation, and weekly pipeline reviews.",
+				"Track sales conversion, cashflow, and fulfillment quality with one dashboard.",
+			],
+			"delegation_sequence": [
+				"First delegate: admin + follow-up coordination.",
+				"Second delegate: fulfillment support for repeatable components.",
+			],
+		},
+		"scale_plan_12_months": {
+			"strategic_targets": [
+				"Establish one repeatable inbound channel and one partner referral channel.",
+				"Systemize onboarding and delivery for consistency at higher volume.",
+				"Protect margin through periodic pricing increases tied to proven outcomes.",
+			],
+			"milestones": [
+				"Quarter 1: Consistent monthly revenue and documented case studies.",
+				"Quarter 2: Standardized delivery SOPs and delegated operations support.",
+				"Quarter 3-4: Expand distribution partnerships and test one scalable paid channel.",
+			],
+		},
+		"risk_flags": [
+			"Selling broad outcomes without a precise first-result promise.",
+			f"Building assets too early instead of validating paid demand against goal: {short_goal}.",
+			f"Ignoring constraint '{short_obstacle}' instead of designing a workaround in the operating plan.",
+		],
+		"sources": sources,
 		"businessIdentity": {
 			"proposedBusinessName": _clean_text(payload.get("proposedBusinessName", ""), ""),
 			"selectedBrandName": _clean_text(payload.get("selectedBrandName", ""), ""),
