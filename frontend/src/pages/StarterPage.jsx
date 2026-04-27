@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import StarterIntakeForm from "../components/starter/StarterIntakeForm.jsx";
 import StarterBlueprintResult from "../components/starter/StarterBlueprintResult.jsx";
 import ProgressSidebar from "../components/starter/StarterWorkflowSidebar.jsx";
-import { getChecklistItems, getProgressSummary, getRecommendedNextAction } from "../components/starter/starterWorkflow.js";
+import { freeRequiredFields, getChecklistItems, getProgressSummary, getRecommendedNextAction } from "../components/starter/starterWorkflow.js";
 import { generateStarterBlueprint } from "../services/api.js";
 
 const DRAFT_KEY = "pen2pro_starter_draft_v2";
@@ -11,7 +11,7 @@ const DRAFT_KEY = "pen2pro_starter_draft_v2";
 const initialValues = {
   tier: "starter",
   accessLevel: "free",
-  strategistFocus: "startup",
+  strategistFocus: "basic",
   proposedBusinessName: "",
   domainToCheck: "",
   domainSearchAttempted: "",
@@ -33,10 +33,23 @@ const initialValues = {
   deliveryPreference: "both",
 };
 
-const requiredFields = ["proposedBusinessName", "businessIdea", "businessType", "productOrService", "targetCustomer", "location", "marketLocation", "budget", "startupBudget", "skillLevel", "timeAvailability", "currentStage", "skillsResources", "incomeGoal", "biggestObstacle", "deliveryPreference"];
+const hasProAccess = false;
+const hasEliteAccess = false;
 
-function validate(values) {
-  return requiredFields.reduce((errors, field) => {
+function getValidationErrorForAccessLevel(values, accessLevel) {
+  if (accessLevel === "free") {
+    if (!String(values.proposedBusinessName || "").trim()) return "Please enter your business name before generating your blueprint.";
+    if (!String(values.businessIdea || "").trim()) return "Please describe the business idea before generating your blueprint.";
+    if (!String(values.productOrService || "").trim()) return "Please enter the product or service you plan to sell.";
+    if (!String(values.targetCustomer || "").trim()) return "Please identify your target customer.";
+    return "";
+  }
+  return "Upgrade required. Choose a paid plan to unlock this strategist blueprint.";
+}
+
+function getFieldErrors(values, accessLevel) {
+  if (accessLevel !== "free") return {};
+  return freeRequiredFields.reduce((errors, field) => {
     if (!String(values[field] || "").trim()) errors[field] = "This field is required.";
     return errors;
   }, {});
@@ -64,14 +77,39 @@ function StarterPage({ navigateTo }) {
   const [blueprintResult, setBlueprintResult] = useState("");
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [blueprintResponse, setBlueprintResponse] = useState(null);
+  const resultPanelRef = useRef(null);
 
   const hasResult = Boolean(blueprintResponse);
   const hasError = Boolean(generationError);
 
   const pageSubtitle = useMemo(() => "Turn your idea into a clear PEN2PRO business starter plan in minutes.", []);
-  const progress = useMemo(() => getProgressSummary(values), [values]);
-  const checklistItems = useMemo(() => getChecklistItems(values, values.accessLevel), [values]);
-  const nextAction = useMemo(() => getRecommendedNextAction(values, values.accessLevel), [values]);
+  const hasPaidTierAccess = useMemo(() => (values.accessLevel === "pro" && hasProAccess) || (values.accessLevel === "elite" && hasEliteAccess), [values.accessLevel]);
+  const progress = useMemo(() => getProgressSummary(values, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
+  const checklistItems = useMemo(() => getChecklistItems(values, values.accessLevel, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
+  const nextAction = useMemo(() => getRecommendedNextAction(values, values.accessLevel, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
+  const freeRequiredComplete = useMemo(() => freeRequiredFields.every((field) => String(values[field] || "").trim()), [values]);
+
+  const handlePricingRedirect = () => {
+    window.location.href = "/pricing";
+  };
+
+  const handleAccessLevelChange = (nextAccessLevel) => {
+    if (nextAccessLevel === "pro" && !hasProAccess) {
+      handlePricingRedirect();
+      return;
+    }
+
+    if (nextAccessLevel === "elite" && !hasEliteAccess) {
+      handlePricingRedirect();
+      return;
+    }
+
+    setValues((current) => ({
+      ...current,
+      accessLevel: nextAccessLevel,
+      strategistFocus: nextAccessLevel === "free" ? "basic" : current.strategistFocus || "startup",
+    }));
+  };
 
   useEffect(() => {
     try {
@@ -110,16 +148,21 @@ function StarterPage({ navigateTo }) {
     return () => observer.disconnect();
   }, [hasResult]);
 
+  useEffect(() => {
+    if ((values.accessLevel === "pro" && !hasProAccess) || (values.accessLevel === "elite" && !hasEliteAccess)) {
+      handlePricingRedirect();
+    }
+  }, [values.accessLevel]);
+
   const handleChange = (field, value) => {
+    if (field === "accessLevel") {
+      handleAccessLevelChange(value);
+      setErrors((current) => ({ ...current, [field]: "" }));
+      setGenerationError("");
+      return;
+    }
+
     setValues((current) => {
-      if (field === "accessLevel") {
-        const nextAccess = value;
-        return {
-          ...current,
-          accessLevel: nextAccess,
-          strategistFocus: ["pro", "elite"].includes(nextAccess) ? current.strategistFocus || "startup" : "startup",
-        };
-      }
       if (field === "proposedBusinessName") {
         const previousSuggestion = String(current.proposedBusinessName || "").toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "");
         const nextSuggestion = String(value || "").toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "");
@@ -136,16 +179,33 @@ function StarterPage({ navigateTo }) {
     setGenerationError("");
   };
 
-  const handleGenerateBlueprint = async () => {
+  const handleGenerateBlueprint = async (event) => {
+    if (event?.preventDefault) event.preventDefault();
     if (isGenerating) return;
 
-    const nextErrors = validate(values);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
     setHasAttemptedGeneration(true);
-    const accessLevel = ["free", "pro", "elite"].includes(values.accessLevel) ? values.accessLevel : "free";
-    const strategistFocus = accessLevel === "free" ? "basic" : values.strategistFocus || "startup";
+    setGenerationError("");
+
+    const normalizedAccessLevel = values.accessLevel || "free";
+    if (normalizedAccessLevel === "pro" && !hasProAccess) {
+      handlePricingRedirect();
+      return;
+    }
+
+    if (normalizedAccessLevel === "elite" && !hasEliteAccess) {
+      handlePricingRedirect();
+      return;
+    }
+
+    const nextErrors = getFieldErrors(values, normalizedAccessLevel);
+    setErrors(nextErrors);
+    const validationError = getValidationErrorForAccessLevel(values, normalizedAccessLevel);
+    if (validationError || Object.keys(nextErrors).length > 0) {
+      setGenerationError(validationError || "Please complete the required fields before generating your blueprint.");
+      resultPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
     const payload = {
       businessName: String(values.proposedBusinessName || "").trim() || "your business",
       domain: String(values.domainToCheck || "").trim(),
@@ -163,8 +223,8 @@ function StarterPage({ navigateTo }) {
       biggestObstacle: values.biggestObstacle,
       urgencyLevel: values.urgencyLevel || "medium",
       deliveryPreference: values.deliveryPreference || "both",
-      accessLevel,
-      strategistFocus,
+      accessLevel: "free",
+      strategistFocus: "basic",
       proposedBusinessName: String(values.proposedBusinessName || "").trim() || "your business",
       domainToCheck: String(values.domainToCheck || "").trim(),
       businessType: values.businessType,
@@ -194,8 +254,7 @@ function StarterPage({ navigateTo }) {
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
-    await handleGenerateBlueprint();
+    await handleGenerateBlueprint(event);
   };
 
   const handleStartAnother = () => {
@@ -218,6 +277,15 @@ function StarterPage({ navigateTo }) {
     window.localStorage.removeItem(DRAFT_KEY);
     setValues(initialValues);
   };
+
+  const emptyStateMessage = useMemo(() => {
+    const accessLevel = values.accessLevel || "free";
+    if ((accessLevel === "pro" && !hasProAccess) || (accessLevel === "elite" && !hasEliteAccess)) {
+      return "Upgrade required. Choose a paid plan to unlock this strategist blueprint.";
+    }
+    if (freeRequiredComplete) return "Your Free Forever blueprint is ready to generate.";
+    return "Complete the required fields to generate your Free Forever starter blueprint.";
+  }, [freeRequiredComplete, values.accessLevel]);
 
   return (
     <div className="starter-page">
@@ -251,10 +319,13 @@ function StarterPage({ navigateTo }) {
                 sectionStatuses={progress.sectionStatuses}
                 onSaveDraft={handleSaveDraft}
                 onClearDraft={handleClearDraft}
+                hasProAccess={hasProAccess}
+                hasEliteAccess={hasEliteAccess}
               />
+              <div ref={resultPanelRef} />
               {!hasAttemptedGeneration && !hasResult && !isGenerating && !hasError && (
                 <div className="starter-state-card starter-state-card--idle" role="status">
-                  <h2>Complete your blueprint intake, then generate your starter plan.</h2>
+                  <h2>{emptyStateMessage}</h2>
                 </div>
               )}
               {isGenerating && (
@@ -282,8 +353,8 @@ function StarterPage({ navigateTo }) {
               progress={progress}
               checklistItems={checklistItems}
               nextAction={nextAction}
-              onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
-              onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
+              onUpgradePro={handlePricingRedirect}
+              onSeeElite={handlePricingRedirect}
             />
           </section>
         )}

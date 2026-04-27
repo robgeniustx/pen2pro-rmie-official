@@ -10,8 +10,8 @@ const deliveryOptions = [
 
 const accessTiers = [
   { value: "free", label: "Free Forever Blueprint" },
-  { value: "pro", label: "Pro Strategist Blueprint" },
-  { value: "elite", label: "Elite 10M Strategist Blueprint" },
+  { value: "pro", label: "Pro Strategist Blueprint — Upgrade Required" },
+  { value: "elite", label: "Elite 10M Strategist Blueprint — Upgrade Required" },
 ];
 
 const strategistFocusOptions = [
@@ -114,10 +114,14 @@ function StepCard({ step, title, helper, status, children }) {
   );
 }
 
-function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectionStatuses, onSaveDraft, onClearDraft }) {
+function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectionStatuses, onSaveDraft, onClearDraft, hasProAccess, hasEliteAccess }) {
   const suggestedDomain = generateSuggestedDomain(values.proposedBusinessName);
   const domainToCheck = values.domainToCheck || suggestedDomain;
   const isPaidTier = ["pro", "elite"].includes(values.accessLevel);
+  const accessLevel = values.accessLevel || "free";
+  const isLockedPro = accessLevel === "pro" && !hasProAccess;
+  const isLockedElite = accessLevel === "elite" && !hasEliteAccess;
+  const generateButtonLabel = isLockedPro ? "Upgrade to Pro" : isLockedElite ? "Unlock Elite" : "Generate Free Blueprint";
 
   const openRegistrarSearch = () => {
     const domain = (domainToCheck || "").trim();
@@ -247,7 +251,7 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectio
         <button className="starter-button starter-button--secondary" type="button" onClick={onSaveDraft} disabled={loading}>Save Draft</button>
         <button className="starter-button starter-button--secondary" type="button" onClick={onClearDraft} disabled={loading}>Clear Draft</button>
         <button className={`starter-button starter-button--primary starter-button--pulse ${loading ? "is-disabled" : ""}`} type="submit" disabled={loading}>
-          {loading ? <span className="starter-button__loading"><span className="starter-spinner" aria-hidden="true" />Generating Blueprint...</span> : "Generate My Blueprint"}
+          {loading ? <span className="starter-button__loading"><span className="starter-spinner" aria-hidden="true" />Generating Blueprint...</span> : generateButtonLabel}
         </button>
       </div>
     </form>

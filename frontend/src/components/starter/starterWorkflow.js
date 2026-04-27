@@ -1,5 +1,8 @@
 const isFilled = (value) => String(value || "").trim().length > 0;
 
+export const freeRequiredFields = ["proposedBusinessName", "businessIdea", "productOrService", "targetCustomer"];
+export const freeOptionalFields = ["domainToCheck", "businessType", "location", "skillLevel", "timeAvailability", "currentStage", "skillsResources", "incomeGoal", "biggestObstacle", "urgencyLevel", "deliveryPreference"];
+
 export const sectionDefinitions = [
   {
     key: "businessIdentity",
@@ -38,30 +41,13 @@ export const sectionDefinitions = [
   },
 ];
 
-const weightedChecks = [
-  { key: "proposedBusinessName", weight: 10, check: (v) => isFilled(v.proposedBusinessName) },
-  { key: "domainToCheck", weight: 10, check: (v) => isFilled(v.domainToCheck) },
-  { key: "businessIdea", weight: 15, check: (v) => isFilled(v.businessIdea) },
-  { key: "productOrService", weight: 10, check: (v) => isFilled(v.productOrService) },
-  { key: "targetCustomer", weight: 10, check: (v) => isFilled(v.targetCustomer) },
-  { key: "skillLevel", weight: 5, check: (v) => isFilled(v.skillLevel) },
-  { key: "incomeGoal", weight: 10, check: (v) => isFilled(v.incomeGoal) },
-  { key: "biggestObstacle", weight: 10, check: (v) => isFilled(v.biggestObstacle) },
-  { key: "accessLevel", weight: 10, check: (v) => isFilled(v.accessLevel) },
-  {
-    key: "strategistFocus",
-    weight: 10,
-    check: (v) => {
-      const isPaidTier = ["pro", "elite"].includes(v.accessLevel);
-      return !isPaidTier || isFilled(v.strategistFocus);
-    },
-  },
-];
+const freeProgressChecks = [...freeRequiredFields, ...freeOptionalFields];
+const paidProgressChecks = [...freeProgressChecks, "strategistFocus"];
 
-export function getCompletionPercentage(values) {
-  const total = weightedChecks.reduce((sum, item) => sum + item.weight, 0);
-  const score = weightedChecks.reduce((sum, item) => (item.check(values) ? sum + item.weight : sum), 0);
-  return Math.min(100, Math.round((score / total) * 100));
+export function getCompletionPercentage(values, { hasPaidTierAccess = false } = {}) {
+  const checks = hasPaidTierAccess ? paidProgressChecks : freeProgressChecks;
+  const completed = checks.filter((field) => isFilled(values[field])).length;
+  return Math.min(100, Math.round((completed / checks.length) * 100));
 }
 
 export function getSectionStatus(sectionName, values) {
@@ -76,8 +62,8 @@ export function getSectionStatus(sectionName, values) {
   return "In progress";
 }
 
-export function getChecklistItems(formState, accessLevel) {
-  const isPaidTier = ["pro", "elite"].includes(accessLevel);
+export function getChecklistItems(formState, accessLevel, { hasPaidTierAccess = false } = {}) {
+  const isPaidTier = ["pro", "elite"].includes(accessLevel) && hasPaidTierAccess;
 
   return [
     { key: "businessName", label: "Business name confirmed", state: isFilled(formState.proposedBusinessName) ? "complete" : "incomplete" },
@@ -91,22 +77,22 @@ export function getChecklistItems(formState, accessLevel) {
     { key: "access", label: "Access level selected", state: isFilled(formState.accessLevel) ? "complete" : "incomplete" },
     {
       key: "focus",
-      label: "Strategist focus selected",
+      label: !isPaidTier ? "Strategist focus locked on Free Forever" : "Strategist focus selected",
       state: !isPaidTier ? "locked" : isFilled(formState.strategistFocus) ? "complete" : "incomplete",
     },
   ];
 }
 
-export function getRecommendedNextAction(formState, accessLevel) {
-  const checklist = getChecklistItems(formState, accessLevel);
+export function getRecommendedNextAction(formState, accessLevel, { hasPaidTierAccess = false } = {}) {
+  const checklist = getChecklistItems(formState, accessLevel, { hasPaidTierAccess });
   const firstIncomplete = checklist.find((item) => item.state === "incomplete");
   if (firstIncomplete) return `Next: ${firstIncomplete.label}.`;
   if (accessLevel === "free") return "Upgrade to Pro or Elite to unlock strategist focus and deeper guidance.";
   return "Generate your blueprint now — your core inputs are complete.";
 }
 
-export function getProgressSummary(values) {
-  const completion = getCompletionPercentage(values);
+export function getProgressSummary(values, { hasPaidTierAccess = false } = {}) {
+  const completion = getCompletionPercentage(values, { hasPaidTierAccess });
   const sectionStatuses = sectionDefinitions.map((section) => ({
     ...section,
     status: getSectionStatus(section.key, values),
