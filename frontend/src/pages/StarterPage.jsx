@@ -74,7 +74,6 @@ function StarterPage({ navigateTo }) {
   const [errors, setErrors] = useState({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState("");
-  const [blueprintResult, setBlueprintResult] = useState("");
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [blueprintResponse, setBlueprintResponse] = useState(null);
   const resultPanelRef = useRef(null);
@@ -237,14 +236,11 @@ function StarterPage({ navigateTo }) {
 
     setIsGenerating(true);
     setGenerationError("");
-    setBlueprintResult("");
     setBlueprintResponse(null);
 
     try {
       const response = await generateStarterBlueprint(payload);
-      const blueprintText = response?.blueprint || response?.result || response?.content || response?.output || response?.plan || "";
-      const normalizedBlueprint = typeof blueprintText === "object" ? JSON.stringify(blueprintText, null, 2) : blueprintText;
-      setBlueprintResult(normalizedBlueprint || "Blueprint generated, but no blueprint text was returned.");
+      console.debug("PEN2PRO starter blueprint response:", response);
       setBlueprintResponse(response);
     } catch (error) {
       setGenerationError(getReadableError(error));
@@ -262,7 +258,6 @@ function StarterPage({ navigateTo }) {
     setErrors({});
     setIsGenerating(false);
     setGenerationError("");
-    setBlueprintResult("");
     setHasAttemptedGeneration(false);
     setBlueprintResponse(null);
     window.localStorage.removeItem(DRAFT_KEY);
@@ -330,7 +325,7 @@ function StarterPage({ navigateTo }) {
               )}
               {isGenerating && (
                 <div className="starter-state-card starter-state-card--loading" role="status" aria-live="polite">
-                  <h2>Generating your PEN2PRO Blueprint...</h2>
+                  <h2>Building your PEN2PRO blueprint...</h2>
                   <p>Your request was received. PEN2PRO is analyzing your business idea, offer, target customer, domain, access level, and launch path.</p>
                   <ul className="starter-loading-steps">
                     <li>Reviewing your business details</li>
@@ -362,7 +357,7 @@ function StarterPage({ navigateTo }) {
         {hasResult && (
           <>
             {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
-            <StarterBlueprintResult response={blueprintResponse} blueprintText={blueprintResult} intakeValues={values} onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")} onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")} onStartAnother={handleStartAnother} />
+            <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={() => navigateTo("/pricing")} onStartAnother={handleStartAnother} />
           </>
         )}
       </main>
