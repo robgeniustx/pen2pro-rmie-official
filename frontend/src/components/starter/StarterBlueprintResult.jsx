@@ -1,29 +1,56 @@
+import { useEffect, useMemo, useState } from "react";
+
+const PHASES = [
+  { id: "foundation", label: "Phase 1: Foundation (Day 0–3)" },
+  { id: "firstMoney", label: "Phase 2: First Money (Day 1–14)" },
+  { id: "growth", label: "Phase 3: Growth (Day 15–30)" },
+  { id: "scale", label: "Phase 4: Scale (Day 30–90)" },
+];
+
+const HIGH_PRIORITY_HINTS = ["top", "first", "launch", "customer", "offer", "pricing", "revenue", "risk", "legal"];
+
+const PHASE_HINTS = {
+  foundation: ["venture", "business_snapshot", "requirements", "license", "compliance", "risk", "brand", "customer"],
+  firstMoney: ["starter", "pricing", "money", "launch", "action", "tools", "software"],
+  growth: ["pro", "operations", "30", "90", "growth"],
+  scale: ["elite", "scale", "12", "automation", "expansion"],
+};
+
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function hasRenderableValue(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (isPlainObject(value)) return Object.keys(value).length > 0;
+  return value !== undefined && value !== null && String(value).trim() !== "";
+}
+
 function normalizeBlueprint(response) {
-  if (!response) {
-    return {};
-  }
+  if (!response) return {};
+  if (isPlainObject(response.blueprint) && hasRenderableValue(response.blueprint)) return response.blueprint;
+  if (isPlainObject(response.data) && isPlainObject(response.data.blueprint)) return response.data.blueprint;
+  if (isPlainObject(response.data) && hasRenderableValue(response.data)) return response.data;
+  if (isPlainObject(response.result) && hasRenderableValue(response.result)) return response.result;
 
-  if (isPlainObject(response.blueprint) && hasRenderableValue(response.blueprint)) {
-    return response.blueprint;
-  }
+  const topLevelBlueprintKeys = [
+    "ventureSummary",
+    "starterPlan",
+    "proPlan",
+    "elitePlan",
+    "upgradeHooks",
+    "business_snapshot",
+    "startup_requirements",
+    "licenses_and_compliance",
+    "tools_and_software",
+    "pricing_strategy",
+    "launch_plan_30_days",
+    "operations_plan_90_days",
+    "scale_plan_12_months",
+    "risk_flags",
+    "sources",
+  ];
 
-  if (isPlainObject(response.data) && isPlainObject(response.data.blueprint)) {
-    return response.data.blueprint;
-  }
-
-  if (isPlainObject(response.data) && hasRenderableValue(response.data)) {
-    return response.data;
-  }
-
-  if (isPlainObject(response.result) && hasRenderableValue(response.result)) {
-    return response.result;
-  }
-
-  const topLevelBlueprintKeys = ["ventureSummary", "starterPlan", "proPlan", "elitePlan", "upgradeHooks"];
   if (isPlainObject(response) && topLevelBlueprintKeys.some((key) => hasRenderableValue(response[key]))) {
     return response;
   }
@@ -39,83 +66,122 @@ function formatLabel(key) {
     .trim();
 }
 
-function coerceToEntryMap(value) {
-  if (isPlainObject(value)) {
-    return value;
+function makeTaskId(sectionKey, taskKey, index = 0) {
+  return `${sectionKey}-${taskKey}-${index}`.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+}
+
+function extractLink(value) {
+  if (typeof value === "string") {
+    const match = value.match(/https?:\/\/\S+/i);
+    return match ? match[0] : "";
   }
 
   if (Array.isArray(value)) {
-    return value.reduce((acc, item, index) => {
-      acc[`item_${index + 1}`] = item;
-      return acc;
-    }, {});
-  }
-
-  return {};
-}
-
-function hasRenderableValue(value) {
-  if (Array.isArray(value)) {
-    return value.length > 0;
-  }
-  if (isPlainObject(value)) {
-    return Object.keys(value).length > 0;
-  }
-  return value !== undefined && value !== null && String(value).trim() !== "";
-}
-
-function renderValue(value, parentKey = "value") {
-  if (Array.isArray(value)) {
-    if (!value.length) return null;
-    return (
-      <ul className="starter-result__list">
-        {value.map((item, index) => (
-          <li key={`${parentKey}-${index}`}>{renderValue(item, `${parentKey}-${index}`) || "Not provided"}</li>
-        ))}
-      </ul>
-    );
+    for (const item of value) {
+      const link = extractLink(item);
+      if (link) return link;
+    }
   }
 
   if (isPlainObject(value)) {
-    const entries = Object.entries(value).filter(([, nestedValue]) => hasRenderableValue(nestedValue));
-    if (!entries.length) return null;
-    return (
-      <div className="starter-result__detail-list">
-        {entries.map(([nestedKey, nestedValue]) => (
-          <div key={`${parentKey}-${nestedKey}`} className="starter-result__detail-item">
-            <span className="starter-result__detail-key">{formatLabel(nestedKey)}</span>
-            <span className="starter-result__detail-value">{renderValue(nestedValue, `${parentKey}-${nestedKey}`)}</span>
-          </div>
-        ))}
-      </div>
-    );
+    const direct = value.externalLink || value.link || value.url || value.source;
+    if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+    for (const nested of Object.values(value)) {
+      const link = extractLink(nested);
+      if (link) return link;
+    }
   }
 
-  return String(value);
+  return "";
 }
 
-function DetailList({ section, emptyMessage }) {
-  const entries = Object.entries(coerceToEntryMap(section)).filter(([, value]) => hasRenderableValue(value));
+function flattenText(value) {
+  if (!hasRenderableValue(value)) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) return value.map((item) => flattenText(item)).filter(Boolean).join(" ");
+  if (isPlainObject(value)) {
+    return Object.entries(value)
+      .map(([key, nested]) => `${formatLabel(key)}: ${flattenText(nested)}`.trim())
+      .filter(Boolean)
+      .join(" ");
+  }
+  return "";
+}
 
-  if (entries.length === 0) return <p className="starter-result__empty">{emptyMessage}</p>;
+function estimateTime(description) {
+  const words = description.split(/\s+/).filter(Boolean).length;
+  if (words < 12) return "15 minutes";
+  if (words < 28) return "30 minutes";
+  if (words < 55) return "45 minutes";
+  return "60 minutes";
+}
 
-  return (
-    <div className="starter-result__detail-list">
-      {entries.map(([key, value]) => (
-        <div key={key} className="starter-result__detail-item">
-          <span className="starter-result__detail-key">{formatLabel(key)}</span>
-          <span className="starter-result__detail-value">{renderValue(value, key) || "Not provided"}</span>
-        </div>
-      ))}
-    </div>
-  );
+function determinePriority(title, description) {
+  const haystack = `${title} ${description}`.toLowerCase();
+  if (HIGH_PRIORITY_HINTS.some((hint) => haystack.includes(hint))) return "High";
+  if (haystack.includes("optimize") || haystack.includes("improve") || haystack.includes("expand")) return "Low";
+  return "Medium";
+}
+
+function determinePhase(sectionKey, taskKey) {
+  const haystack = `${sectionKey} ${taskKey}`.toLowerCase();
+  if (PHASE_HINTS.scale.some((hint) => haystack.includes(hint))) return "scale";
+  if (PHASE_HINTS.growth.some((hint) => haystack.includes(hint))) return "growth";
+  if (PHASE_HINTS.firstMoney.some((hint) => haystack.includes(hint))) return "firstMoney";
+  return "foundation";
+}
+
+function createTask(sectionKey, taskKey, rawValue, index = 0) {
+  const description = flattenText(rawValue) || "Review this step and define the exact deliverable for execution.";
+  const title = `${formatLabel(sectionKey)}: ${formatLabel(taskKey)}`;
+
+  return {
+    id: makeTaskId(sectionKey, taskKey, index),
+    title,
+    description,
+    priority: determinePriority(title, description),
+    estimate: estimateTime(description),
+    externalLink: extractLink(rawValue),
+    phase: determinePhase(sectionKey, taskKey),
+  };
+}
+
+function extractTasksFromSection(sectionKey, sectionValue) {
+  if (!hasRenderableValue(sectionValue)) return [];
+
+  if (Array.isArray(sectionValue)) {
+    return sectionValue.filter(hasRenderableValue).map((item, index) => createTask(sectionKey, `task_${index + 1}`, item, index));
+  }
+
+  if (!isPlainObject(sectionValue)) {
+    return [createTask(sectionKey, "task", sectionValue)];
+  }
+
+  const tasks = [];
+
+  Object.entries(sectionValue).forEach(([taskKey, value]) => {
+    if (!hasRenderableValue(value)) return;
+
+    if (Array.isArray(value)) {
+      value.filter(hasRenderableValue).forEach((item, index) => {
+        tasks.push(createTask(sectionKey, `${taskKey}_${index + 1}`, item, index));
+      });
+      return;
+    }
+
+    tasks.push(createTask(sectionKey, taskKey, value));
+  });
+
+  return tasks;
 }
 
 function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const source = response || blueprint || {};
   const normalized = normalizeBlueprint(source);
-  console.log("Starter normalized blueprint:", normalized);
   const blueprintData = isPlainObject(normalized) ? normalized : {};
+
   const proposedBusinessName = (intakeValues?.proposedBusinessName || "").trim();
   const selectedBrandName = (intakeValues?.selectedBrandName || "").trim();
   const resolvedBusinessName = proposedBusinessName || selectedBrandName || "Your Company Name";
@@ -138,102 +204,53 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
       ? { thirtyDayActionPlan: starterPlan.thirtyDayActionPlan }
       : {}),
   };
+  const allTasks = useMemo(() => {
+    return Object.entries(blueprintData).flatMap(([sectionKey, sectionValue]) => extractTasksFromSection(sectionKey, sectionValue));
+  }, [blueprintData]);
 
-  const fastestPath = {
-    ...(hasRenderableValue(starterPlan.fastestPathToFirstMoney)
-      ? { fastestPathToFirstMoney: starterPlan.fastestPathToFirstMoney }
-      : {}),
-    ...(hasRenderableValue(starterPlan.strategistInsight) ? { strategistInsight: starterPlan.strategistInsight } : {}),
+  const storageKey = useMemo(() => {
+    const blueprintSignature = JSON.stringify(Object.keys(blueprintData));
+    return `pen2pro:task-progress:${resolvedBusinessName}:${blueprintSignature}`;
+  }, [blueprintData, resolvedBusinessName]);
+
+  const [completedTasks, setCompletedTasks] = useState({});
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      if (!saved) {
+        setCompletedTasks({});
+        return;
+      }
+      const parsed = JSON.parse(saved);
+      setCompletedTasks(isPlainObject(parsed) ? parsed : {});
+    } catch {
+      setCompletedTasks({});
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(completedTasks));
+  }, [completedTasks, storageKey]);
+
+  const completedCount = allTasks.filter((task) => completedTasks[task.id]).length;
+  const progressPercent = allTasks.length ? Math.round((completedCount / allTasks.length) * 100) : 0;
+
+  const tasksByPhase = PHASES.map((phase) => ({
+    ...phase,
+    tasks: allTasks.filter((task) => task.phase === phase.id),
+  }));
+
+  const nextRecommendedTask =
+    allTasks.find((task) => !completedTasks[task.id] && task.priority === "High") ||
+    allTasks.find((task) => !completedTasks[task.id]);
+
+  const toggleTask = (taskId) => {
+    setCompletedTasks((current) => ({
+      ...current,
+      [taskId]: !current[taskId],
+    }));
   };
-
-  const upgradeRecommendation = {
-    ...(hasRenderableValue(upgradeHooks.proReason) ? { proReason: upgradeHooks.proReason } : {}),
-    ...(hasRenderableValue(upgradeHooks.eliteReason) ? { eliteReason: upgradeHooks.eliteReason } : {}),
-  };
-
-  const sections = [
-    [
-      "Business Concept Summary",
-      <DetailList
-        section={{
-          ...(hasRenderableValue(ventureSummary.businessModel)
-            ? { businessModel: ventureSummary.businessModel }
-            : {}),
-          ...(hasRenderableValue(ventureSummary.marketOpportunity)
-            ? { marketOpportunity: ventureSummary.marketOpportunity }
-            : {}),
-        }}
-        emptyMessage="Business concept summary is not available yet."
-      />,
-    ],
-    [
-      "Ideal Customer",
-      <DetailList
-        section={{
-          ...(hasRenderableValue(ventureSummary.targetCustomer)
-            ? { targetCustomer: ventureSummary.targetCustomer }
-            : {}),
-        }}
-        emptyMessage="Ideal customer details are missing."
-      />,
-    ],
-    [
-      "Core Offer",
-      <DetailList
-        section={{
-          ...(hasRenderableValue(ventureSummary.coreOffer) ? { coreOffer: ventureSummary.coreOffer } : {}),
-        }}
-        emptyMessage="Core offer details are missing."
-      />,
-    ],
-    [
-      "Revenue Direction",
-      <DetailList
-        section={{
-          ...(hasRenderableValue(starterPlan.pricingDirection)
-            ? { pricingDirection: starterPlan.pricingDirection }
-            : {}),
-        }}
-        emptyMessage="Revenue direction was not returned."
-      />,
-    ],
-    [
-      "Brand Positioning",
-      <DetailList
-        section={{
-          ...(hasRenderableValue(ventureSummary.brandPositioning)
-            ? { brandPositioning: ventureSummary.brandPositioning }
-            : {}),
-        }}
-        emptyMessage="Brand positioning was not returned."
-      />,
-    ],
-    [
-      "30-Day Starter Action Plan",
-      <DetailList section={actionPlan} emptyMessage="30-day starter action plan is not available yet." />,
-    ],
-    [
-      "Fastest Path to First Money",
-      <DetailList section={fastestPath} emptyMessage="Fastest path to first money is not available yet." />,
-    ],
-    [
-      "Upgrade Recommendation",
-      <DetailList section={upgradeRecommendation} emptyMessage="Upgrade recommendation is not available yet." />,
-    ],
-    [
-      "Common Risks or Mistakes",
-      <DetailList
-        section={{
-          ...(hasRenderableValue(ventureSummary.commonRisksOrMistakes)
-            ? { commonRisksOrMistakes: ventureSummary.commonRisksOrMistakes }
-            : {}),
-        }}
-        emptyMessage="Common risks or mistakes are not available yet."
-      />,
-    ],
-    ["Pro Plan (Days 8–30)", <DetailList section={proPlan} emptyMessage="Pro plan details are unavailable." />],
-    ["Elite Plan (Days 31–90)", <DetailList section={elitePlan} emptyMessage="Elite plan details are unavailable." />],
-  ];
 
   const handlePrintBlueprint = () => {
     if (!hasExplicitBusinessName) {
@@ -250,17 +267,16 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
       return;
     }
 
-    const subject = `Your PEN2PRO™ Business Blueprint for ${resolvedBusinessName}`;
+    const subject = `Your PEN2PRO™ Business Execution Tasks for ${resolvedBusinessName}`;
     const lines = [
-      `Here is your business blueprint for ${resolvedBusinessName}, generated by PEN2PRO™.`,
+      `Here is your task-based execution system for ${resolvedBusinessName}, generated by PEN2PRO™.`,
       "",
       `Business idea: ${businessIdea || "Not provided"}`,
       `Date generated: ${generatedDate}`,
+      `Progress: ${progressPercent}% complete`,
     ];
 
-    if (selectedState) {
-      lines.push(`Selected state: ${selectedState}`);
-    }
+    if (selectedState) lines.push(`Selected state: ${selectedState}`);
 
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
   };
@@ -268,14 +284,14 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
   return (
     <div className="starter-result">
       <div className="starter-result__header">
-        <p className="starter-result__eyebrow">PEN2PRO STARTER BUSINESS BLUEPRINT</p>
-        <h2 className="starter-result__title">Business Blueprint for: {resolvedBusinessName}</h2>
+        <p className="starter-result__eyebrow">PEN2PRO STARTER EXECUTION SYSTEM</p>
+        <h2 className="starter-result__title">Task System for: {resolvedBusinessName}</h2>
         <p className="starter-result__meta">Generated by PEN2PRO™</p>
         <p className="starter-result__meta">Date generated: {generatedDate}</p>
         <p className="starter-result__meta">Business idea: {businessIdea || "Not provided"}</p>
         {selectedState && <p className="starter-result__meta">Selected state: {selectedState}</p>}
         <p className="starter-result__subtitle">
-          Use this blueprint to tighten your offer, move faster, and start validating demand.
+          Complete tasks phase-by-phase to move from setup to revenue, growth, and scale.
         </p>
       </div>
 
@@ -317,20 +333,75 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
           <section key={title} className="starter-result__card">
             <h3>{title}</h3>
             {content}
+      <div className="starter-result__tracker" role="status" aria-live="polite">
+        <div className="starter-result__tracker-row">
+          <p>
+            <strong>Progress:</strong> {completedCount}/{allTasks.length} tasks complete ({progressPercent}%)
+          </p>
+          {nextRecommendedTask ? (
+            <p>
+              <strong>Next Recommended Action:</strong> {nextRecommendedTask.title}
+            </p>
+          ) : (
+            <p>
+              <strong>Next Recommended Action:</strong> All tasks complete. Great work.
+            </p>
+          )}
+        </div>
+        <div className="starter-result__progress" aria-hidden="true">
+          <span style={{ width: `${progressPercent}%` }} />
+        </div>
+      </div>
+
+      <div className="starter-result__phases">
+        {tasksByPhase.map((phase) => (
+          <section key={phase.id} className="starter-result__card">
+            <h3>{phase.label}</h3>
+            {phase.tasks.length === 0 ? (
+              <p className="starter-result__empty">No tasks were generated for this phase yet.</p>
+            ) : (
+              <ul className="starter-result__task-list">
+                {phase.tasks.map((task) => {
+                  const isComplete = Boolean(completedTasks[task.id]);
+
+                  return (
+                    <li key={task.id} className={`starter-result__task ${isComplete ? "is-complete" : ""}`}>
+                      <label className="starter-result__task-main">
+                        <input
+                          type="checkbox"
+                          checked={isComplete}
+                          onChange={() => toggleTask(task.id)}
+                          aria-label={`Mark ${task.title} as complete`}
+                        />
+                        <span className="starter-result__task-title">{isComplete ? "✔ " : ""}{task.title}</span>
+                      </label>
+                      <p className="starter-result__task-description">{task.description}</p>
+                      <div className="starter-result__task-meta">
+                        <span>Priority: {task.priority}</span>
+                        <span>Estimated time: {task.estimate}</span>
+                        {task.externalLink && (
+                          <a href={task.externalLink} target="_blank" rel="noreferrer">
+                            External link
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </section>
         ))}
       </div>
 
       <div className="starter-result__cta-block">
-        <p className="starter-result__cta-copy">
-          Ready for deeper strategy, automation, and execution tools?
-        </p>
+        <p className="starter-result__cta-copy">Ready for deeper strategy, automation, and execution tools?</p>
         <div className="starter-result__cta-actions">
           <button className="starter-button starter-button--secondary" onClick={handlePrintBlueprint}>
             Print / Save PDF
           </button>
           <button className="starter-button starter-button--secondary" onClick={handleEmailBlueprint}>
-            Email Blueprint
+            Email Task Plan
           </button>
           <button className="starter-button starter-button--primary" onClick={onUpgradePro}>
             Upgrade to Pro
