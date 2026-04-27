@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { sectionDefinitions } from "./starterWorkflow.js";
+
 const deliveryOptions = [
   { value: "online", label: "Online" },
   { value: "local", label: "Local" },
@@ -28,23 +30,6 @@ const urgencyOptions = [
   { value: "urgent", label: "Urgent" },
 ];
 
-const fields = [
-  { name: "businessIdea", label: "Business idea", placeholder: "Describe the business idea you want to turn into a real offer.", type: "textarea" },
-  { name: "businessType", label: "Business type", placeholder: "Local service, e-commerce, consulting, SaaS, etc." },
-  { name: "productOrService", label: "Product or service", placeholder: "What are you planning to sell first?" },
-  { name: "targetCustomer", label: "Target customer", placeholder: "Who is most likely to buy this first?" },
-  { name: "location", label: "Location", placeholder: "City, state, or region where you will operate." },
-  { name: "marketLocation", label: "Market location", placeholder: "Where will you sell or operate?" },
-  { name: "budget", label: "Budget", placeholder: "What budget do you have for the next 30 days?" },
-  { name: "startupBudget", label: "Startup budget", placeholder: "What budget are you starting with?" },
-  { name: "skillLevel", label: "Skill level", placeholder: "Beginner, intermediate, or advanced" },
-  { name: "timeAvailability", label: "Time availability", placeholder: "How much time can you commit weekly?" },
-  { name: "currentStage", label: "Current stage", placeholder: "Idea, pre-revenue, first clients, growth" },
-  { name: "skillsResources", label: "Skills and resources", placeholder: "What skills, tools, audience, or resources do you already have?", type: "textarea" },
-  { name: "incomeGoal", label: "Income goal", placeholder: "What is your first revenue target?" },
-  { name: "biggestObstacle", label: "Biggest obstacle", placeholder: "What is the main thing slowing you down right now?", type: "textarea" },
-];
-
 function FieldError({ error }) {
   if (!error) return null;
   return <p className="starter-form__error">{error}</p>;
@@ -63,17 +48,6 @@ function SelectMenu({ label, name, value, options, onChange, disabled }) {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
 
-  const handleKeyDown = (event) => {
-    if (disabled) return;
-    if (["Enter", " ", "ArrowDown"].includes(event.key)) {
-      event.preventDefault();
-      setOpen(true);
-    }
-    if (event.key === "Escape") {
-      setOpen(false);
-    }
-  };
-
   return (
     <div className="starter-form__field">
       <span className="starter-form__label">{label}</span>
@@ -82,7 +56,6 @@ function SelectMenu({ label, name, value, options, onChange, disabled }) {
           className="starter-select__trigger"
           type="button"
           onClick={() => !disabled && setOpen((current) => !current)}
-          onKeyDown={handleKeyDown}
           aria-expanded={open}
           aria-haspopup="listbox"
           disabled={disabled}
@@ -121,7 +94,27 @@ function generateSuggestedDomain(name) {
   return normalized ? `${normalized}.com` : "";
 }
 
-function StarterIntakeForm({ values, errors, loading, onChange, onSubmit }) {
+function StatusChip({ status }) {
+  return <span className={`starter-status-chip starter-status-chip--${status.toLowerCase().replace(/\s+/g, "-")}`}>{status}</span>;
+}
+
+function StepCard({ step, title, helper, status, children }) {
+  return (
+    <section className="starter-step-card starter-reveal" aria-label={title}>
+      <div className="starter-step-card__header">
+        <div>
+          <p className="starter-step-card__step">{step}</p>
+          <h3>{title}</h3>
+          <p className="starter-form__helper">{helper}</p>
+        </div>
+        <StatusChip status={status} />
+      </div>
+      <div className="starter-step-card__body">{children}</div>
+    </section>
+  );
+}
+
+function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectionStatuses, onSaveDraft, onClearDraft }) {
   const suggestedDomain = generateSuggestedDomain(values.proposedBusinessName);
   const domainToCheck = values.domainToCheck || suggestedDomain;
   const isPaidTier = ["pro", "elite"].includes(values.accessLevel);
@@ -133,77 +126,130 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit }) {
     onChange("domainSearchAttempted", "true");
   };
 
+  const statusByKey = sectionStatuses.reduce((acc, section) => ({ ...acc, [section.key]: section.status }), {});
+
   return (
     <form className="starter-form" onSubmit={onSubmit} noValidate>
-      <section className="starter-form__name-card starter-reveal" aria-label="Confirm your business name">
-        <h3>Confirm Your Business Name</h3>
-        <p className="starter-form__helper">
-          Enter the name you want to build your blueprint around. This name will appear throughout your PEN2PRO blueprint.
-        </p>
-
-        <label className="starter-form__field">
-          <span className="starter-form__label">Business Name</span>
-          <input className="starter-form__input" name="proposedBusinessName" value={values.proposedBusinessName} onChange={(event) => onChange("proposedBusinessName", event.target.value)} placeholder="Example: Greenway Exterior Solutions" disabled={loading} />
-          <FieldError error={errors.proposedBusinessName} />
-        </label>
-
-        <label className="starter-form__field">
-          <span className="starter-form__label">Check Domain Availability</span>
-          <input className="starter-form__input" name="domainToCheck" value={domainToCheck} onChange={(event) => onChange("domainToCheck", event.target.value)} placeholder="greenwayexteriorsolutions.com" disabled={loading} />
-          {suggestedDomain && <p className="starter-form__helper">Suggested domain: {suggestedDomain}</p>}
-        </label>
-
+      <StepCard step={sectionDefinitions[0].stepLabel} title={sectionDefinitions[0].title} helper={sectionDefinitions[0].helper} status={statusByKey.businessIdentity || "Not started"}>
+        <div className="starter-form__grid">
+          <label className="starter-form__field">
+            <span className="starter-form__label">Business Name</span>
+            <input className="starter-form__input" name="proposedBusinessName" value={values.proposedBusinessName} onChange={(event) => onChange("proposedBusinessName", event.target.value)} placeholder="Example: Greenway Exterior Solutions" disabled={loading} />
+            <FieldError error={errors.proposedBusinessName} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Domain</span>
+            <input className="starter-form__input" name="domainToCheck" value={domainToCheck} onChange={(event) => onChange("domainToCheck", event.target.value)} placeholder="greenwayexteriorsolutions.com" disabled={loading} />
+            {suggestedDomain && <p className="starter-form__helper">Suggested domain: {suggestedDomain}</p>}
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Category</span>
+            <input className="starter-form__input" name="businessType" value={values.businessType} onChange={(event) => onChange("businessType", event.target.value)} placeholder="Local service, ecommerce, consulting, SaaS" disabled={loading} />
+            <FieldError error={errors.businessType} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Location</span>
+            <input className="starter-form__input" name="location" value={values.location} onChange={(event) => onChange("location", event.target.value)} placeholder="City, state, or region" disabled={loading} />
+            <FieldError error={errors.location} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Market Location</span>
+            <input className="starter-form__input" name="marketLocation" value={values.marketLocation} onChange={(event) => onChange("marketLocation", event.target.value)} placeholder="Where will you sell or operate?" disabled={loading} />
+            <FieldError error={errors.marketLocation} />
+          </label>
+        </div>
         <div className="starter-form__domain-actions">
           <button className="starter-button starter-button--secondary" type="button" onClick={openRegistrarSearch} disabled={loading || !String(domainToCheck || "").trim()}>
             Check Domain Availability
           </button>
+        </div>
+      </StepCard>
 
-          {values.domainSearchAttempted === "true" && (
-            <button className="starter-button starter-button--secondary" type="button" onClick={openRegistrarSearch} disabled={loading || !String(domainToCheck || "").trim()}>
-              Register This Domain
-            </button>
+      <StepCard step={sectionDefinitions[1].stepLabel} title={sectionDefinitions[1].title} helper={sectionDefinitions[1].helper} status={statusByKey.offerDetails || "Not started"}>
+        <div className="starter-form__grid">
+          <label className="starter-form__field starter-form__field--full">
+            <span className="starter-form__label">Business Idea</span>
+            <textarea className="starter-form__input starter-form__textarea" name="businessIdea" value={values.businessIdea} onChange={(event) => onChange("businessIdea", event.target.value)} placeholder="Describe the business idea you want to turn into a real offer." rows={4} disabled={loading} />
+            <FieldError error={errors.businessIdea} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Product or Service</span>
+            <input className="starter-form__input" name="productOrService" value={values.productOrService} onChange={(event) => onChange("productOrService", event.target.value)} placeholder="What are you planning to sell first?" disabled={loading} />
+            <FieldError error={errors.productOrService} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Target Customer</span>
+            <input className="starter-form__input" name="targetCustomer" value={values.targetCustomer} onChange={(event) => onChange("targetCustomer", event.target.value)} placeholder="Who is most likely to buy this first?" disabled={loading} />
+            <FieldError error={errors.targetCustomer} />
+          </label>
+          <SelectMenu label="Delivery Preference" name="deliveryPreference" value={values.deliveryPreference || "both"} options={deliveryOptions} onChange={onChange} disabled={loading} />
+        </div>
+      </StepCard>
+
+      <StepCard step={sectionDefinitions[2].stepLabel} title={sectionDefinitions[2].title} helper={sectionDefinitions[2].helper} status={statusByKey.founderReadiness || "Not started"}>
+        <div className="starter-form__grid">
+          <label className="starter-form__field">
+            <span className="starter-form__label">Skill Level</span>
+            <input className="starter-form__input" name="skillLevel" value={values.skillLevel} onChange={(event) => onChange("skillLevel", event.target.value)} placeholder="Beginner, intermediate, or advanced" disabled={loading} />
+            <FieldError error={errors.skillLevel} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Current Stage</span>
+            <input className="starter-form__input" name="currentStage" value={values.currentStage} onChange={(event) => onChange("currentStage", event.target.value)} placeholder="Idea, pre-revenue, first clients, growth" disabled={loading} />
+            <FieldError error={errors.currentStage} />
+          </label>
+          <label className="starter-form__field starter-form__field--full">
+            <span className="starter-form__label">Skills and Resources</span>
+            <textarea className="starter-form__input starter-form__textarea" name="skillsResources" value={values.skillsResources} onChange={(event) => onChange("skillsResources", event.target.value)} placeholder="What skills, tools, audience, or resources do you already have?" rows={3} disabled={loading} />
+            <FieldError error={errors.skillsResources} />
+          </label>
+          <label className="starter-form__field">
+            <span className="starter-form__label">Time Availability</span>
+            <input className="starter-form__input" name="timeAvailability" value={values.timeAvailability} onChange={(event) => onChange("timeAvailability", event.target.value)} placeholder="How much time can you commit weekly?" disabled={loading} />
+            <FieldError error={errors.timeAvailability} />
+          </label>
+        </div>
+      </StepCard>
+
+      <StepCard step={sectionDefinitions[3].stepLabel} title={sectionDefinitions[3].title} helper={sectionDefinitions[3].helper} status={statusByKey.goalsAndConstraints || "Not started"}>
+        <div className="starter-form__grid">
+          <label className="starter-form__field">
+            <span className="starter-form__label">Income Goal</span>
+            <input className="starter-form__input" name="incomeGoal" value={values.incomeGoal} onChange={(event) => onChange("incomeGoal", event.target.value)} placeholder="What is your first revenue target?" disabled={loading} />
+            <FieldError error={errors.incomeGoal} />
+          </label>
+          <label className="starter-form__field starter-form__field--full">
+            <span className="starter-form__label">Biggest Obstacle</span>
+            <textarea className="starter-form__input starter-form__textarea" name="biggestObstacle" value={values.biggestObstacle} onChange={(event) => onChange("biggestObstacle", event.target.value)} placeholder="What is the main thing slowing you down right now?" rows={3} disabled={loading} />
+            <FieldError error={errors.biggestObstacle} />
+          </label>
+          <SelectMenu label="Urgency Level" name="urgencyLevel" value={values.urgencyLevel} options={urgencyOptions} onChange={onChange} disabled={loading} />
+        </div>
+      </StepCard>
+
+      <StepCard step={sectionDefinitions[4].stepLabel} title={sectionDefinitions[4].title} helper={sectionDefinitions[4].helper} status={statusByKey.blueprintAccess || "Not started"}>
+        <div className="starter-form__grid">
+          <SelectMenu label="Blueprint Access Level" name="accessLevel" value={values.accessLevel} options={accessTiers} onChange={onChange} disabled={loading} />
+          {isPaidTier && (
+            <div className="starter-form__focus-reveal">
+              <SelectMenu label="Strategist Focus" name="strategistFocus" value={values.strategistFocus} options={strategistFocusOptions} onChange={onChange} disabled={loading} />
+            </div>
+          )}
+          {!isPaidTier && (
+            <div className="starter-tier-notice" role="status">
+              Strategist focus is locked on Free Forever. Upgrade to Pro or Elite for deeper strategist guidance.
+            </div>
           )}
         </div>
-      </section>
+      </StepCard>
 
-      <div className="starter-form__grid">
-        <SelectMenu label="Blueprint Access Level" name="accessLevel" value={values.accessLevel} options={accessTiers} onChange={onChange} disabled={loading} />
-        <FieldError error={errors.accessLevel} />
-
-        {isPaidTier && (
-          <div className="starter-form__focus-reveal">
-            <SelectMenu label="Choose Your Strategist Focus" name="strategistFocus" value={values.strategistFocus} options={strategistFocusOptions} onChange={onChange} disabled={loading} />
-          </div>
-        )}
-
-        {!isPaidTier && (
-          <div className="starter-tier-notice" role="status">
-            Free Forever gives you a starter blueprint with your business idea, business name, domain check, target customer, basic offer, and first-step checklist.
-            <br />
-            <br />
-            Upgrade to Pro or Elite to unlock strategist modes for branding, monetization, marketing, operations, and legal/foundation planning.
-          </div>
-        )}
-
-        {fields.map((field) => (
-          <label className="starter-form__field" key={field.name}>
-            <span className="starter-form__label">{field.label}</span>
-            {field.type === "textarea" ? (
-              <textarea className="starter-form__input starter-form__textarea" name={field.name} value={values[field.name]} onChange={(event) => onChange(field.name, event.target.value)} placeholder={field.placeholder} rows={field.name === "businessIdea" ? 4 : 3} disabled={loading} />
-            ) : (
-              <input className="starter-form__input" name={field.name} value={values[field.name]} onChange={(event) => onChange(field.name, event.target.value)} placeholder={field.placeholder} disabled={loading} />
-            )}
-            <FieldError error={errors[field.name]} />
-          </label>
-        ))}
-
-        <SelectMenu label="Urgency level" name="urgencyLevel" value={values.urgencyLevel} options={urgencyOptions} onChange={onChange} disabled={loading} />
-        <SelectMenu label="Delivery preference" name="deliveryPreference" value={values.deliveryPreference || "both"} options={deliveryOptions} onChange={onChange} disabled={loading} />
+      <div className="starter-form__actions">
+        <button className="starter-button starter-button--secondary" type="button" onClick={onSaveDraft} disabled={loading}>Save Draft</button>
+        <button className="starter-button starter-button--secondary" type="button" onClick={onClearDraft} disabled={loading}>Clear Draft</button>
+        <button className="starter-button starter-button--primary starter-button--pulse" type="submit" disabled={loading}>
+          {loading ? "Building your Starter Business Blueprint..." : "Generate My Blueprint"}
+        </button>
       </div>
-
-      <button className="starter-button starter-button--primary starter-button--pulse" type="submit" disabled={loading}>
-        {loading ? "Building your Starter Business Blueprint..." : "Generate My Blueprint"}
-      </button>
     </form>
   );
 }

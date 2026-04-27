@@ -1,6 +1,51 @@
 const rawApiBase = import.meta.env.VITE_API_BASE_URL || "";
 export const apiBase = rawApiBase.replace(/\/+$/, "");
 
+function toReadableError(payload, fallback) {
+  if (!payload) return fallback;
+
+  if (typeof payload === "string" && payload.trim()) return payload.trim();
+
+  const detail = payload?.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (detail && typeof detail === "object") {
+    try {
+      return JSON.stringify(detail);
+    } catch {
+      return fallback;
+    }
+  }
+
+  if (typeof payload?.error === "string" && payload.error.trim()) return payload.error;
+  if (typeof payload?.message === "string" && payload.message.trim()) return payload.message;
+
+  try {
+    return JSON.stringify(payload);
+  } catch {
+    return fallback;
+  }
+}
+
+async function parseResponseBody(response) {
+  const contentType = (response.headers.get("content-type") || "").toLowerCase();
+  const isJson = contentType.includes("application/json");
+
+  if (isJson) {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const text = await response.text();
+    return text ? { message: text } : null;
+  } catch {
+    return null;
+  }
+}
+
 async function request(path, options = {}, config = {}) {
   const { timeout = 30000 } = config;
 
@@ -17,65 +62,20 @@ async function request(path, options = {}, config = {}) {
       signal: controller.signal,
     });
 
-    let data = null;
-    let errorPayload = null;
-
-    try {
-      data = await response.json();
-    } catch {
-      const rawText = await response.text();
-      errorPayload = { message: rawText };
-    }
+    const data = await parseResponseBody(response);
 
     if (!response.ok) {
-      const readableError =
-        errorPayload?.detail ||
-        errorPayload?.error ||
-        errorPayload?.message ||
-        data?.detail ||
-        data?.error ||
-        data?.message ||
-        `Request failed with status ${response.status}`;
-
-      throw new Error(
-        typeof readableError === "string"
-          ? readableError
-          : JSON.stringify(readableError)
-    const contentType = response.headers.get("content-type") || "";
-    const isJson = contentType.includes("application/json");
-    let data = null;
-
-    if (isJson) {
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
+      throw new Error(toReadableError(data, `Request failed with status ${response.status}`));
     }
 
-    if (!response.ok) {
-      let errorPayload = data;
-      if (!errorPayload) {
-        const errorText = await response.text();
-        errorPayload = { message: errorText };
-      }
-      const details = errorPayload?.detail;
-      const detailText = typeof details === "string" ? details : details ? JSON.stringify(details) : "";
-      throw new Error(
-        detailText ||
-          errorPayload?.error ||
-          errorPayload?.message ||
-          `Blueprint generation failed with status ${response.status}`
-      );
-    }
-
-    return data;
+    return data ?? {};
   } catch (error) {
-    if (error.name === "AbortError") {
+    if (error?.name === "AbortError") {
       throw new Error("Request timed out. Please try again.");
     }
 
-    throw error;
+    if (error instanceof Error) throw error;
+    throw new Error(toReadableError(error, "Request failed. Please try again."));
   } finally {
     clearTimeout(timeoutId);
   }
@@ -124,8 +124,8 @@ export function createFounderCheckout(tierId) {
 
 function normalizeBlueprintResponse(data) {
   const blueprintPayload =
-  const blueprintText =
     data?.blueprint ||
+    data?.result?.blueprint ||
     data?.result ||
     data?.content ||
     data?.output ||
@@ -150,18 +150,7 @@ function normalizeBlueprintResponse(data) {
     };
   }
 
-  throw new Error("Blueprint generated, but no blueprint text was returned.");
-    data?.result?.blueprint ||
-    "";
-  const normalizedText = typeof blueprintText === "object" ? JSON.stringify(blueprintText, null, 2) : String(blueprintText || "").trim();
-  const fallbackText = "Blueprint generated, but no blueprint text was returned.";
-  const blueprint = data?.blueprint && typeof data.blueprint === "object" ? data.blueprint : data?.result?.blueprint || data?.data?.blueprint || data?.data;
-
-  return {
-    ...data,
-    blueprintText: normalizedText || fallbackText,
-    blueprint: blueprint && typeof blueprint === "object" ? blueprint : {},
-  };
+  throw new Error("Blueprint generated, but no blueprint content was returned.");
 }
 
 export async function generateStarterBlueprint(payload) {
