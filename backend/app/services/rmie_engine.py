@@ -50,6 +50,134 @@ def _build_growth_channels(delivery_preference: str, target_customer: str, marke
 	]
 
 
+def _is_beginner(skill_level: str, skills_resources: str) -> bool:
+	text = f"{skill_level} {skills_resources}".lower()
+	return any(keyword in text for keyword in ["beginner", "new", "novice", "no experience"])
+
+
+def _is_low_budget(budget: str) -> bool:
+	text = budget.lower()
+	return any(keyword in text for keyword in ["$0", "0", "low", "tight", "lean", "bootstrap", "under 1000"])
+
+
+def _is_high_urgency(urgency_level: str) -> bool:
+	return urgency_level.lower() in {"high", "urgent", "immediate", "asap"}
+
+
+def _is_local_business(business_type: str, delivery_preference: str) -> bool:
+	type_text = business_type.lower()
+	return delivery_preference == "local" or "local" in type_text or "brick" in type_text or "service area" in type_text
+
+
+def _build_strategist_engine(payload: dict) -> dict:
+	business_idea = _clean_text(payload.get("businessIdea", ""), "your business offer")
+	business_type = _clean_text(payload.get("businessType", ""), "service")
+	target_customer = _clean_text(payload.get("targetCustomer", ""), "your ideal customer")
+	location = _clean_text(payload.get("location", payload.get("marketLocation", "")), "your local market")
+	budget = _clean_text(payload.get("budget", payload.get("startupBudget", "")), "lean budget")
+	skill_level = _clean_text(payload.get("skillLevel", ""), "intermediate")
+	time_availability = _clean_text(payload.get("timeAvailability", ""), "part-time")
+	urgency_level = _clean_text(payload.get("urgencyLevel", ""), "medium")
+	current_stage = _clean_text(payload.get("currentStage", ""), "idea")
+	access_tier = _clean_text(payload.get("accessTier", "free"), "free").lower()
+
+	beginner = _is_beginner(skill_level, payload.get("skillsResources", ""))
+	low_budget = _is_low_budget(budget)
+	high_urgency = _is_high_urgency(urgency_level)
+	local_business = _is_local_business(business_type, payload.get("deliveryPreference", "both"))
+
+	if high_urgency:
+		next_best_move = (
+			f"Within 24 hours, message 10 high-fit {target_customer} prospects with a paid pilot offer for {business_idea} and 3 call slots."
+		)
+	else:
+		next_best_move = (
+			f"Define one paid starter offer for {business_idea} with fixed scope, a clear result, and a single call-to-action for {target_customer}."
+		)
+
+	fast_path_steps = [
+		"Define a fixed-scope 'first result' offer that can be delivered in 3-7 days.",
+		f"Create a simple one-page offer (problem, outcome, price, proof placeholder) for {target_customer}.",
+	]
+	if beginner:
+		fast_path_steps.append("Use one channel only this week (direct outreach or local referrals), not multiple growth experiments.")
+	if local_business:
+		fast_path_steps.append(f"Visit or call 5 local partner businesses in {location} and ask for warm introductions.")
+	else:
+		fast_path_steps.append("Send 20 personalized DMs/emails to ideal buyers with one pain-point-led message and booking link.")
+	fast_path_steps.extend(
+		[
+			"Book 5 discovery calls, diagnose urgency, and close 1-2 paid pilots.",
+			"Deliver quickly, collect one testimonial, and reinvest into the same channel until $1K is reached.",
+		]
+	)
+
+	avoid_list = [
+		"Do not spend days on logos, decks, or websites before your first paid customer.",
+		"Do not offer broad custom work without fixed scope and price.",
+		"Do not chase multiple customer segments at once.",
+	]
+	if low_budget:
+		avoid_list.append("Do not buy tools or subscriptions that are not directly tied to lead generation or getting paid.")
+	if beginner:
+		avoid_list.append("Do not build complex automations early; use simple checklists and manual follow-up first.")
+
+	execution_plan = [
+		{"task": "Finalize first-offer promise + fixed price", "priority": "High", "time_estimate": "45 min"},
+		{"task": "Publish one-page offer and booking link", "priority": "High", "time_estimate": "90 min"},
+		{"task": "Run outreach/referral batch and follow-up", "priority": "High", "time_estimate": "2-3 hours"},
+		{"task": "Run discovery calls and close paid pilot(s)", "priority": "High", "time_estimate": "3-4 hours"},
+		{"task": "Deliver first result and request testimonial", "priority": "Medium", "time_estimate": "4-8 hours"},
+	]
+
+	insight_parts = [
+		f"Given your stage ({current_stage}), the only metric that matters now is first sale velocity.",
+		f"With {time_availability} availability and a {budget} budget, focus on one offer + one channel until repeatable closes.",
+	]
+	if local_business:
+		insight_parts.append(f"Your location ({location}) is a growth asset—use local trust loops before paid ads.")
+	if high_urgency:
+		insight_parts.append("Urgency is high, so compress execution into 7-day sales sprints and optimize for cash this week.")
+
+	advanced_insights = {
+		"projection_model": "At a $500 starter offer, 2 sales = $1K. At 30% close rate, target 7 qualified sales calls.",
+		"kpi_focus": ["Daily outreach sent", "Calls booked", "Close rate", "Cash collected this week"],
+		"scaling_trigger": "Scale only after two consecutive weeks of predictable lead flow and stable delivery quality.",
+	}
+
+	result = {
+		"label": "AI Strategist Recommendation",
+		"input_profile": {
+			"businessIdea": business_idea,
+			"businessType": business_type,
+			"targetCustomer": target_customer,
+			"location": location,
+			"budget": budget,
+			"skillLevel": skill_level,
+			"timeAvailability": time_availability,
+			"urgencyLevel": urgency_level,
+			"currentStage": current_stage,
+		},
+		"next_best_move": next_best_move,
+		"fastest_path_to_first_1k": fast_path_steps,
+		"what_to_avoid": avoid_list[:5],
+		"execution_plan": execution_plan,
+		"strategist_insight": " ".join(insight_parts),
+	}
+
+	if access_tier in {"pro", "elite"}:
+		result["pro_breakdown"] = {
+			"offer_validation_loop": "Run 10 calls, capture objections, revise script every 48 hours.",
+			"channel_priority": "Double down on the highest response channel for two weeks before adding another.",
+			"pricing_upgrade_rule": "Increase price by 10-20% after every 3 documented client wins.",
+		}
+
+	if access_tier == "elite":
+		result["advanced_insights_and_projections"] = advanced_insights
+
+	return result
+
+
 def build_starter_business_blueprint(payload: dict) -> dict:
 	business_name = _resolve_business_name(payload)
 	business_idea = _clean_text(payload.get("businessIdea", ""), "a practical business concept")
@@ -61,6 +189,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	income_goal = _clean_text(payload.get("incomeGoal", ""), "your first consistent income milestone")
 	biggest_obstacle = _clean_text(payload.get("biggestObstacle", ""), "unclear positioning")
 	delivery_preference = payload.get("deliveryPreference", "both")
+	strategist_engine = _build_strategist_engine(payload)
 
 	delivery_model = _delivery_model(delivery_preference)
 	pricing_direction = _pricing_direction(startup_budget, delivery_preference)
@@ -130,6 +259,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"income_goal": income_goal,
 			"primary_constraint": biggest_obstacle,
 		},
+		"ai_strategist_recommendation": strategist_engine,
 		"startup_requirements": startup_requirements,
 		"licenses_and_compliance": licenses_and_compliance,
 		"tools_and_software": tools_and_software,

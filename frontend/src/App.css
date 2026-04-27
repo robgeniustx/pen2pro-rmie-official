@@ -254,6 +254,19 @@
   gap: 16px;
 }
 
+.starter-result__strategist-card {
+  border: 2px solid #6ea24e;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f3fbe9 0%, #f9fdf4 100%);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.starter-result__strategist-card h3 {
+  margin: 0 0 10px;
+  color: #1d3a16;
+}
+
 .starter-result__card {
   border: 1px solid #d9e6cb;
   border-radius: 18px;
