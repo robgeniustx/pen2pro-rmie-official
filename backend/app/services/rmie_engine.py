@@ -1,3 +1,6 @@
+import re
+
+
 def _clean_text(value: str, fallback: str) -> str:
 	cleaned = value.strip()
 	return cleaned or fallback
@@ -26,8 +29,18 @@ def _pricing_direction(budget: str, delivery_preference: str) -> str:
 
 def _resolve_business_name(payload: dict) -> str:
 	proposed_business_name = _clean_text(payload.get("proposedBusinessName", ""), "")
-	selected_brand_name = _clean_text(payload.get("selectedBrandName", ""), "")
-	return proposed_business_name or selected_brand_name or "Your Company Name"
+	return proposed_business_name or "Your Company Name"
+
+
+def _inject_business_name(value, business_name: str):
+	if isinstance(value, str):
+		result = re.sub(r"\byour company\b", business_name, value, flags=re.IGNORECASE)
+		return re.sub(r"\byour business\b", business_name, result, flags=re.IGNORECASE)
+	if isinstance(value, list):
+		return [_inject_business_name(item, business_name) for item in value]
+	if isinstance(value, dict):
+		return {key: _inject_business_name(item, business_name) for key, item in value.items()}
+	return value
 
 
 def _build_growth_channels(delivery_preference: str, target_customer: str, market_location: str) -> list[str]:
@@ -248,7 +261,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 		{"name": "State Secretary of State portal", "url": "https://www.usa.gov/state-business"},
 	]
 
-	return {
+	blueprint = {
 		"business_snapshot": {
 			"business_name": business_name,
 			"business_idea": business_idea,
@@ -312,7 +325,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 		"sources": sources,
 		"businessIdentity": {
 			"proposedBusinessName": _clean_text(payload.get("proposedBusinessName", ""), ""),
-			"selectedBrandName": _clean_text(payload.get("selectedBrandName", ""), ""),
+			"domainToCheck": _clean_text(payload.get("domainToCheck", ""), ""),
 			"displayBusinessName": business_name,
 		},
 		"ventureSummary": {
@@ -433,3 +446,5 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			),
 		},
 	}
+
+	return _inject_business_name(blueprint, business_name)

@@ -101,51 +101,95 @@ function FieldError({ error }) {
   return <p className="starter-form__error">{error}</p>;
 }
 
-const brandBuilderOptions = [
-  { id: "momentum-labs", name: "Momentum Labs" },
-  { id: "northstar-studio", name: "Northstar Studio" },
-  { id: "summit-growth", name: "Summit Growth Co." },
-];
+const rawRegistrarUrl = import.meta.env.VITE_DOMAIN_REGISTRAR_URL || "";
+const registrarBaseUrl =
+  rawRegistrarUrl.trim() || "https://www.namecheap.com/domains/registration/results/?domain=";
+
+function generateSuggestedDomain(name) {
+  const normalized = String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, "");
+
+  return normalized ? `${normalized}.com` : "";
+}
 
 function StarterIntakeForm({ values, errors, loading, onChange, onSubmit }) {
+  const suggestedDomain = generateSuggestedDomain(values.proposedBusinessName);
+  const domainToCheck = values.domainToCheck || suggestedDomain;
+
+  const openRegistrarSearch = () => {
+    const domain = (domainToCheck || "").trim();
+
+    if (!domain) {
+      return;
+    }
+
+    window.open(`${registrarBaseUrl}${encodeURIComponent(domain)}`, "_blank", "noopener,noreferrer");
+    onChange("domainSearchAttempted", "true");
+  };
+
   return (
     <form className="starter-form" onSubmit={onSubmit} noValidate>
       <section className="starter-form__name-card" aria-label="Confirm your business name">
         <h3>Confirm Your Business Name</h3>
         <p className="starter-form__helper">
-          Use one of the suggested names or enter your own before printing or emailing your blueprint.
+          Enter the name you want to build your blueprint around. This name will appear throughout your business plan,
+          printout, and emailed blueprint.
         </p>
 
         <label className="starter-form__field">
-          <span className="starter-form__label">Brand Builder suggestion</span>
-          <select
-            className="starter-form__input"
-            name="selectedBrandName"
-            value={values.selectedBrandName}
-            onChange={(event) => onChange("selectedBrandName", event.target.value)}
-            disabled={loading}
-          >
-            <option value="">Select a suggested brand name</option>
-            {brandBuilderOptions.map((option) => (
-              <option key={option.id} value={option.name}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="starter-form__field">
-          <span className="starter-form__label">Your Proposed Business Name</span>
+          <span className="starter-form__label">Business Name</span>
           <input
             className="starter-form__input"
             name="proposedBusinessName"
             value={values.proposedBusinessName}
             onChange={(event) => onChange("proposedBusinessName", event.target.value)}
-            placeholder="Enter your business name or select one from the Brand Builder"
+            placeholder="Example: Greenway Exterior Solutions"
             disabled={loading}
           />
           <FieldError error={errors.proposedBusinessName} />
         </label>
+
+        <label className="starter-form__field">
+          <span className="starter-form__label">Check Domain Availability</span>
+          <input
+            className="starter-form__input"
+            name="domainToCheck"
+            value={domainToCheck}
+            onChange={(event) => onChange("domainToCheck", event.target.value)}
+            placeholder="greenwayexteriorsolutions.com"
+            disabled={loading}
+          />
+          {suggestedDomain && (
+            <p className="starter-form__helper">Suggested domain: {suggestedDomain}</p>
+          )}
+        </label>
+
+        <div className="starter-form__domain-actions">
+          <button
+            className="starter-button starter-button--secondary"
+            type="button"
+            onClick={openRegistrarSearch}
+            disabled={loading || !String(domainToCheck || "").trim()}
+          >
+            Check Domain Availability
+          </button>
+
+          {values.domainSearchAttempted === "true" && (
+            <>
+              <p className="starter-form__domain-note">Domain availability will be confirmed by the registrar.</p>
+              <button
+                className="starter-button starter-button--secondary"
+                type="button"
+                onClick={openRegistrarSearch}
+                disabled={loading || !String(domainToCheck || "").trim()}
+              >
+                Register This Domain
+              </button>
+            </>
+          )}
+        </div>
       </section>
 
       <div className="starter-form__grid">
