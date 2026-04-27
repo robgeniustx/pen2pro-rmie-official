@@ -59,13 +59,14 @@ function getReadableError(error) {
 function StarterPage({ navigateTo }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
-  const [status, setStatus] = useState("idle");
-  const [submitError, setSubmitError] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState("");
+  const [blueprintResult, setBlueprintResult] = useState("");
+  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [blueprintResponse, setBlueprintResponse] = useState(null);
 
-  const isLoading = status === "loading";
-  const hasResult = status === "success";
-  const hasError = status === "error";
+  const hasResult = Boolean(blueprintResponse);
+  const hasError = Boolean(generationError);
 
   const pageSubtitle = useMemo(() => "Turn your idea into a clear PEN2PRO business starter plan in minutes.", []);
   const progress = useMemo(() => getProgressSummary(values), [values]);
@@ -132,20 +133,23 @@ function StarterPage({ navigateTo }) {
     });
 
     setErrors((current) => ({ ...current, [field]: "" }));
-    setSubmitError("");
-    if (status === "error") setStatus("idle");
+    setGenerationError("");
   };
 
-  const submitBlueprint = async () => {
+  const handleGenerateBlueprint = async () => {
+    if (isGenerating) return;
+
     const nextErrors = validate(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    setHasAttemptedGeneration(true);
     const accessLevel = ["free", "pro", "elite"].includes(values.accessLevel) ? values.accessLevel : "free";
     const strategistFocus = accessLevel === "free" ? "basic" : values.strategistFocus || "startup";
     const payload = {
       businessName: String(values.proposedBusinessName || "").trim() || "your business",
       domain: String(values.domainToCheck || "").trim(),
+      suggestedDomain: String(values.proposedBusinessName || "").toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "") ? `${String(values.proposedBusinessName || "").toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "")}.com` : "",
       businessIdea: values.businessIdea,
       category: values.businessType,
       productOrService: values.productOrService,
@@ -171,29 +175,36 @@ function StarterPage({ navigateTo }) {
       tier: "starter",
     };
 
-    setStatus("loading");
-    setSubmitError("");
+    setIsGenerating(true);
+    setGenerationError("");
+    setBlueprintResult("");
+    setBlueprintResponse(null);
 
     try {
       const response = await generateStarterBlueprint(payload);
+      const blueprintText = response?.blueprint || response?.result || response?.content || response?.output || response?.plan || "";
+      const normalizedBlueprint = typeof blueprintText === "object" ? JSON.stringify(blueprintText, null, 2) : blueprintText;
+      setBlueprintResult(normalizedBlueprint || "Blueprint generated, but no blueprint text was returned.");
       setBlueprintResponse(response);
-      setStatus("success");
     } catch (error) {
-      setSubmitError(getReadableError(error));
-      setStatus("error");
+      setGenerationError(getReadableError(error));
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await submitBlueprint();
+    await handleGenerateBlueprint();
   };
 
   const handleStartAnother = () => {
     setValues(initialValues);
     setErrors({});
-    setStatus("idle");
-    setSubmitError("");
+    setIsGenerating(false);
+    setGenerationError("");
+    setBlueprintResult("");
+    setHasAttemptedGeneration(false);
     setBlueprintResponse(null);
     window.localStorage.removeItem(DRAFT_KEY);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -234,15 +245,37 @@ function StarterPage({ navigateTo }) {
               <StarterIntakeForm
                 values={values}
                 errors={errors}
-                loading={isLoading}
+                loading={isGenerating}
                 onChange={handleChange}
                 onSubmit={handleSubmit}
                 sectionStatuses={progress.sectionStatuses}
                 onSaveDraft={handleSaveDraft}
                 onClearDraft={handleClearDraft}
               />
-              {isLoading && <div className="starter-state-card starter-state-card--loading"><h2>Building your Starter Business Blueprint...</h2><p>PEN2PRO is organizing your inputs into a focused starter plan you can act on.</p></div>}
-              {hasError && <div className="starter-state-card starter-state-card--error"><h2>Generation failed</h2><p>{submitError || "We could not build your Starter Business Blueprint right now."}</p><button className="starter-button starter-button--secondary" onClick={submitBlueprint}>Retry</button></div>}
+              {!hasAttemptedGeneration && !hasResult && !isGenerating && !hasError && (
+                <div className="starter-state-card starter-state-card--idle" role="status">
+                  <h2>Complete your blueprint intake, then generate your starter plan.</h2>
+                </div>
+              )}
+              {isGenerating && (
+                <div className="starter-state-card starter-state-card--loading" role="status" aria-live="polite">
+                  <h2>Generating your PEN2PRO Blueprint...</h2>
+                  <p>Your request was received. PEN2PRO is analyzing your business idea, offer, target customer, domain, access level, and launch path.</p>
+                  <ul className="starter-loading-steps">
+                    <li>Reviewing your business details</li>
+                    <li>Structuring your offer</li>
+                    <li>Building your launch checklist</li>
+                    <li>Preparing your blueprint</li>
+                  </ul>
+                </div>
+              )}
+              {hasError && !isGenerating && (
+                <div className="starter-state-card starter-state-card--error" role="alert">
+                  <h2>Generation failed</h2>
+                  <p>{generationError || "We could not build your Starter Business Blueprint right now."}</p>
+                  <button className="starter-button starter-button--secondary" type="button" onClick={handleGenerateBlueprint} disabled={isGenerating}>Retry</button>
+                </div>
+              )}
             </div>
             <ProgressSidebar
               values={values}
@@ -257,8 +290,8 @@ function StarterPage({ navigateTo }) {
 
         {hasResult && (
           <>
-            {submitError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{submitError}</p></div>}
-            <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")} onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")} onStartAnother={handleStartAnother} />
+            {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
+            <StarterBlueprintResult response={blueprintResponse} blueprintText={blueprintResult} intakeValues={values} onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")} onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")} onStartAnother={handleStartAnother} />
           </>
         )}
       </main>

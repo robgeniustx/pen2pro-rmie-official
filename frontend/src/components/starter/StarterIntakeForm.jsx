@@ -246,8 +246,8 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectio
       <div className="starter-form__actions">
         <button className="starter-button starter-button--secondary" type="button" onClick={onSaveDraft} disabled={loading}>Save Draft</button>
         <button className="starter-button starter-button--secondary" type="button" onClick={onClearDraft} disabled={loading}>Clear Draft</button>
-        <button className="starter-button starter-button--primary starter-button--pulse" type="submit" disabled={loading}>
-          {loading ? "Building your Starter Business Blueprint..." : "Generate My Blueprint"}
+        <button className={`starter-button starter-button--primary starter-button--pulse ${loading ? "is-disabled" : ""}`} type="submit" disabled={loading}>
+          {loading ? <span className="starter-button__loading"><span className="starter-spinner" aria-hidden="true" />Generating Blueprint...</span> : "Generate My Blueprint"}
         </button>
       </div>
     </form>

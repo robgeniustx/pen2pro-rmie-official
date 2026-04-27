@@ -81,7 +81,7 @@ function TimelineCard({ items }) {
   );
 }
 
-function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
+function StarterBlueprintResult({ response, blueprint, blueprintText, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprintData = useMemo(() => resolveBlueprintData(response, blueprint), [response, blueprint]);
 
   const accessLevel = (intakeValues?.accessLevel || intakeValues?.accessTier || "free").toLowerCase();
@@ -116,6 +116,11 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
         </ResultSectionCard>
         <StartupChecklistCard items={startupChecklist.length ? startupChecklist : [{ task: "Add startup checklist details", priority: "High" }]} />
         <TimelineCard items={timelineItems.length ? timelineItems : [{ label: "Milestone 1", detail: "Generate your first milestone in launch_plan_30_days." }]} />
+        {typeof blueprintText === "string" && blueprintText.trim() && (
+          <ResultSectionCard title="Generated Blueprint Output" span="wide">
+            <pre className="starter-result__raw-output">{blueprintText}</pre>
+          </ResultSectionCard>
+        )}
       </section>
 
       {accessLevel === "free" && (
