@@ -32,6 +32,27 @@ def _resolve_business_name(payload: dict) -> str:
 	return proposed_business_name or "Your Company Name"
 
 
+def _resolve_access_level(payload: dict) -> str:
+	level = _clean_text(payload.get("accessLevel", payload.get("accessTier", "free")), "free").lower()
+	return level if level in {"free", "pro", "elite"} else "free"
+
+
+def _resolve_strategist_focus(payload: dict, access_level: str) -> str:
+	focus = _clean_text(payload.get("strategistFocus", "startup"), "startup").lower()
+	if access_level == "free":
+		return "basic"
+	allowed = {"startup", "brand", "monetization", "marketing", "operations", "legal_foundation"}
+	return focus if focus in allowed else "startup"
+
+
+def _resolve_domain(payload: dict, business_name: str) -> str:
+	domain = _clean_text(payload.get("domainToCheck", ""), "")
+	if domain:
+		return domain
+	suggested = re.sub(r"[^a-z0-9]", "", business_name.lower())
+	return f"{suggested}.com" if suggested else ""
+
+
 def _inject_business_name(value, business_name: str):
 	if isinstance(value, str):
 		result = re.sub(r"\byour company\b", business_name, value, flags=re.IGNORECASE)
@@ -92,7 +113,8 @@ def _build_strategist_engine(payload: dict) -> dict:
 	time_availability = _clean_text(payload.get("timeAvailability", ""), "part-time")
 	urgency_level = _clean_text(payload.get("urgencyLevel", ""), "medium")
 	current_stage = _clean_text(payload.get("currentStage", ""), "idea")
-	access_tier = _clean_text(payload.get("accessTier", "free"), "free").lower()
+	access_tier = _resolve_access_level(payload)
+	strategist_focus = _resolve_strategist_focus(payload, access_tier)
 
 	beginner = _is_beginner(skill_level, payload.get("skillsResources", ""))
 	low_budget = _is_low_budget(budget)
@@ -158,8 +180,20 @@ def _build_strategist_engine(payload: dict) -> dict:
 		"scaling_trigger": "Scale only after two consecutive weeks of predictable lead flow and stable delivery quality.",
 	}
 
+	focus_guidance = {
+		"startup": "Focus on launch sequencing, first-offer clarity, and a 30-day go-to-market plan.",
+		"brand": "Focus on positioning, messaging consistency, and identity direction that builds trust.",
+		"monetization": "Focus on offer ladder design, pricing confidence, and recurring revenue pathways.",
+		"marketing": "Focus on customer acquisition channels, content hooks, and campaign execution.",
+		"operations": "Focus on workflow design, delivery systems, and operational efficiency.",
+		"legal_foundation": "Focus on LLC/EIN/banking/domain/email setup with educational, non-legal-advice framing.",
+		"basic": "Starter mode keeps strategy intentionally limited to core launch essentials.",
+	}
+
 	result = {
 		"label": "AI Strategist Recommendation",
+		"strategist_focus": strategist_focus,
+		"focus_directive": focus_guidance.get(strategist_focus, focus_guidance["startup"]),
 		"input_profile": {
 			"businessIdea": business_idea,
 			"businessType": business_type,
@@ -193,6 +227,9 @@ def _build_strategist_engine(payload: dict) -> dict:
 
 def build_starter_business_blueprint(payload: dict) -> dict:
 	business_name = _resolve_business_name(payload)
+	access_level = _resolve_access_level(payload)
+	strategist_focus = _resolve_strategist_focus(payload, access_level)
+	payload = {**payload, "accessLevel": access_level, "accessTier": access_level, "strategistFocus": strategist_focus}
 	business_idea = _clean_text(payload.get("businessIdea", ""), "a practical business concept")
 	product_or_service = _clean_text(payload.get("productOrService", ""), "a focused service")
 	target_customer = _clean_text(payload.get("targetCustomer", ""), "a clearly defined customer group")
@@ -202,7 +239,69 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	income_goal = _clean_text(payload.get("incomeGoal", ""), "your first consistent income milestone")
 	biggest_obstacle = _clean_text(payload.get("biggestObstacle", ""), "unclear positioning")
 	delivery_preference = payload.get("deliveryPreference", "both")
+	domain_to_check = _resolve_domain(payload, business_name)
 	strategist_engine = _build_strategist_engine(payload)
+
+	sources = [
+		{"name": "IRS EIN Online", "url": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers"},
+		{"name": "SBA business guide", "url": "https://www.sba.gov/business-guide"},
+		{"name": "State Secretary of State portal", "url": "https://www.usa.gov/state-business"},
+	]
+
+	if access_level == "free":
+		free_blueprint = {
+			"business_snapshot": {
+				"business_name": business_name,
+				"business_idea": business_idea,
+				"target_customer": target_customer,
+				"basic_offer_idea": product_or_service,
+				"domain": domain_to_check,
+			},
+			"startup_requirements": [
+				{"task": f"Write a one-sentence value promise for {business_name}", "priority": "High"},
+				{"task": "Set up a simple one-page offer or landing page", "priority": "High"},
+				{"task": "Reach out to 10 potential customers and collect feedback", "priority": "High"},
+			],
+			"licenses_and_compliance": [
+				{"note": "Basic starter blueprint only. Upgrade for legal/foundation strategist mode details."}
+			],
+			"tools_and_software": [
+				{"tool": "Basic docs + spreadsheet", "purpose": "Track outreach, offers, and next steps."}
+			],
+			"pricing_strategy": {
+				"direction": "Start with one basic offer and test willingness to pay with early buyers.",
+			},
+			"launch_plan_30_days": {
+				"week_1": "Clarify offer, audience, and domain/brand basics.",
+				"weeks_2_4": "Run outreach, validate offer demand, and refine messaging from real calls.",
+			},
+			"operations_plan_90_days": {
+				"focus": "Keep operations simple with repeatable delivery checklists and customer follow-up cadence.",
+			},
+			"scale_plan_12_months": {
+				"focus": "Upgrade to Pro or Elite for strategist-led scaling roadmap and projections.",
+			},
+			"risk_flags": [
+				"Trying to scale before validating a clear first paid offer.",
+				"Skipping customer interviews and relying only on assumptions.",
+			],
+			"sources": sources,
+			"ai_strategist_recommendation": {
+				"label": "Free Forever Starter Blueprint",
+				"strategist_focus": "basic",
+				"upgrade_prompt": "Upgrade to Pro to unlock strategist modes and Elite to unlock advanced projections and the 10M scaling roadmap.",
+			},
+			"upgradeHooks": {
+				"proReason": "Pro unlocks strategist modes for branding, monetization, marketing, operations, and legal/foundation planning.",
+				"eliteReason": "Elite unlocks advanced projections, automation opportunities, scaling milestones, and 10M roadmap guidance.",
+			},
+			"businessIdentity": {
+				"proposedBusinessName": _clean_text(payload.get("proposedBusinessName", ""), ""),
+				"domainToCheck": domain_to_check,
+				"displayBusinessName": business_name,
+			},
+		}
+		return _inject_business_name(free_blueprint, business_name)
 
 	delivery_model = _delivery_model(delivery_preference)
 	pricing_direction = _pricing_direction(startup_budget, delivery_preference)
@@ -325,7 +424,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 		"sources": sources,
 		"businessIdentity": {
 			"proposedBusinessName": _clean_text(payload.get("proposedBusinessName", ""), ""),
-			"domainToCheck": _clean_text(payload.get("domainToCheck", ""), ""),
+			"domainToCheck": domain_to_check,
 			"displayBusinessName": business_name,
 		},
 		"ventureSummary": {
@@ -446,5 +545,25 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			),
 		},
 	}
+
+	blueprint["accessLevel"] = access_level
+	blueprint["strategistFocus"] = strategist_focus
+	blueprint["generationInstruction"] = (
+		"Generate a full Pro Strategist Blueprint based on the selected strategist focus."
+		if access_level == "pro"
+		else "Generate the full Elite 10M Strategist Blueprint."
+	)
+
+	if access_level == "pro":
+		blueprint.pop("elitePlan", None)
+		if isinstance(blueprint.get("ai_strategist_recommendation"), dict):
+			blueprint["ai_strategist_recommendation"].pop("advanced_insights_and_projections", None)
+
+	if access_level == "elite":
+		blueprint["elitePlan"]["ten_m_roadmap"] = [
+			"Phase 1: Validate repeatable acquisition with one dominant channel.",
+			"Phase 2: Scale delivery capacity with automation and SOP-backed delegation.",
+			"Phase 3: Expand monetization paths and strategic partnerships toward $10M trajectory.",
+		]
 
 	return _inject_business_name(blueprint, business_name)

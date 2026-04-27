@@ -10,7 +10,9 @@ router = APIRouter()
 
 class StarterGenerateRequest(BaseModel):
     tier: Literal["starter"]
+    accessLevel: Literal["free", "pro", "elite"] = "free"
     accessTier: Literal["free", "pro", "elite"] = "free"
+    strategistFocus: Literal["startup", "brand", "monetization", "marketing", "operations", "legal_foundation"] = "startup"
     proposedBusinessName: str = Field(default="", max_length=140)
     domainToCheck: str = Field(default="", max_length=220)
     businessIdea: str = Field(..., min_length=3, max_length=240)
@@ -33,8 +35,17 @@ class StarterGenerateRequest(BaseModel):
 
 @router.post("/rmie/starter-generate")
 def starter_generate(payload: StarterGenerateRequest):
-    blueprint = build_starter_business_blueprint(payload.dict())
+    data = payload.dict()
+    access_level = data.get("accessLevel") or data.get("accessTier") or "free"
+    data["accessLevel"] = access_level
+    data["accessTier"] = access_level
+
+    if access_level == "free":
+        data["strategistFocus"] = "basic"
+
+    blueprint = build_starter_business_blueprint(data)
     return {
         "tier": payload.tier,
+        "accessLevel": access_level,
         "blueprint": blueprint,
     }
