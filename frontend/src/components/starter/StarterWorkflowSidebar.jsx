@@ -27,6 +27,7 @@ function CompletionChecklist({ items }) {
           <li key={item.key} className={`starter-checklist__row is-${item.state}`}>
             <span>{iconByState[item.state]}</span>
             <span>{item.label}</span>
+            {item.state === "locked" && <span>Locked</span>}
           </li>
         ))}
       </ul>
