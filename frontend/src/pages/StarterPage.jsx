@@ -6,6 +6,8 @@ import { generateStarterBlueprint } from "../services/api.js";
 
 const initialValues = {
   tier: "starter",
+  proposedBusinessName: "",
+  selectedBrandName: "",
   businessIdea: "",
   productOrService: "",
   targetCustomer: "",
@@ -90,7 +92,17 @@ function StarterPage({ navigateTo }) {
   );
 
   const handleChange = (field, value) => {
-    setValues((current) => ({ ...current, [field]: value }));
+    setValues((current) => {
+      if (field === "selectedBrandName") {
+        return {
+          ...current,
+          selectedBrandName: value,
+          proposedBusinessName: value || current.proposedBusinessName,
+        };
+      }
+
+      return { ...current, [field]: value };
+    });
     setErrors((current) => ({ ...current, [field]: "" }));
     setSubmitError("");
     if (status === "error") {
@@ -209,6 +221,7 @@ function StarterPage({ navigateTo }) {
 
             <StarterBlueprintResult
               response={blueprintResponse}
+              intakeValues={values}
               onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
               onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
               onStartAnother={handleStartAnother}
