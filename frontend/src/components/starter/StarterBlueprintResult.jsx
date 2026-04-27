@@ -14,29 +14,82 @@ function normalizeText(value, fallback = "Not provided") {
   return fallback;
 }
 
-function stringifySection(value) {
-  if (Array.isArray(value)) return value.map((item) => (typeof item === "string" ? item : JSON.stringify(item))).join(" • ");
-  if (isPlainObject(value)) return Object.entries(value).map(([k, v]) => `${k.replace(/_/g, " ")}: ${typeof v === "string" ? v : JSON.stringify(v)}`).join(" • ");
-  return normalizeText(value, "Not available");
+function getChecklistEntries(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => {
+      if (typeof item === "string") return { task: item, priority: "Medium" };
+      if (isPlainObject(item)) return { task: item.task || item.item || JSON.stringify(item), priority: item.priority || "Medium" };
+      return { task: String(item), priority: "Medium" };
+    });
+  }
+
+  if (isPlainObject(value)) {
+    return Object.entries(value).map(([task, priority]) => ({ task: task.replace(/_/g, " "), priority: typeof priority === "string" ? priority : "Medium" }));
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    return value.split(/\n|•|;/).map((item) => ({ task: item.trim(), priority: "Medium" })).filter((item) => item.task);
+  }
+
+  return [];
+}
+
+function getTimelineEntries(value) {
+  if (Array.isArray(value)) return value.map((item, idx) => ({ label: `Milestone ${idx + 1}`, detail: typeof item === "string" ? item : JSON.stringify(item) }));
+  if (isPlainObject(value)) return Object.entries(value).map(([label, detail]) => ({ label: label.replace(/_/g, " "), detail: typeof detail === "string" ? detail : JSON.stringify(detail) }));
+  if (typeof value === "string") return [{ label: "Next", detail: value }];
+  return [];
+}
+
+function ResultSectionCard({ title, children, span = "half" }) {
+  return (
+    <article className={`starter-result__bento-card starter-result__bento-card--${span}`}>
+      <h3>{title}</h3>
+      {children}
+    </article>
+  );
+}
+
+function StartupChecklistCard({ items }) {
+  return (
+    <ResultSectionCard title="Startup Checklist" span="wide">
+      <ul className="starter-result__checklist">
+        {items.map((item, idx) => (
+          <li key={`${item.task}-${idx}`}>
+            <span>☐</span>
+            <span>{item.task}</span>
+            <span className="starter-priority-badge">{item.priority}</span>
+          </li>
+        ))}
+      </ul>
+    </ResultSectionCard>
+  );
+}
+
+function TimelineCard({ items }) {
+  return (
+    <ResultSectionCard title="Next Steps Timeline" span="wide">
+      <ol className="starter-result__timeline">
+        {items.map((item, idx) => (
+          <li key={`${item.label}-${idx}`}>
+            <p>{item.label}</p>
+            <span>{item.detail}</span>
+          </li>
+        ))}
+      </ol>
+    </ResultSectionCard>
+  );
 }
 
 function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprintData = useMemo(() => resolveBlueprintData(response, blueprint), [response, blueprint]);
-  const blueprintText = typeof response?.blueprintText === "string" ? response.blueprintText : "";
 
   const accessLevel = (intakeValues?.accessLevel || intakeValues?.accessTier || "free").toLowerCase();
   const businessName = normalizeText(intakeValues?.proposedBusinessName, normalizeText(blueprintData?.business_snapshot?.business_name, "your business"));
-  const domain = normalizeText(intakeValues?.domainToCheck, normalizeText(blueprintData?.businessIdentity?.domainToCheck, "Not selected"));
+  const domain = normalizeText(intakeValues?.domainToCheck, "Not selected");
 
-  const cards = [
-    { title: "Business summary", value: stringifySection(blueprintData.business_snapshot || blueprintData.ventureSummary) },
-    { title: "Target customer", value: normalizeText(blueprintData?.business_snapshot?.target_customer || intakeValues?.targetCustomer) },
-    { title: "Offer", value: normalizeText(blueprintData?.business_snapshot?.basic_offer_idea || blueprintData?.business_snapshot?.product_or_service || intakeValues?.productOrService) },
-    { title: "Domain / brand foundation", value: `Business name: ${businessName} • Domain: ${domain}` },
-    { title: "Startup checklist", value: stringifySection(blueprintData.startup_requirements || blueprintData.launch_plan_30_days) },
-    { title: "Next steps", value: stringifySection(blueprintData.launch_plan_30_days || blueprintData.operations_plan_90_days) },
-  ];
-  const hasStructuredBlueprint = Object.keys(blueprintData || {}).length > 0;
+  const startupChecklist = getChecklistEntries(blueprintData.startup_requirements || blueprintData.launch_plan_30_days);
+  const timelineItems = getTimelineEntries(blueprintData.launch_plan_30_days || blueprintData.operations_plan_90_days);
 
   return (
     <div className="starter-result starter-reveal">
@@ -48,23 +101,26 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
       </header>
 
       <section className="starter-result__bento">
-        {cards.map((card, idx) => (
-          <article key={card.title} className={`starter-result__bento-card starter-result__bento-card--${(idx % 3) + 1}`}>
-            <h3>{card.title}</h3>
-            <p>{card.value}</p>
-          </article>
-        ))}
-        {!hasStructuredBlueprint && (
-          <article className="starter-result__bento-card starter-result__bento-card--1">
-            <h3>Generated blueprint</h3>
-            <p>{blueprintText || "Blueprint generated, but no blueprint text was returned."}</p>
-          </article>
-        )}
+        <ResultSectionCard title="Business Summary">
+          <p>{normalizeText(blueprintData?.business_snapshot?.business_summary || blueprintData?.business_snapshot?.business_name || intakeValues?.businessIdea)}</p>
+        </ResultSectionCard>
+        <ResultSectionCard title="Target Customer">
+          <p>{normalizeText(blueprintData?.business_snapshot?.target_customer || intakeValues?.targetCustomer)}</p>
+        </ResultSectionCard>
+        <ResultSectionCard title="Core Offer">
+          <p>{normalizeText(blueprintData?.business_snapshot?.basic_offer_idea || blueprintData?.business_snapshot?.product_or_service || intakeValues?.productOrService)}</p>
+        </ResultSectionCard>
+        <ResultSectionCard title="Domain / Brand Foundation">
+          <p>Business name: {businessName}</p>
+          <p>Domain: {domain}</p>
+        </ResultSectionCard>
+        <StartupChecklistCard items={startupChecklist.length ? startupChecklist : [{ task: "Add startup checklist details", priority: "High" }]} />
+        <TimelineCard items={timelineItems.length ? timelineItems : [{ label: "Milestone 1", detail: "Generate your first milestone in launch_plan_30_days." }]} />
       </section>
 
       {accessLevel === "free" && (
         <section className="starter-upsell starter-upsell--locked">
-          <h3>Unlock Full Strategist Modes</h3>
+          <h3>Upgrade Panel</h3>
           <p>Pro and Elite unlock deeper strategist breakdowns for branding, monetization, marketing, operations, and legal/foundation planning.</p>
           <div className="starter-result__cta-actions">
             <button className="starter-button starter-button--primary" onClick={onUpgradePro}>Upgrade to Pro</button>
@@ -75,7 +131,7 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
 
       {accessLevel === "pro" && (
         <section className="starter-upsell starter-upsell--elite">
-          <h3>Unlock Elite 10M Strategy</h3>
+          <h3>Upgrade Panel</h3>
           <p>Elite adds advanced projections, automation opportunities, scaling milestones, and a founder-level 10M roadmap.</p>
           <div className="starter-result__cta-actions">
             <button className="starter-button starter-button--primary" onClick={onSeeElite}>Upgrade to Elite</button>

@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import StarterIntakeForm from "../components/starter/StarterIntakeForm.jsx";
 import StarterBlueprintResult from "../components/starter/StarterBlueprintResult.jsx";
+import ProgressSidebar from "../components/starter/StarterWorkflowSidebar.jsx";
+import { getChecklistItems, getProgressSummary, getRecommendedNextAction } from "../components/starter/starterWorkflow.js";
 import { generateStarterBlueprint } from "../services/api.js";
+
+const DRAFT_KEY = "pen2pro_starter_draft_v2";
 
 const initialValues = {
   tier: "starter",
@@ -64,6 +68,29 @@ function StarterPage({ navigateTo }) {
   const hasError = status === "error";
 
   const pageSubtitle = useMemo(() => "Turn your idea into a clear PEN2PRO business starter plan in minutes.", []);
+  const progress = useMemo(() => getProgressSummary(values), [values]);
+  const checklistItems = useMemo(() => getChecklistItems(values, values.accessLevel), [values]);
+  const nextAction = useMemo(() => getRecommendedNextAction(values, values.accessLevel), [values]);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setValues((current) => ({ ...current, ...parsed }));
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...values, completion: progress.completion }));
+    } catch {
+      // ignore storage errors
+    }
+  }, [values, progress.completion]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -85,7 +112,12 @@ function StarterPage({ navigateTo }) {
   const handleChange = (field, value) => {
     setValues((current) => {
       if (field === "accessLevel") {
-        return { ...current, accessLevel: value, strategistFocus: current.strategistFocus || "startup" };
+        const nextAccess = value;
+        return {
+          ...current,
+          accessLevel: nextAccess,
+          strategistFocus: ["pro", "elite"].includes(nextAccess) ? current.strategistFocus || "startup" : "startup",
+        };
       }
       if (field === "proposedBusinessName") {
         const previousSuggestion = String(current.proposedBusinessName || "").toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "");
@@ -163,7 +195,17 @@ function StarterPage({ navigateTo }) {
     setStatus("idle");
     setSubmitError("");
     setBlueprintResponse(null);
+    window.localStorage.removeItem(DRAFT_KEY);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSaveDraft = () => {
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...values, completion: progress.completion }));
+  };
+
+  const handleClearDraft = () => {
+    window.localStorage.removeItem(DRAFT_KEY);
+    setValues(initialValues);
   };
 
   return (
@@ -187,10 +229,29 @@ function StarterPage({ navigateTo }) {
         </section>
 
         {!hasResult && (
-          <section className="starter-page__panel starter-reveal">
-            <StarterIntakeForm values={values} errors={errors} loading={isLoading} onChange={handleChange} onSubmit={handleSubmit} />
-            {isLoading && <div className="starter-state-card starter-state-card--loading"><h2>Building your Starter Business Blueprint...</h2><p>PEN2PRO is organizing your inputs into a focused starter plan you can act on.</p></div>}
-            {hasError && <div className="starter-state-card starter-state-card--error"><h2>Generation failed</h2><p>{submitError || "We could not build your Starter Business Blueprint right now."}</p><button className="starter-button starter-button--secondary" onClick={submitBlueprint}>Retry</button></div>}
+          <section className="starter-workspace starter-reveal">
+            <div className="starter-workspace__main starter-page__panel">
+              <StarterIntakeForm
+                values={values}
+                errors={errors}
+                loading={isLoading}
+                onChange={handleChange}
+                onSubmit={handleSubmit}
+                sectionStatuses={progress.sectionStatuses}
+                onSaveDraft={handleSaveDraft}
+                onClearDraft={handleClearDraft}
+              />
+              {isLoading && <div className="starter-state-card starter-state-card--loading"><h2>Building your Starter Business Blueprint...</h2><p>PEN2PRO is organizing your inputs into a focused starter plan you can act on.</p></div>}
+              {hasError && <div className="starter-state-card starter-state-card--error"><h2>Generation failed</h2><p>{submitError || "We could not build your Starter Business Blueprint right now."}</p><button className="starter-button starter-button--secondary" onClick={submitBlueprint}>Retry</button></div>}
+            </div>
+            <ProgressSidebar
+              values={values}
+              progress={progress}
+              checklistItems={checklistItems}
+              nextAction={nextAction}
+              onUpgradePro={() => navigateTo("/?goal=upgrade&plan=pro#pricing")}
+              onSeeElite={() => navigateTo("/?goal=upgrade&plan=elite#pricing")}
+            />
           </section>
         )}
 
