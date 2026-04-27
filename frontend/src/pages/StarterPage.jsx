@@ -38,6 +38,20 @@ function validate(values) {
   }, {});
 }
 
+function getReadableError(error) {
+  if (!error) return "Blueprint generation failed. Please try again.";
+  if (typeof error === "string") return error;
+  if (error.message) return error.message;
+  if (error.detail) return typeof error.detail === "string" ? error.detail : JSON.stringify(error.detail);
+  if (error.error) return typeof error.error === "string" ? error.error : JSON.stringify(error.error);
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Blueprint generation failed. Please try again.";
+  }
+}
+
 function StarterPage({ navigateTo }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
@@ -95,12 +109,34 @@ function StarterPage({ navigateTo }) {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    const accessLevel = ["free", "pro", "elite"].includes(values.accessLevel) ? values.accessLevel : "free";
+    const strategistFocus = accessLevel === "free" ? "basic" : values.strategistFocus || "startup";
     const payload = {
-      ...values,
-      accessLevel: values.accessLevel || "free",
-      strategistFocus: ["pro", "elite"].includes(values.accessLevel) ? (values.strategistFocus || "startup") : "basic",
+      businessName: String(values.proposedBusinessName || "").trim() || "your business",
+      domain: String(values.domainToCheck || "").trim(),
+      businessIdea: values.businessIdea,
+      category: values.businessType,
+      productOrService: values.productOrService,
+      targetCustomer: values.targetCustomer,
+      location: values.location,
+      skillLevel: values.skillLevel,
+      timeAvailability: values.timeAvailability,
+      currentStage: values.currentStage,
+      skillsAndResources: values.skillsResources,
+      incomeGoal: values.incomeGoal,
+      biggestObstacle: values.biggestObstacle,
+      urgencyLevel: values.urgencyLevel || "medium",
+      deliveryPreference: values.deliveryPreference || "both",
+      accessLevel,
+      strategistFocus,
       proposedBusinessName: String(values.proposedBusinessName || "").trim() || "your business",
       domainToCheck: String(values.domainToCheck || "").trim(),
+      businessType: values.businessType,
+      marketLocation: values.marketLocation,
+      budget: values.budget,
+      startupBudget: values.startupBudget,
+      skillsResources: values.skillsResources,
+      tier: "starter",
     };
 
     setStatus("loading");
@@ -111,7 +147,7 @@ function StarterPage({ navigateTo }) {
       setBlueprintResponse(response);
       setStatus("success");
     } catch (error) {
-      setSubmitError(error.message || "We could not build your Starter Business Blueprint right now.");
+      setSubmitError(getReadableError(error));
       setStatus("error");
     }
   };

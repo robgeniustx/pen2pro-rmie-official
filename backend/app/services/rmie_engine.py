@@ -2,8 +2,16 @@ import re
 
 
 def _clean_text(value: str, fallback: str) -> str:
-	cleaned = value.strip()
+	cleaned = str(value or "").strip()
 	return cleaned or fallback
+
+
+def _pick(payload: dict, *keys: str, fallback: str = "") -> str:
+	for key in keys:
+		value = payload.get(key)
+		if value is not None and str(value).strip():
+			return str(value).strip()
+	return fallback
 
 
 def _compact(value: str) -> str:
@@ -28,17 +36,17 @@ def _pricing_direction(budget: str, delivery_preference: str) -> str:
 
 
 def _resolve_business_name(payload: dict) -> str:
-	proposed_business_name = _clean_text(payload.get("proposedBusinessName", ""), "")
+	proposed_business_name = _clean_text(_pick(payload, "businessName", "proposedBusinessName"), "")
 	return proposed_business_name or "Your Company Name"
 
 
 def _resolve_access_level(payload: dict) -> str:
-	level = _clean_text(payload.get("accessLevel", payload.get("accessTier", "free")), "free").lower()
+	level = _clean_text(_pick(payload, "accessLevel", "accessTier", "tier", fallback="free"), "free").lower()
 	return level if level in {"free", "pro", "elite"} else "free"
 
 
 def _resolve_strategist_focus(payload: dict, access_level: str) -> str:
-	focus = _clean_text(payload.get("strategistFocus", "startup"), "startup").lower()
+	focus = _clean_text(_pick(payload, "strategistFocus", "strategistMode", fallback="startup"), "startup").lower()
 	if access_level == "free":
 		return "basic"
 	allowed = {"startup", "brand", "monetization", "marketing", "operations", "legal_foundation"}
@@ -46,7 +54,7 @@ def _resolve_strategist_focus(payload: dict, access_level: str) -> str:
 
 
 def _resolve_domain(payload: dict, business_name: str) -> str:
-	domain = _clean_text(payload.get("domainToCheck", ""), "")
+	domain = _clean_text(_pick(payload, "domain", "suggestedDomain", "domainToCheck"), "")
 	if domain:
 		return domain
 	suggested = re.sub(r"[^a-z0-9]", "", business_name.lower())
@@ -104,19 +112,19 @@ def _is_local_business(business_type: str, delivery_preference: str) -> bool:
 
 
 def _build_strategist_engine(payload: dict) -> dict:
-	business_idea = _clean_text(payload.get("businessIdea", ""), "your business offer")
-	business_type = _clean_text(payload.get("businessType", ""), "service")
-	target_customer = _clean_text(payload.get("targetCustomer", ""), "your ideal customer")
-	location = _clean_text(payload.get("location", payload.get("marketLocation", "")), "your local market")
-	budget = _clean_text(payload.get("budget", payload.get("startupBudget", "")), "lean budget")
-	skill_level = _clean_text(payload.get("skillLevel", ""), "intermediate")
-	time_availability = _clean_text(payload.get("timeAvailability", ""), "part-time")
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "Not provided")
+	business_type = _clean_text(_pick(payload, "businessType", "category"), "Not provided")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "Not provided")
+	location = _clean_text(_pick(payload, "location", "marketLocation"), "Online")
+	budget = _clean_text(_pick(payload, "budget", "startupBudget"), "Not provided")
+	skill_level = _clean_text(_pick(payload, "skillLevel"), "Beginner")
+	time_availability = _clean_text(_pick(payload, "timeAvailability", "time_available"), "Not provided")
 	urgency_level = _clean_text(payload.get("urgencyLevel", ""), "medium")
 	current_stage = _clean_text(payload.get("currentStage", ""), "idea")
 	access_tier = _resolve_access_level(payload)
 	strategist_focus = _resolve_strategist_focus(payload, access_tier)
 
-	beginner = _is_beginner(skill_level, payload.get("skillsResources", ""))
+	beginner = _is_beginner(skill_level, _pick(payload, "skillsResources", "skillsAndResources", "resources"))
 	low_budget = _is_low_budget(budget)
 	high_urgency = _is_high_urgency(urgency_level)
 	local_business = _is_local_business(business_type, payload.get("deliveryPreference", "both"))
@@ -230,15 +238,15 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	access_level = _resolve_access_level(payload)
 	strategist_focus = _resolve_strategist_focus(payload, access_level)
 	payload = {**payload, "accessLevel": access_level, "accessTier": access_level, "strategistFocus": strategist_focus}
-	business_idea = _clean_text(payload.get("businessIdea", ""), "a practical business concept")
-	product_or_service = _clean_text(payload.get("productOrService", ""), "a focused service")
-	target_customer = _clean_text(payload.get("targetCustomer", ""), "a clearly defined customer group")
-	market_location = _clean_text(payload.get("marketLocation", ""), "your target market")
-	startup_budget = _clean_text(payload.get("startupBudget", ""), "a lean startup budget")
-	skills_resources = _clean_text(payload.get("skillsResources", ""), "your current skills and available resources")
-	income_goal = _clean_text(payload.get("incomeGoal", ""), "your first consistent income milestone")
-	biggest_obstacle = _clean_text(payload.get("biggestObstacle", ""), "unclear positioning")
-	delivery_preference = payload.get("deliveryPreference", "both")
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "Not provided")
+	product_or_service = _clean_text(_pick(payload, "productOrService", "product_service"), "Not provided")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "Not provided")
+	market_location = _clean_text(_pick(payload, "marketLocation", "location"), "Online")
+	startup_budget = _clean_text(_pick(payload, "startupBudget", "budget"), "Not provided")
+	skills_resources = _clean_text(_pick(payload, "skillsResources", "skillsAndResources", "resources"), "Not provided")
+	income_goal = _clean_text(_pick(payload, "incomeGoal"), "Not provided")
+	biggest_obstacle = _clean_text(_pick(payload, "biggestObstacle", "obstacle"), "Not provided")
+	delivery_preference = _pick(payload, "deliveryPreference", fallback="both")
 	domain_to_check = _resolve_domain(payload, business_name)
 	strategist_engine = _build_strategist_engine(payload)
 
