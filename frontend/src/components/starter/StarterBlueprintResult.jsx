@@ -57,11 +57,19 @@ function getStringValue(...values) {
   return "";
 }
 
-function normalizeTaskCandidate(rawItem, sectionKey, index) {
+function replaceCompanyPlaceholders(value, businessName) {
+  if (typeof value !== "string") return value;
+
+  return value
+    .replace(/\byour company\b/gi, businessName)
+    .replace(/\byour business\b/gi, businessName);
+}
+
+function normalizeTaskCandidate(rawItem, sectionKey, index, businessName) {
   if (typeof rawItem === "string") {
     return {
       id: `${sectionKey}-${index}-${rawItem}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      title: rawItem,
+      title: replaceCompanyPlaceholders(rawItem, businessName),
       description: "",
       priority: "Medium",
       estimatedTime: "30-60 min",
@@ -96,8 +104,8 @@ function normalizeTaskCandidate(rawItem, sectionKey, index) {
 
   return {
     id: `${sectionKey}-${index}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-    title,
-    description,
+    title: replaceCompanyPlaceholders(title, businessName),
+    description: replaceCompanyPlaceholders(description, businessName),
     priority: getStringValue(rawItem.priority, rawItem.urgency, rawItem.impact) || "Medium",
     estimatedTime: getStringValue(
       rawItem.estimated_time,
@@ -110,23 +118,23 @@ function normalizeTaskCandidate(rawItem, sectionKey, index) {
   };
 }
 
-function buildTasksForSection(sectionKey, sectionValue) {
+function buildTasksForSection(sectionKey, sectionValue, businessName) {
   const taskCandidates = [];
 
   if (Array.isArray(sectionValue)) {
     sectionValue.forEach((item, index) => {
-      taskCandidates.push(normalizeTaskCandidate(item, sectionKey, index));
+      taskCandidates.push(normalizeTaskCandidate(item, sectionKey, index, businessName));
     });
   } else if (isPlainObject(sectionValue)) {
     if (Array.isArray(sectionValue.tasks)) {
       sectionValue.tasks.forEach((item, index) => {
-        taskCandidates.push(normalizeTaskCandidate(item, sectionKey, index));
+        taskCandidates.push(normalizeTaskCandidate(item, sectionKey, index, businessName));
       });
     } else {
       Object.entries(sectionValue).forEach(([key, value], index) => {
         if (Array.isArray(value)) {
           value.forEach((item, nestedIndex) => {
-            taskCandidates.push(normalizeTaskCandidate(item, `${sectionKey}-${key}`, nestedIndex));
+            taskCandidates.push(normalizeTaskCandidate(item, `${sectionKey}-${key}`, nestedIndex, businessName));
           });
           return;
         }
@@ -138,20 +146,21 @@ function buildTasksForSection(sectionKey, sectionValue) {
                 ? { ...value, title: value.title || formatLabel(key) }
                 : { title: formatLabel(key), description: String(value) },
               sectionKey,
-              index
+              index,
+              businessName
             )
           );
         }
       });
     }
   } else if (typeof sectionValue === "string" && sectionValue.trim()) {
-    taskCandidates.push(normalizeTaskCandidate(sectionValue, sectionKey, 0));
+    taskCandidates.push(normalizeTaskCandidate(sectionValue, sectionKey, 0, businessName));
   }
 
   return taskCandidates.filter(Boolean);
 }
 
-function buildTaskEngine(blueprintData) {
+function buildTaskEngine(blueprintData, businessName) {
   const allTasks = [];
 
   Object.entries(blueprintData).forEach(([sectionKey, sectionValue]) => {
@@ -160,7 +169,7 @@ function buildTaskEngine(blueprintData) {
     }
 
     const phase = BLUEPRINT_PHASE_MAP[sectionKey] || "Foundation";
-    const sectionTasks = buildTasksForSection(sectionKey, sectionValue).map((task) => ({
+    const sectionTasks = buildTasksForSection(sectionKey, sectionValue, businessName).map((task) => ({
       ...task,
       phase,
       sectionKey,
@@ -186,9 +195,8 @@ function StarterBlueprintResult({
   const blueprintData = useMemo(() => resolveBlueprintData(response, blueprint), [response, blueprint]);
 
   const proposedBusinessName = (intakeValues?.proposedBusinessName || "").trim();
-  const selectedBrandName = (intakeValues?.selectedBrandName || "").trim();
   const resolvedBusinessName =
-    proposedBusinessName || selectedBrandName || getStringValue(blueprintData.business_name) || "Your Company Name";
+    proposedBusinessName || getStringValue(blueprintData.business_name) || "Your Company Name";
 
   const generatedDate = new Date().toLocaleDateString();
   const businessIdea = (intakeValues?.businessIdea || "").trim();
@@ -225,8 +233,16 @@ function StarterBlueprintResult({
     },
   ];
 
+  const normalizedStrategistPanels = strategistPanels.map((panel) => ({
+    ...panel,
+    value: replaceCompanyPlaceholders(panel.value, resolvedBusinessName),
+  }));
+
   const accessTier = getStringValue(intakeValues?.accessTier).toLowerCase() || "free";
-  const taskPhases = useMemo(() => buildTaskEngine(blueprintData), [blueprintData]);
+  const taskPhases = useMemo(
+    () => buildTaskEngine(blueprintData, resolvedBusinessName),
+    [blueprintData, resolvedBusinessName]
+  );
   const allTasks = useMemo(() => PHASE_ORDER.flatMap((phase) => taskPhases[phase] || []), [taskPhases]);
 
   const storageKey = useMemo(
@@ -267,7 +283,7 @@ function StarterBlueprintResult({
   };
 
   const handlePrintBlueprint = () => {
-    if (!proposedBusinessName && !selectedBrandName) {
+    if (!proposedBusinessName) {
       alert("Enter a business name before printing.");
       return;
     }
@@ -298,7 +314,7 @@ function StarterBlueprintResult({
 
       <section className="starter-result__strategist-card">
         <h3>10M Strategist Recommendation</h3>
-        {strategistPanels.map((panel) => {
+        {normalizedStrategistPanels.map((panel) => {
           const isProLocked = panel.lockedBy === "pro" && accessTier === "free";
           const isEliteLocked = panel.lockedBy === "elite" && ["free", "pro"].includes(accessTier);
           const isLocked = isProLocked || isEliteLocked;

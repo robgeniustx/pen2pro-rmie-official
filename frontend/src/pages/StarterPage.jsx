@@ -8,7 +8,8 @@ const initialValues = {
   tier: "starter",
   accessTier: "free",
   proposedBusinessName: "",
-  selectedBrandName: "",
+  domainToCheck: "",
+  domainSearchAttempted: "",
   businessIdea: "",
   businessType: "",
   productOrService: "",
@@ -28,6 +29,7 @@ const initialValues = {
 };
 
 const requiredFields = [
+  "proposedBusinessName",
   "businessIdea",
   "businessType",
   "productOrService",
@@ -107,11 +109,33 @@ function StarterPage({ navigateTo }) {
 
   const handleChange = (field, value) => {
     setValues((current) => {
-      if (field === "selectedBrandName") {
+      if (field === "proposedBusinessName") {
+        const previousSuggestion = String(current.proposedBusinessName || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, "")
+          .replace(/\s+/g, "");
+        const nextSuggestion = String(value || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, "")
+          .replace(/\s+/g, "");
+        const previousSuggestedDomain = previousSuggestion ? `${previousSuggestion}.com` : "";
+        const nextSuggestedDomain = nextSuggestion ? `${nextSuggestion}.com` : "";
+        const shouldSyncDomain =
+          !String(current.domainToCheck || "").trim() || current.domainToCheck === previousSuggestedDomain;
+
         return {
           ...current,
-          selectedBrandName: value,
-          proposedBusinessName: value || current.proposedBusinessName,
+          proposedBusinessName: value,
+          domainToCheck: shouldSyncDomain ? nextSuggestedDomain : current.domainToCheck,
+          domainSearchAttempted: "",
+        };
+      }
+
+      if (field === "domainToCheck") {
+        return {
+          ...current,
+          domainToCheck: value,
+          domainSearchAttempted: "",
         };
       }
 

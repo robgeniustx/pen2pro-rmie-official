@@ -12,7 +12,7 @@ class StarterGenerateRequest(BaseModel):
     tier: Literal["starter"]
     accessTier: Literal["free", "pro", "elite"] = "free"
     proposedBusinessName: str = Field(default="", max_length=140)
-    selectedBrandName: str = Field(default="", max_length=140)
+    domainToCheck: str = Field(default="", max_length=220)
     businessIdea: str = Field(..., min_length=3, max_length=240)
     businessType: str = Field(..., min_length=2, max_length=140)
     productOrService: str = Field(..., min_length=3, max_length=180)
