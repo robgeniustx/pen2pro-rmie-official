@@ -17,15 +17,30 @@ async function request(path, options = {}, config = {}) {
       signal: controller.signal,
     });
 
-    const contentType = response.headers.get("content-type") || "";
-    const isJson = contentType.includes("application/json");
-    const data = isJson ? await response.json() : null;
+    let data = null;
+    let errorPayload = null;
+
+    try {
+      data = await response.json();
+    } catch {
+      const rawText = await response.text();
+      errorPayload = { message: rawText };
+    }
 
     if (!response.ok) {
-      throw new Error(
+      const readableError =
+        errorPayload?.detail ||
+        errorPayload?.error ||
+        errorPayload?.message ||
         data?.detail ||
-          data?.message ||
-          `Request failed with status ${response.status}.`
+        data?.error ||
+        data?.message ||
+        `Request failed with status ${response.status}`;
+
+      throw new Error(
+        typeof readableError === "string"
+          ? readableError
+          : JSON.stringify(readableError)
       );
     }
 
@@ -83,19 +98,33 @@ export function createFounderCheckout(tierId) {
 }
 
 function normalizeBlueprintResponse(data) {
-  const blueprint =
+  const blueprintPayload =
     data?.blueprint ||
+    data?.result ||
+    data?.content ||
+    data?.output ||
+    data?.plan ||
     data?.data?.blueprint ||
     data?.data ||
-    data?.result?.blueprint ||
-    data?.result ||
-    data;
+    null;
 
-  if (!blueprint || typeof blueprint !== "object") {
-    throw new Error("Blueprint response is missing or invalid.");
+  if (blueprintPayload && typeof blueprintPayload === "object") {
+    return {
+      ...data,
+      blueprint: blueprintPayload,
+    };
   }
 
-  return { blueprint };
+  if (typeof blueprintPayload === "string" && blueprintPayload.trim()) {
+    return {
+      ...data,
+      blueprint: {
+        content: blueprintPayload,
+      },
+    };
+  }
+
+  throw new Error("Blueprint generated, but no blueprint text was returned.");
 }
 
 export async function generateStarterBlueprint(payload) {
