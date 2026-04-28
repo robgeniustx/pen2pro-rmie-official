@@ -5,6 +5,7 @@ import StarterBlueprintResult from "../components/starter/StarterBlueprintResult
 import ProgressSidebar from "../components/starter/StarterWorkflowSidebar.jsx";
 import { freeRequiredFields, getChecklistItems, getProgressSummary, getRecommendedNextAction } from "../components/starter/starterWorkflow.js";
 import { generateStarterBlueprint } from "../services/api.js";
+import { buildLocalStarterBlueprint } from "../components/starter/localStrategistEngine.js";
 
 const DRAFT_KEY = "pen2pro_starter_draft_v2";
 
@@ -89,7 +90,8 @@ function StarterPage({ navigateTo }) {
   const freeRequiredComplete = useMemo(() => freeRequiredFields.every((field) => String(values[field] || "").trim()), [values]);
 
   const handlePricingRedirect = () => {
-    window.location.href = "/pricing";
+    navigateTo("/pricing#pricing");
+    navigateTo("/pricing");
   };
 
   const handleAccessLevelChange = (nextAccessLevel) => {
@@ -234,16 +236,39 @@ function StarterPage({ navigateTo }) {
       tier: "starter",
     };
 
+    console.info("PEN2PRO starter form submission:", payload);
+
     setIsGenerating(true);
     setGenerationError("");
     setBlueprintResponse(null);
 
+    console.info("PEN2PRO starter form submission:", payload);
+
     try {
       const response = await generateStarterBlueprint(payload);
-      console.debug("PEN2PRO starter blueprint response:", response);
+      console.info("PEN2PRO starter API response:", response);
+      if (response?.source === "local-fallback") {
+        setGenerationError("Live strategist service is temporarily unavailable. PEN2PRO generated your blueprint with local premium strategy mode.");
+      }
       setBlueprintResponse(response);
     } catch (error) {
-      setGenerationError(getReadableError(error));
+      console.error("PEN2PRO starter generation failed:", error);
+      setGenerationError("We hit an issue while generating your blueprint. Please try again in a moment.");
+
+      if (!response?.blueprint) {
+        throw new Error("Starter API returned without blueprint payload.");
+      }
+
+      setBlueprintResponse(response);
+    } catch (error) {
+      console.error("PEN2PRO starter generation failed, using local strategist engine:", error);
+      const fallbackBlueprint = buildLocalStarterBlueprint(payload);
+      setBlueprintResponse({
+        success: true,
+        source: "local_fallback",
+        blueprint: fallbackBlueprint,
+      });
+      setGenerationError("Live strategist is temporarily unavailable. PEN2PRO generated your blueprint using the local strategy engine.");
     } finally {
       setIsGenerating(false);
     }
@@ -288,7 +313,7 @@ function StarterPage({ navigateTo }) {
         <div className="starter-page__nav">
           <button className="starter-page__brand" onClick={() => navigateTo("/")}>PEN2PRO</button>
           <div className="starter-page__nav-links">
-            <button onClick={() => navigateTo("/#pricing")}>Pricing</button>
+            <button onClick={() => navigateTo("/pricing")}>Pricing</button>
             <button onClick={() => navigateTo("/#waitlist")}>Join Waitlist</button>
           </div>
         </div>
@@ -325,13 +350,13 @@ function StarterPage({ navigateTo }) {
               )}
               {isGenerating && (
                 <div className="starter-state-card starter-state-card--loading" role="status" aria-live="polite">
-                  <h2>Building your PEN2PRO blueprint...</h2>
+                  <h2>Building your PEN2PRO blueprint…</h2>
                   <p>Your request was received. PEN2PRO is analyzing your business idea, offer, target customer, domain, access level, and launch path.</p>
                   <ul className="starter-loading-steps">
-                    <li>Reviewing your business details</li>
-                    <li>Structuring your offer</li>
-                    <li>Building your launch checklist</li>
-                    <li>Preparing your blueprint</li>
+                    <li>✅ Reviewing your business details</li>
+                    <li>⏳ Structuring your premium offer</li>
+                    <li>⏳ Building your launch and growth plans</li>
+                    <li>⏳ Finalizing your strategist blueprint</li>
                   </ul>
                 </div>
               )}

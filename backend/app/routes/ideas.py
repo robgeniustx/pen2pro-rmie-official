@@ -100,6 +100,54 @@ def generate_starter_blueprint(payload: StarterBlueprintRequest) -> dict[str, An
                 "Need repeatable lead generation workflows.",
                 "Need deeper pricing and conversion optimization.",
                 "Need operating system support beyond founder-only execution.",
+            "target_customer": audience,
+            "revenue_target": revenue_goal,
+        },
+        "startup_requirements": [
+            {"task": "Define one paid starter offer with fixed scope and outcome.", "priority": "High"},
+            {"task": "Set up a one-page offer + booking flow.", "priority": "High"},
+            {"task": "Prepare a 20-message outreach list and call script.", "priority": "High"},
+        ],
+        "next_steps_timeline": [
+            {"window": "Next 24 hours", "action": f"Finalize your first paid '{idea}' offer and pricing."},
+            {"window": "Days 2-7", "action": "Interview 5 potential buyers and launch your one-page offer."},
+            {"window": "Days 8-14", "action": "Reach out to 30 prospects and book 5 sales calls."},
+            {"window": "Days 15-30", "action": "Close first 3 clients, deliver fast wins, and collect testimonials."},
+        ],
+        "monetization_roadmap": {
+            "revenue_model": "Starter sprint offer → standard package → monthly retainer upsell.",
+            "first_offer": _format_offer(idea),
+            "pricing_idea": "Beta at $49-$149, then move to $199-$499 after first 3 wins.",
+            "customer_acquisition": "Direct outreach + referral asks + short proof-based content.",
+            "launch_actions": [
+                "Publish offer page with clear deliverables and timeline.",
+                "Run daily outreach with one pain-first script.",
+                "Track replies, calls, close rate, and cash collected weekly.",
+            ],
+        },
+        "offer_positioning": {
+            "core_promise": "Deliver a measurable result in 14 days using a simple execution system.",
+            "problem_statement": f"People struggle to execute '{idea}' consistently.",
+            "differentiator": "Fast implementation, fixed scope, and beginner-friendly support.",
+        },
+        "customer_avatar": {
+            "primary_segment": audience,
+            "buying_triggers": ["Needs a quick win.", "Prefers fixed pricing.", "Wants practical execution help."],
+            "top_pains": ["No clear action plan.", "Inconsistent execution.", "Slow results from generic advice."],
+        },
+        "first_30_day_execution_plan": {
+            "week_1": "Validate offer language and pricing with customer interviews.",
+            "week_2": "Launch outreach and book calls.",
+            "week_3": "Close paid pilots and deliver results fast.",
+            "week_4": "Gather testimonials and optimize script for repeat sales.",
+        },
+        "upgrade_recommendation": {
+            "recommended_tier": "pro",
+            "why_now": "Upgrade after first 3 customers to improve conversion consistency and systemize growth.",
+            "what_unlocks_next": [
+                "Weekly strategist execution plans",
+                "Offer and pricing optimization",
+                "More advanced growth and operations support",
             ],
         },
     }
