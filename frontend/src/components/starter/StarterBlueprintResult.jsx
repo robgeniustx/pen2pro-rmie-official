@@ -164,27 +164,39 @@ function TimelineCard({ items }) {
 }
 
 function MonetizationRoadmapCard({ blueprintData }) {
-  const monetization = blueprintData?.pricing_strategy || {};
-  const launchPlan = blueprintData?.launch_plan_30_days || {};
-
-  const rows = [
-    ["Revenue model", monetization.revenue_model || monetization.model],
-    ["First offer", monetization.first_offer || monetization.offer],
-    ["Pricing idea", monetization.pricing_idea || monetization.price_point],
-    ["Customer acquisition", monetization.customer_acquisition_steps || launchPlan.customer_acquisition_steps],
-    ["Launch actions", monetization.launch_actions || launchPlan.launch_actions],
-  ];
+  const monetization = isPlainObject(blueprintData?.monetization_roadmap) ? blueprintData.monetization_roadmap : null;
+  const rows = monetization
+    ? [
+        ["Revenue model", monetization.revenue_model],
+        ["First offer", monetization.first_offer],
+        ["Pricing idea", monetization.pricing_idea],
+        ["Customer acquisition", monetization.customer_acquisition],
+      ]
+    : [];
+  const launchActions = Array.isArray(monetization?.launch_actions) ? monetization.launch_actions.filter((item) => typeof item === "string" && item.trim()) : [];
 
   return (
     <ResultSectionCard title="Monetization Roadmap" span="wide">
-      <div className="starter-result__roadmap-grid">
-        {rows.map(([label, value]) => (
-          <div key={label}>
-            <h4>{label}</h4>
-            <p>{compactText(value, `Add ${label.toLowerCase()} to sharpen your monetization plan.`)}</p>
+      {!monetization ? (
+        <p>Monetization roadmap is temporarily unavailable. Regenerate your blueprint to restore this section.</p>
+      ) : (
+        <div className="starter-result__roadmap-grid">
+          {rows.map(([label, value]) => (
+            <div key={label}>
+              <h4>{label}</h4>
+              <p>{compactText(value)}</p>
+            </div>
+          ))}
+          <div>
+            <h4>Launch actions</h4>
+            <ul>
+              {launchActions.map((action, idx) => (
+                <li key={`${action}-${idx}`}>{action}</li>
+              ))}
+            </ul>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </ResultSectionCard>
   );
 }
@@ -196,13 +208,13 @@ function UpgradeCta({ accessLevel, onUpgradePro, onSeeElite }) {
       <h3>Join Now</h3>
       <p>Unlock strategist-level guidance and accelerate execution with PEN2PRO Pro or Elite.</p>
       <div className="starter-upsell__plans">
-        <article className={`starter-upsell__plan ${isFree ? "is-locked" : ""}`}>
+        <article className={`starter-upsell__plan ${isFree ? "is-locked" : ""}`} onClick={onUpgradePro} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onUpgradePro(); }}>
           <h4>Pro</h4>
           <p>Advanced strategy workflows, launch planning, and execution support.</p>
           {isFree && <span className="starter-upsell__lock">Locked for Free Forever</span>}
           <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>Choose Pro</button>
         </article>
-        <article className={`starter-upsell__plan starter-upsell__plan--elite ${isFree ? "is-locked" : ""}`}>
+        <article className={`starter-upsell__plan starter-upsell__plan--elite ${isFree ? "is-locked" : ""}`} onClick={onSeeElite} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSeeElite(); }}>
           <h4>Elite</h4>
           <p>Elite strategist roadmap, deep optimization, and scale execution plans.</p>
           <p className="starter-upsell__promo">$50 for the first month.</p>
