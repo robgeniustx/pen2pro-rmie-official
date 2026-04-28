@@ -165,12 +165,13 @@ function TimelineCard({ items }) {
 
 function MonetizationRoadmapCard({ blueprintData }) {
   const monetization = isPlainObject(blueprintData?.monetization_roadmap) ? blueprintData.monetization_roadmap : null;
+  const readRoadmapText = (value) => (typeof value === "string" && value.trim() ? value.trim() : "—");
   const rows = monetization
     ? [
-        ["Revenue model", monetization.revenue_model],
-        ["First offer", monetization.first_offer],
-        ["Pricing idea", monetization.pricing_idea],
-        ["Customer acquisition", monetization.customer_acquisition],
+        ["Revenue model", readRoadmapText(monetization.revenue_model)],
+        ["First offer", readRoadmapText(monetization.first_offer)],
+        ["Pricing idea", readRoadmapText(monetization.pricing_idea)],
+        ["Customer acquisition", readRoadmapText(monetization.customer_acquisition)],
       ]
     : [];
   const launchActions = Array.isArray(monetization?.launch_actions) ? monetization.launch_actions.filter((item) => typeof item === "string" && item.trim()) : [];
@@ -184,7 +185,7 @@ function MonetizationRoadmapCard({ blueprintData }) {
           {rows.map(([label, value]) => (
             <div key={label}>
               <h4>{label}</h4>
-              <p>{compactText(value)}</p>
+              <p>{value}</p>
             </div>
           ))}
           <div>
