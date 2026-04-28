@@ -31,7 +31,7 @@ def get_ideas(niche: str = "general business"):
         f"{niche} monetization blueprint",
         f"{niche} AI content workflow",
         f"{niche} offer creation engine",
-        f"{niche} customer acquisition assistant"
+        f"{niche} customer acquisition assistant",
     ]
     return {"niche": niche, "ideas": ideas}
 
@@ -54,102 +54,42 @@ def generate_starter_blueprint(payload: StarterBlueprintRequest) -> dict[str, An
             "time_commitment": time_commitment,
         },
         "startup_requirements": [
-            {"task": "Write one clear before/after transformation promise.", "priority": "High"},
-            {"task": "Create a one-page offer and booking link.", "priority": "High"},
-            {"task": "Prepare outreach script for 30 prospects.", "priority": "High"},
+            {"task": "Confirm business name entered by user", "priority": "High"},
+            {"task": "Check domain availability", "priority": "High"},
+            {"task": "Register domain if available", "priority": "High"},
+            {"task": "Set up Google Business Profile", "priority": "High"},
+            {"task": "Set up Apple Maps / Apple Business Connect", "priority": "High"},
+            {"task": "Set up social handles on Facebook, Instagram, TikTok, and LinkedIn", "priority": "High"},
+            {"task": "Set up booking/contact form", "priority": "High"},
+            {"task": "Set up review collection system", "priority": "Medium"},
+            {"task": "Set up local SEO", "priority": "Medium"},
         ],
-        "next_steps_timeline": [
-            {"window": "Days 1-3", "action": "Interview 5 target customers and capture exact pain-point language."},
-            {"window": "Days 4-7", "action": "Publish the starter offer page and message first 15 prospects."},
-            {"window": "Days 8-14", "action": "Book 5 calls, close 1-2 paid pilots, and refine objections script."},
-            {"window": "Days 15-30", "action": "Deliver to first clients, capture testimonials, and raise starter price."},
-        ],
-        "monetization_roadmap": {
-            "revenue_model": "Fixed-scope starter sprint with upsell into recurring support.",
-            "first_offer": _format_offer(idea),
-            "pricing_idea": "Start at $49-$149 beta price, then increase after first 3 measurable results.",
-            "customer_acquisition": f"Direct outreach + referral asks targeting {audience}.",
+        "launch_plan_30_days": {
+            "week_1": "Confirm business name entered by user, check domain availability, register domain if available, set up Google Business Profile, set up Apple Maps / Apple Business Connect, set up Facebook/Instagram/TikTok/LinkedIn business profiles, and create basic logo, brand colors, and tagline.",
+            "week_2": "Build simple landing page or starter website, add contact form or booking form, create first offer, create pricing package, and prepare sales script plus outreach message.",
+            "week_3": "Begin customer outreach, post before-and-after or proof-based content, ask for first reviews, add reviews to website and Google Business Profile, and start local SEO content.",
+            "week_4": "Raise pricing after first customers, launch monthly or recurring offer, add email/SMS follow-up, and push customers toward Pro or Elite if they need full strategy support.",
         },
-        "offer_positioning": {
-            "positioning_statement": f"{business_name} helps {audience} solve '{idea}' with an actionable sprint and measurable results.",
-            "core_promise": "Visible progress in 14 days with fixed scope and hands-on support.",
-            "differentiator": "Execution-first delivery built for beginners who need practical weekly actions.",
-        },
-        "customer_avatar": {
-            "profile": audience,
-            "pain_points": [
-                "Wants faster results but lacks a clear implementation roadmap.",
-                "Has limited time and needs simple weekly execution steps.",
-                "Will pay for speed, clarity, and accountability.",
-            ],
-            "buying_triggers": [
-                "Clear outcome in less than 30 days.",
-                "Starter pricing with low risk.",
-                "Proof from similar customers.",
-            ],
-        },
-        "first_30_day_execution_plan": [
-            {"week": "Week 1", "objective": "Build offer + sales assets", "actions": ["Define offer", "Set booking flow", "Create outreach script"]},
-            {"week": "Week 2", "objective": "Acquire first buyers", "actions": ["Run daily outreach", "Hold discovery calls", "Close pilots"]},
-            {"week": "Week 3", "objective": "Deliver first wins", "actions": ["Deliver sprint", "Track outcomes", "Collect testimonial"]},
-            {"week": "Week 4", "objective": "Systemize + optimize", "actions": ["Improve messaging", "Raise price", "Start referral sequence"]},
-        ],
-        "upgrade_recommendation": {
-            "recommended_path": "Upgrade to Pro once first 3 customers are closed; move to Elite for team, systems, and scaling support.",
-            "triggers": [
-                "Need repeatable lead generation workflows.",
-                "Need deeper pricing and conversion optimization.",
-                "Need operating system support beyond founder-only execution.",
-            "target_customer": audience,
-            "revenue_target": revenue_goal,
-        },
-        "startup_requirements": [
-            {"task": "Define one paid starter offer with fixed scope and outcome.", "priority": "High"},
-            {"task": "Set up a one-page offer + booking flow.", "priority": "High"},
-            {"task": "Prepare a 20-message outreach list and call script.", "priority": "High"},
-        ],
-        "next_steps_timeline": [
-            {"window": "Next 24 hours", "action": f"Finalize your first paid '{idea}' offer and pricing."},
-            {"window": "Days 2-7", "action": "Interview 5 potential buyers and launch your one-page offer."},
-            {"window": "Days 8-14", "action": "Reach out to 30 prospects and book 5 sales calls."},
-            {"window": "Days 15-30", "action": "Close first 3 clients, deliver fast wins, and collect testimonials."},
-        ],
         "monetization_roadmap": {
             "revenue_model": "Starter sprint offer → standard package → monthly retainer upsell.",
             "first_offer": _format_offer(idea),
             "pricing_idea": "Beta at $49-$149, then move to $199-$499 after first 3 wins.",
             "customer_acquisition": "Direct outreach + referral asks + short proof-based content.",
-            "launch_actions": [
-                "Publish offer page with clear deliverables and timeline.",
-                "Run daily outreach with one pain-first script.",
-                "Track replies, calls, close rate, and cash collected weekly.",
-            ],
-        },
-        "offer_positioning": {
-            "core_promise": "Deliver a measurable result in 14 days using a simple execution system.",
-            "problem_statement": f"People struggle to execute '{idea}' consistently.",
-            "differentiator": "Fast implementation, fixed scope, and beginner-friendly support.",
-        },
-        "customer_avatar": {
-            "primary_segment": audience,
-            "buying_triggers": ["Needs a quick win.", "Prefers fixed pricing.", "Wants practical execution help."],
-            "top_pains": ["No clear action plan.", "Inconsistent execution.", "Slow results from generic advice."],
-        },
-        "first_30_day_execution_plan": {
-            "week_1": "Validate offer language and pricing with customer interviews.",
-            "week_2": "Launch outreach and book calls.",
-            "week_3": "Close paid pilots and deliver results fast.",
-            "week_4": "Gather testimonials and optimize script for repeat sales.",
         },
         "upgrade_recommendation": {
-            "recommended_tier": "pro",
-            "why_now": "Upgrade after first 3 customers to improve conversion consistency and systemize growth.",
+            "recommended_tier": "elite",
+            "why_now": "Ready to unlock the full PEN2PRO business buildout?",
             "what_unlocks_next": [
-                "Weekly strategist execution plans",
-                "Offer and pricing optimization",
-                "More advanced growth and operations support",
+                "This free blueprint gives you the starting map. Elite unlocks the deeper execution system, including entity setup guidance, domain strategy, branding direction, pricing systems, customer acquisition, CRM setup, payment setup, and 90-day growth execution.",
+                "Elite Offer: First month only $99.",
             ],
+            "cta_button": "Unlock Elite Strategy",
+            "route": "/pricing",
         },
+        "sources": [
+            {"name": "Google Business Profile", "url": "https://www.google.com/business/"},
+            {"name": "Apple Business Connect", "url": "https://businessconnect.apple.com/"},
+        ],
     }
 
     return {"blueprint": blueprint}

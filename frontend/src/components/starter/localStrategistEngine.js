@@ -29,9 +29,15 @@ export function buildLocalStarterBlueprint(payload = {}) {
       startup_budget: startupBudget,
     },
     startup_requirements: [
-      { task: `Secure ${businessName} business registration and EIN`, priority: "High" },
-      { task: "Set up a one-page offer and booking funnel", priority: "High" },
-      { task: "Run 10 customer discovery calls", priority: "High" },
+      { task: `Confirm the final business name for ${businessName}`, priority: "High" },
+      { task: "Check domain availability", priority: "High" },
+      { task: "Register domain once available", priority: "High" },
+      { task: "Set up Google Business Profile", priority: "High" },
+      { task: "Set up Apple Maps / Apple Business Connect", priority: "High" },
+      { task: "Set up social handles for Facebook, Instagram, TikTok, and LinkedIn", priority: "High" },
+      { task: "Set up booking/contact form", priority: "High" },
+      { task: "Implement a review collection system", priority: "Medium" },
+      { task: "Set up local SEO", priority: "Medium" },
     ],
     licenses_and_compliance: [
       { note: `Check city/state licensing requirements in ${location}` },
@@ -49,8 +55,10 @@ export function buildLocalStarterBlueprint(payload = {}) {
       premium_offer: "Premium offer: $2,500+",
     },
     launch_plan_30_days: {
-      week_1: `Finalize ${businessName} positioning, first offer, and target ICP list of 50 prospects.`,
-      weeks_2_4: "Run outbound + referral sprint, close 1-3 pilot customers, collect testimonials.",
+      week_1: `Confirm business name, check domain availability, register domain if available, set up Google Business Profile, set up Apple Maps / Apple Business Connect, set up Facebook + Instagram + TikTok + LinkedIn profiles, and create basic logo, brand colors, and tagline for ${businessName}.`,
+      week_2: "Build a simple landing page/starter website, add contact or booking form, create first offer, create pricing package, and prepare sales script + outreach message.",
+      week_3: "Begin customer outreach, post proof-based content, ask for first reviews, add reviews to website and Google Business Profile, and start local SEO content.",
+      week_4: "Raise pricing after first customers, launch monthly/recurring offer, add email/SMS follow-up, and push customers toward Pro or Elite when they need full strategy support.",
     },
     operations_plan_90_days: {
       focus: "Build repeatable delivery SOPs, pipeline review rhythm, and weekly KPI dashboard.",
@@ -102,7 +110,7 @@ export function buildLocalStarterBlueprint(payload = {}) {
         "Build booking page and payment link.",
         "Book first 5 discovery calls this week.",
       ]),
-      upgrade_cta: "Unlock Full Strategy",
+      upgrade_cta: "Unlock Elite Strategy",
     },
   };
 }
