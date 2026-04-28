@@ -4,7 +4,7 @@ import StarterIntakeForm from "../components/starter/StarterIntakeForm.jsx";
 import StarterBlueprintResult from "../components/starter/StarterBlueprintResult.jsx";
 import ProgressSidebar from "../components/starter/StarterWorkflowSidebar.jsx";
 import { freeRequiredFields, getChecklistItems, getProgressSummary, getRecommendedNextAction } from "../components/starter/starterWorkflow.js";
-import { generateStarterBlueprint } from "../services/api.js";
+import { createFounderCheckout, generateStarterBlueprint } from "../services/api.js";
 import { buildLocalStarterBlueprint } from "../components/starter/localStrategistEngine.js";
 
 const DRAFT_KEY = "pen2pro_starter_draft_v2";
@@ -92,6 +92,23 @@ function StarterPage({ navigateTo }) {
   const handlePricingRedirect = () => {
     navigateTo("/pricing#pricing");
     navigateTo("/pricing");
+  };
+
+  const handleEliteUpgrade = async () => {
+    try {
+      const checkoutData = await createFounderCheckout("elite");
+      if (checkoutData?.checkoutUrl) {
+        window.location.href = checkoutData.checkoutUrl;
+        return;
+      }
+      if (checkoutData?.url) {
+        window.location.href = checkoutData.url;
+        return;
+      }
+    } catch {
+      // Fallback to pricing route when Stripe checkout is unavailable.
+    }
+    handlePricingRedirect();
   };
 
   const handleAccessLevelChange = (nextAccessLevel) => {
@@ -374,7 +391,7 @@ function StarterPage({ navigateTo }) {
               checklistItems={checklistItems}
               nextAction={nextAction}
               onUpgradePro={handlePricingRedirect}
-              onSeeElite={handlePricingRedirect}
+              onSeeElite={handleEliteUpgrade}
             />
           </section>
         )}
@@ -382,7 +399,7 @@ function StarterPage({ navigateTo }) {
         {hasResult && (
           <>
             {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
-            <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={() => navigateTo("/pricing")} onStartAnother={handleStartAnother} />
+            <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />
           </>
         )}
       </main>

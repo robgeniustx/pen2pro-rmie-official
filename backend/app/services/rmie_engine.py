@@ -573,9 +573,15 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				"domain": domain_to_check,
 			},
 			"startup_requirements": [
-				{"task": f"Write a one-sentence value promise for {business_name}", "priority": "High"},
-				{"task": "Set up a simple one-page offer or landing page", "priority": "High"},
-				{"task": "Reach out to 10 potential customers and collect feedback", "priority": "High"},
+				{"task": f"Confirm the final business name for {business_name}", "priority": "High"},
+				{"task": "Check domain availability", "priority": "High"},
+				{"task": "Register domain once available", "priority": "High"},
+				{"task": "Set up Google Business Profile", "priority": "High"},
+				{"task": "Set up Apple Maps / Apple Business Connect", "priority": "High"},
+				{"task": "Set up social handles across Facebook, Instagram, TikTok, and LinkedIn", "priority": "High"},
+				{"task": "Set up booking or contact form", "priority": "High"},
+				{"task": "Install a review collection system", "priority": "Medium"},
+				{"task": "Set up local SEO basics", "priority": "Medium"},
 			],
 			"next_steps_timeline": next_steps_timeline,
 			"licenses_and_compliance": [
@@ -594,8 +600,10 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"first_30_day_execution_plan": first_30_day_execution_plan,
 			"upgrade_recommendation": upgrade_recommendation,
 			"launch_plan_30_days": {
-				"week_1": "Clarify offer, audience, and domain/brand basics.",
-				"weeks_2_4": "Run outreach, validate offer demand, and refine messaging from real calls.",
+				"week_1": "Confirm business name, check domain availability, register domain if available, set up Google Business Profile, set up Apple Maps / Apple Business Connect, create Facebook + Instagram + TikTok + LinkedIn business profiles, and create a basic logo, brand colors, and tagline.",
+				"week_2": "Build a simple landing page or starter website, add contact/booking form, create first offer, create pricing package, and prepare sales script plus outreach message.",
+				"week_3": "Begin customer outreach, post before-and-after or proof-based content, ask for first reviews, add reviews to website and Google Business Profile, and start local SEO content.",
+				"week_4": "Raise pricing after first customers, launch monthly/recurring offer, add email/SMS follow-up, and push customers toward Pro or Elite when they need full strategy support.",
 			},
 			"operations_plan_90_days": {
 				"focus": "Keep operations simple with repeatable delivery checklists and customer follow-up cadence.",
@@ -616,6 +624,14 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"upgradeHooks": {
 				"proReason": "Pro unlocks strategist modes for branding, monetization, marketing, operations, and legal/foundation planning.",
 				"eliteReason": "Elite unlocks advanced projections, automation opportunities, scaling milestones, and 10M roadmap guidance.",
+				"eliteOffer": "Elite Offer: First month only $99.",
+			},
+			"upgrade_cta": {
+				"title": "Ready to unlock the full PEN2PRO business buildout?",
+				"copy": "This free blueprint gives you the starting map. Elite unlocks the deeper execution system, including entity setup guidance, domain strategy, branding direction, pricing systems, customer acquisition, CRM setup, payment setup, and 90-day growth execution.",
+				"offer": "Elite Offer: First month only $99.",
+				"button": "Unlock Elite Strategy",
+				"route": "/pricing",
 			},
 			"businessIdentity": {
 				"proposedBusinessName": _clean_text(payload.get("proposedBusinessName", ""), ""),

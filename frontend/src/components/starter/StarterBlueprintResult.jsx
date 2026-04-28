@@ -72,7 +72,7 @@ function normalizeBlueprintData(response, intakeValues) {
       tools_needed: premium.tools_needed || read(raw, "proPlan.toolsNeeded", read(raw, "tools_and_software", [])),
       risk_warnings: premium.risk_warnings || read(raw, "risk_flags", []),
       next_best_actions: premium.next_best_actions || read(raw, "starterPlan.top3Actions", []),
-      upgrade_cta: premium.upgrade_cta || "Unlock Full Strategy",
+      upgrade_cta: premium.upgrade_cta || "Unlock Elite Strategy",
     },
   if (typeof value === "string" && value.trim()) {
     return value
@@ -210,21 +210,21 @@ function ResultCard({ title, content }) {
 function UpgradeCta({ onUpgradePro, onSeeElite }) {
   return (
     <section className="starter-upsell starter-upsell--join-now">
-      <h3>Unlock Full Strategy</h3>
-      <p>Free Forever is active. Upgrade to unlock deeper strategist execution systems.</p>
+      <h3>Ready to unlock the full PEN2PRO business buildout?</h3>
+      <p>This free blueprint gives you the starting map. Elite unlocks the deeper execution system, including entity setup guidance, domain strategy, branding direction, pricing systems, customer acquisition, CRM setup, payment setup, and 90-day growth execution.</p>
       <div className="starter-upsell__plans">
         <article className="starter-upsell__plan is-locked">
           <h4>Pro Plan</h4>
           <p>Conversion playbooks, deeper positioning, and advanced launch systems.</p>
           <span className="starter-upsell__lock">Locked on Free Forever</span>
-          <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>Unlock Full Strategy</button>
+          <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>Unlock Elite Strategy</button>
         </article>
         <article className="starter-upsell__plan starter-upsell__plan--elite is-locked">
           <h4>Elite Plan</h4>
           <p>Elite growth systems and 10M strategist sequencing.</p>
-          <p className="starter-upsell__promo">First month only $50</p>
+          <p className="starter-upsell__promo">Elite Offer: First month only $99.</p>
           <span className="starter-upsell__lock">Locked on Free Forever</span>
-          <button className="starter-button starter-button--primary" onClick={onSeeElite}>Unlock Full Strategy</button>
+          <button className="starter-button starter-button--primary" onClick={onSeeElite}>Unlock Elite Strategy</button>
 function HeroResultCard({ businessName, blueprintData, intakeValues, domain }) {
   return (
     <section className="starter-result__hero-card">
@@ -371,7 +371,7 @@ function UpgradeCta({ accessLevel, onUpgradePro, onSeeElite }) {
         </article>
         <article className="starter-upsell__plan starter-upsell__plan--elite is-locked">
           <h4>Elite Plan</h4>
-          <p>First month only $50</p>
+          <p>Elite Offer: First month only $99.</p>
           <button className="starter-button starter-button--primary" onClick={onSeeElite}>{ctaLabel}</button>
         </article>
       </div>
@@ -457,7 +457,7 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
         <UpgradeRecommendationCard blueprintData={blueprintData} />
       </section>
 
-      <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} ctaLabel={sections.upgrade_cta || "Unlock Full Strategy"} />
+      <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} ctaLabel={sections.upgrade_cta || "Unlock Elite Strategy"} />
 
       <section className="starter-result__cta-block">
         <div className="starter-result__cta-actions">
