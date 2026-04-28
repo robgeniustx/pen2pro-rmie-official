@@ -92,6 +92,58 @@ def _build_growth_channels(delivery_preference: str, target_customer: str, marke
 	]
 
 
+def _deterministic_monetization_fallback(payload: dict, business_name: str, market_location: str) -> dict:
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "your business idea")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "your ideal customer")
+	product_or_service = _clean_text(_pick(payload, "productOrService", "product_service"), "a focused starter package")
+	startup_budget = _clean_text(_pick(payload, "startupBudget", "budget"), "lean budget")
+	low_budget = _is_low_budget(startup_budget)
+	price_range = "$99-$299 paid pilot" if low_budget else "$300-$900 starter package"
+
+	return {
+		"revenue_model": (
+			f"Lead with a productized {product_or_service} offer for {target_customer}, then upsell recurring support once "
+			f"{business_name} documents outcomes from early clients."
+		),
+		"first_offer": (
+			f"{product_or_service} Quickstart for {target_customer}: a fixed-scope 7-day implementation that delivers one concrete win "
+			f"related to {business_idea}."
+		),
+		"pricing_idea": (
+			f"Start with a {price_range} to secure initial proof, then raise pricing by 15-25% after 2-3 successful case studies."
+		),
+		"customer_acquisition": (
+			f"Use direct outreach, referral asks, and proof-based social posts targeting {target_customer} in {market_location}."
+		),
+		"launch_actions": [
+			f"Publish a one-page {business_name} offer with scope, timeline, proof placeholder, and booking CTA.",
+			f"Contact 20 qualified {target_customer} prospects with a short pain-first message and paid pilot CTA.",
+			"Run 5 discovery calls, close 1-2 paid pilots, and log objections to tighten positioning.",
+			"Deliver the first pilot quickly, collect a testimonial, and reuse it in the next outreach cycle.",
+		],
+	}
+
+
+def _ensure_complete_monetization_roadmap(monetization: dict, payload: dict, business_name: str, market_location: str) -> dict:
+	fallback = _deterministic_monetization_fallback(payload, business_name, market_location)
+	roadmap = monetization if isinstance(monetization, dict) else {}
+	launch_actions = roadmap.get("launch_actions")
+	if not isinstance(launch_actions, list):
+		launch_actions = []
+	launch_actions = [str(item).strip() for item in launch_actions if str(item).strip()]
+	if len(launch_actions) < 3:
+		launch_actions = fallback["launch_actions"]
+	launch_actions = launch_actions[:5]
+
+	return {
+		"revenue_model": _clean_text(roadmap.get("revenue_model", ""), fallback["revenue_model"]),
+		"first_offer": _clean_text(roadmap.get("first_offer", ""), fallback["first_offer"]),
+		"pricing_idea": _clean_text(roadmap.get("pricing_idea", ""), fallback["pricing_idea"]),
+		"customer_acquisition": _clean_text(roadmap.get("customer_acquisition", ""), fallback["customer_acquisition"]),
+		"launch_actions": launch_actions,
+	}
+
+
 def _build_monetization_roadmap(payload: dict, business_name: str, market_location: str) -> dict:
 	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "your core offer")
 	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "your ideal customer")
@@ -136,13 +188,20 @@ def _build_monetization_roadmap(payload: dict, business_name: str, market_locati
 		"Deliver the pilot fast, collect a testimonial, and reuse it in your next outreach sprint.",
 	]
 
-	return {
+	return _ensure_complete_monetization_roadmap({
 		"revenue_model": _clean_text(revenue_model, "Productized starter offer with clear scope and recurring upsell path."),
 		"first_offer": _clean_text(first_offer, "Fixed-scope starter package with a measurable outcome."),
 		"pricing_idea": _clean_text(pricing_idea, "Start with an entry paid pilot and increase pricing after documented wins."),
 		"customer_acquisition": _clean_text(customer_acquisition, "Use direct outreach, referrals, and proof-based content to acquire first buyers."),
 		"launch_actions": launch_actions[:5],
-	}
+	}, payload, business_name, market_location)
+
+
+def _safe_build_monetization_roadmap(payload: dict, business_name: str, market_location: str) -> dict:
+	try:
+		return _build_monetization_roadmap(payload, business_name, market_location)
+	except Exception:
+		return _deterministic_monetization_fallback(payload, business_name, market_location)
 
 
 def _build_offer_positioning(business_name: str, business_idea: str, target_customer: str, product_or_service: str) -> dict:
@@ -383,7 +442,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	]
 
 	if access_level == "free":
-		monetization_roadmap = _build_monetization_roadmap(payload, business_name, market_location)
+		monetization_roadmap = _safe_build_monetization_roadmap(payload, business_name, market_location)
 		free_blueprint = {
 			"business_snapshot": {
 				"business_name": business_name,
@@ -522,6 +581,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 		"customer_avatar": customer_avatar,
 		"first_30_day_execution_plan": first_30_day_execution_plan,
 		"upgrade_recommendation": upgrade_recommendation,
+		"monetization_roadmap": _safe_build_monetization_roadmap(payload, business_name, market_location),
 		"launch_plan_30_days": {
 			"top3_actions": [
 				"Define a single sentence value proposition with a measurable before/after outcome.",
