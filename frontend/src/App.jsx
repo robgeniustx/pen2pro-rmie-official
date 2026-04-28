@@ -51,6 +51,10 @@ function App() {
     return <StarterPage navigateTo={navigateTo} />;
   }
 
+  if (pathname === "/pricing") {
+    return <HomePage navigateTo={navigateTo} initialSection="#pricing" />;
+  }
+
   return <HomePage navigateTo={navigateTo} />;
 }
 
