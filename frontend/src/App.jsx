@@ -51,7 +51,7 @@ function App() {
     return <StarterPage navigateTo={navigateTo} />;
   }
 
-  return <HomePage navigateTo={navigateTo} />;
+  return <HomePage navigateTo={navigateTo} currentPath={pathname} />;
 }
 
 export default App;

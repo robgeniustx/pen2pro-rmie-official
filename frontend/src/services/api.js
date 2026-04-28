@@ -1,3 +1,5 @@
+import { buildLocalStarterBlueprint } from "./localBlueprintEngine.js";
+
 const rawApiBase = import.meta.env.VITE_API_BASE_URL || "";
 export const apiBase = rawApiBase.replace(/\/+$/, "");
 
@@ -123,6 +125,13 @@ export function createFounderCheckout(tierId) {
 }
 
 function normalizeBlueprintResponse(data) {
+  if (typeof data === "string" && data.trim()) {
+    return {
+      raw: data,
+      blueprint: { narrative: data.trim() },
+    };
+  }
+
   const blueprintPayload =
     data?.blueprint ||
     data?.result?.blueprint ||
@@ -134,6 +143,13 @@ function normalizeBlueprintResponse(data) {
     data?.data ||
     null;
 
+  if (typeof blueprintPayload === "string" && blueprintPayload.trim()) {
+    return {
+      ...data,
+      blueprint: { narrative: blueprintPayload.trim() },
+    };
+  }
+
   if (blueprintPayload && typeof blueprintPayload === "object") {
     return {
       ...data,
@@ -141,29 +157,34 @@ function normalizeBlueprintResponse(data) {
     };
   }
 
-  if (typeof blueprintPayload === "string" && blueprintPayload.trim()) {
-    return {
-      ...data,
-      blueprint: {
-        content: blueprintPayload,
-      },
-    };
-  }
-
   throw new Error("Blueprint generated, but no blueprint content was returned.");
 }
 
-export async function generateStarterBlueprint(payload) {
-  const data = await request(
-    "/api/rmie/starter-generate",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-    {
-      timeout: 45000,
-    }
-  );
+function buildFallbackResponse(payload, reason = "API unavailable") {
+  return {
+    success: true,
+    source: "local-fallback",
+    fallbackReason: reason,
+    blueprint: buildLocalStarterBlueprint(payload),
+  };
+}
 
-  return normalizeBlueprintResponse(data);
+export async function generateStarterBlueprint(payload) {
+  try {
+    const data = await request(
+      "/api/rmie/starter-generate",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      {
+        timeout: 45000,
+      }
+    );
+
+    return normalizeBlueprintResponse(data);
+  } catch (error) {
+    console.error("PEN2PRO starter API failed, using local fallback:", error);
+    return buildFallbackResponse(payload, error?.message || "Unknown API failure");
+  }
 }

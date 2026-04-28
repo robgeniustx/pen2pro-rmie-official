@@ -1,290 +1,65 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-function isPlainObject(value) {
+function isObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function resolveBlueprintData(response, blueprint) {
-  const candidates = [blueprint, response?.blueprint, response?.data?.blueprint, response?.data, response?.result?.blueprint, response?.result, response];
-  return candidates.find((entry) => isPlainObject(entry)) || {};
-}
-
-function normalizeText(value, fallback = "Not provided") {
-  if (typeof value === "string" && value.trim()) return value.trim();
-  return fallback;
-}
-
-function toReadableLabel(value) {
-  return String(value || "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function compactText(value, fallback = "Not provided") {
+function toText(value, fallback = "Not provided") {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (Array.isArray(value)) {
-    const lines = value
-      .map((item) => (typeof item === "string" ? item : item?.task || item?.item || item?.step || ""))
+    const rows = value
+      .map((item) => (typeof item === "string" ? item : item?.task || item?.note || item?.requirement || item?.tool || ""))
       .map((item) => String(item).trim())
       .filter(Boolean);
-    return lines.length ? lines.join(" • ") : fallback;
+    return rows.length ? rows.join(" • ") : fallback;
   }
-  if (isPlainObject(value)) {
-    const lines = Object.entries(value)
-      .map(([key, detail]) => {
-        if (typeof detail === "string") return `${toReadableLabel(key)}: ${detail}`;
-        return "";
-      })
-      .filter(Boolean);
-    return lines.length ? lines.join(" • ") : fallback;
+  if (isObject(value)) {
+    const rows = Object.entries(value)
+      .map(([key, detail]) => `${key.replace(/_/g, " ")}: ${typeof detail === "string" ? detail : ""}`)
+      .filter((row) => row.trim().length > 2);
+    return rows.length ? rows.join(" • ") : fallback;
   }
   return fallback;
 }
 
-function getChecklistEntries(value) {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => {
-        if (typeof item === "string") return { task: item, priority: "Medium" };
-        if (isPlainObject(item)) {
-          const task = normalizeText(item.task || item.item || item.requirement || item.step, "");
-          return task ? { task, priority: normalizeText(item.priority, "Medium") } : null;
-        }
-        return null;
-      })
-      .filter(Boolean);
-  }
-
-  if (isPlainObject(value)) {
-    return Object.entries(value).map(([task, priority]) => ({ task: toReadableLabel(task), priority: typeof priority === "string" ? priority : "Medium" }));
-  }
-
-  if (typeof value === "string" && value.trim()) {
-    return value
-      .split(/\n|•|;/)
-      .map((item) => ({ task: item.trim(), priority: "Medium" }))
-      .filter((item) => item.task);
-  }
-
-  return [];
+function normalizeBlueprintPayload(response, blueprint) {
+  if (isObject(blueprint)) return blueprint;
+  if (isObject(response?.blueprint)) return response.blueprint;
+  if (isObject(response?.result?.blueprint)) return response.result.blueprint;
+  if (isObject(response?.result)) return response.result;
+  if (typeof response?.blueprint === "string") return { narrative: response.blueprint };
+  if (typeof response?.result === "string") return { narrative: response.result };
+  if (typeof response === "string") return { narrative: response };
+  return {};
 }
 
-function getTimelineEntries(launchPlan, operationsPlan) {
-  const week1 = compactText(
-    isPlainObject(launchPlan) ? launchPlan.week_1 || launchPlan.week1 || launchPlan.first_week : Array.isArray(launchPlan) ? launchPlan[0] : launchPlan,
-    "Define your first offer, set up your business profile, and map your MVP actions."
-  );
-  const weeks2to4 = compactText(
-    isPlainObject(launchPlan) ? launchPlan.weeks_2_4 || launchPlan.weeks2_4 || launchPlan.weeks_2_to_4 : Array.isArray(launchPlan) ? launchPlan.slice(1).join(" • ") : "",
-    "Validate demand, publish your offer, and run your first customer acquisition sprint."
-  );
-  const day30 = compactText(
-    isPlainObject(operationsPlan) ? operationsPlan.day_30 || operationsPlan.first_30_days || operationsPlan.month_1 : operationsPlan,
-    "Review traction metrics, optimize your funnel, and set your next 60-day growth goals."
-  );
-
-  return [
-    { label: "Week 1", detail: week1 },
-    { label: "Weeks 2–4", detail: weeks2to4 },
-    { label: "30-Day Plan", detail: day30 },
-  ];
-}
-
-function getWindowTimelineEntries(value) {
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => {
-      if (!isPlainObject(item)) return null;
-      const label = normalizeText(item.window || item.label, "");
-      const detail = compactText(item.action || item.detail, "");
-      if (!label || !detail) return null;
-      return { label, detail };
-    })
-    .filter(Boolean);
-}
-
-function ResultSectionCard({ title, children, span = "half", animated = false }) {
+function ResultCard({ title, content }) {
   return (
-    <article className={`starter-result__bento-card starter-result__bento-card--${span} ${animated ? "starter-result__bento-card--animated" : ""}`}>
+    <article className="starter-result__bento-card">
       <h3>{title}</h3>
-      {children}
+      <p>{content}</p>
     </article>
   );
 }
 
-function HeroResultCard({ businessName, blueprintData, intakeValues, domain }) {
-  return (
-    <section className="starter-result__hero-card">
-      <p className="starter-result__eyebrow">PEN2PRO BLUEPRINT</p>
-      <h2 className="starter-result__hero-title">Your Business Blueprint</h2>
-      <p className="starter-result__subtitle">Built for {businessName}</p>
-      <div className="starter-result__hero-grid">
-        <ResultSectionCard title="Business Idea" animated>
-          <p>{normalizeText(intakeValues?.businessIdea, normalizeText(blueprintData?.business_snapshot?.business_summary))}</p>
-        </ResultSectionCard>
-        <ResultSectionCard title="Target Customer" animated>
-          <p>{normalizeText(blueprintData?.business_snapshot?.target_customer, normalizeText(intakeValues?.targetCustomer))}</p>
-        </ResultSectionCard>
-        <ResultSectionCard title="Offer Idea" animated>
-          <p>{normalizeText(blueprintData?.business_snapshot?.basic_offer_idea || blueprintData?.business_snapshot?.product_or_service, normalizeText(intakeValues?.productOrService))}</p>
-        </ResultSectionCard>
-        <ResultSectionCard title="Domain" animated>
-          <p>{normalizeText(domain, "Choose a domain to strengthen your brand positioning.")}</p>
-        </ResultSectionCard>
-      </div>
-    </section>
-  );
-}
-
-function StartupChecklistCard({ items }) {
-  const [checkedItems, setCheckedItems] = useState({});
-
-  const handleToggle = (index) => {
-    setCheckedItems((current) => ({ ...current, [index]: !current[index] }));
-  };
-
-  return (
-    <ResultSectionCard title="Startup Checklist" span="wide">
-      <ul className="starter-result__checklist">
-        {items.map((item, idx) => {
-          const checked = !!checkedItems[idx];
-          return (
-            <li key={`${item.task}-${idx}`} className={checked ? "is-checked" : ""}>
-              <label>
-                <input type="checkbox" checked={checked} onChange={() => handleToggle(idx)} aria-label={`Mark ${item.task} as complete`} />
-                <span>{item.task}</span>
-              </label>
-              <span className="starter-priority-badge">{item.priority}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </ResultSectionCard>
-  );
-}
-
-function TimelineCard({ items }) {
-  return (
-    <ResultSectionCard title="Next Steps Timeline" span="wide">
-      <ol className="starter-result__timeline-grid">
-        {items.map((item, idx) => (
-          <li key={`${item.label}-${idx}`} className="starter-result__timeline-card">
-            <p>{item.label}</p>
-            <span>{item.detail}</span>
-          </li>
-        ))}
-      </ol>
-    </ResultSectionCard>
-  );
-}
-
-function MonetizationRoadmapCard({ blueprintData }) {
-  const monetization = isPlainObject(blueprintData?.monetization_roadmap) ? blueprintData.monetization_roadmap : null;
-  const readRoadmapText = (value) => (typeof value === "string" && value.trim() ? value.trim() : "—");
-  const rows = monetization
-    ? [
-        ["Revenue model", readRoadmapText(monetization.revenue_model)],
-        ["First offer", readRoadmapText(monetization.first_offer)],
-        ["Pricing idea", readRoadmapText(monetization.pricing_idea)],
-        ["Customer acquisition", readRoadmapText(monetization.customer_acquisition)],
-      ]
-    : [];
-  const launchActions = Array.isArray(monetization?.launch_actions) ? monetization.launch_actions.filter((item) => typeof item === "string" && item.trim()) : [];
-
-  return (
-    <ResultSectionCard title="Monetization Roadmap" span="wide">
-      {!monetization ? (
-        <p>Monetization roadmap is temporarily unavailable. Regenerate your blueprint to restore this section.</p>
-      ) : (
-        <div className="starter-result__roadmap-grid">
-          {rows.map(([label, value]) => (
-            <div key={label}>
-              <h4>{label}</h4>
-              <p>{value}</p>
-            </div>
-          ))}
-          <div>
-            <h4>Launch actions</h4>
-            <ul>
-              {launchActions.map((action, idx) => (
-                <li key={`${action}-${idx}`}>{action}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-    </ResultSectionCard>
-  );
-}
-
-function PositioningAvatarCard({ blueprintData }) {
-  return (
-    <ResultSectionCard title="Offer Positioning + Customer Avatar" span="wide">
-      <div className="starter-result__roadmap-grid">
-        <div>
-          <h4>Core promise</h4>
-          <p>{compactText(blueprintData?.offer_positioning?.core_promise)}</p>
-        </div>
-        <div>
-          <h4>Differentiator</h4>
-          <p>{compactText(blueprintData?.offer_positioning?.differentiator)}</p>
-        </div>
-        <div>
-          <h4>Primary segment</h4>
-          <p>{compactText(blueprintData?.customer_avatar?.primary_segment)}</p>
-        </div>
-        <div>
-          <h4>Top pains</h4>
-          <p>{compactText(blueprintData?.customer_avatar?.top_pains)}</p>
-        </div>
-      </div>
-    </ResultSectionCard>
-  );
-}
-
-function First30DaysCard({ blueprintData }) {
-  return (
-    <ResultSectionCard title="First 30-Day Execution Plan" span="wide">
-      <div className="starter-result__roadmap-grid">
-        <div><h4>Week 1</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_1)}</p></div>
-        <div><h4>Week 2</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_2)}</p></div>
-        <div><h4>Week 3</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_3)}</p></div>
-        <div><h4>Week 4</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_4)}</p></div>
-      </div>
-    </ResultSectionCard>
-  );
-}
-
-function UpgradeRecommendationCard({ blueprintData }) {
-  const recommendation = blueprintData?.upgrade_recommendation;
-  return (
-    <ResultSectionCard title="Upgrade Recommendation" span="wide">
-      <div className="starter-result__roadmap-grid">
-        <div><h4>Recommended tier</h4><p>{compactText(recommendation?.recommended_tier)}</p></div>
-        <div><h4>Why now</h4><p>{compactText(recommendation?.why_now)}</p></div>
-        <div><h4>What unlocks next</h4><p>{compactText(recommendation?.what_unlocks_next)}</p></div>
-      </div>
-    </ResultSectionCard>
-  );
-}
-
-function UpgradeCta({ accessLevel, onUpgradePro, onSeeElite }) {
-  const isFree = accessLevel === "free";
+function UpgradeCta({ onUpgradePro, onSeeElite }) {
   return (
     <section className="starter-upsell starter-upsell--join-now">
-      <h3>Join Now</h3>
-      <p>Unlock strategist-level guidance and accelerate execution with PEN2PRO Pro or Elite.</p>
+      <h3>Unlock Full Strategy</h3>
+      <p>Free Forever is active. Upgrade to unlock deeper strategist execution systems.</p>
       <div className="starter-upsell__plans">
-        <article className={`starter-upsell__plan ${isFree ? "is-locked" : ""}`} onClick={onUpgradePro} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onUpgradePro(); }}>
-          <h4>Pro</h4>
-          <p>Advanced strategy workflows, launch planning, and execution support.</p>
-          {isFree && <span className="starter-upsell__lock">Locked for Free Forever</span>}
-          <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>Choose Pro</button>
+        <article className="starter-upsell__plan is-locked">
+          <h4>Pro Plan</h4>
+          <p>Conversion playbooks, deeper positioning, and advanced launch systems.</p>
+          <span className="starter-upsell__lock">Locked on Free Forever</span>
+          <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>Unlock Full Strategy</button>
         </article>
-        <article className={`starter-upsell__plan starter-upsell__plan--elite ${isFree ? "is-locked" : ""}`} onClick={onSeeElite} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSeeElite(); }}>
-          <h4>Elite</h4>
-          <p>Elite strategist roadmap, deep optimization, and scale execution plans.</p>
-          <p className="starter-upsell__promo">$50 for the first month.</p>
-          {isFree && <span className="starter-upsell__lock">Locked for Free Forever</span>}
-          <button className="starter-button starter-button--primary" onClick={onSeeElite}>Choose Elite</button>
+        <article className="starter-upsell__plan starter-upsell__plan--elite is-locked">
+          <h4>Elite Plan</h4>
+          <p>Elite growth systems and 10M strategist sequencing.</p>
+          <p className="starter-upsell__promo">First month only $50</p>
+          <span className="starter-upsell__lock">Locked on Free Forever</span>
+          <button className="starter-button starter-button--primary" onClick={onSeeElite}>Unlock Full Strategy</button>
         </article>
       </div>
     </section>
@@ -292,31 +67,45 @@ function UpgradeCta({ accessLevel, onUpgradePro, onSeeElite }) {
 }
 
 function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
-  const blueprintData = useMemo(() => resolveBlueprintData(response, blueprint), [response, blueprint]);
+  const blueprintData = useMemo(() => normalizeBlueprintPayload(response, blueprint), [response, blueprint]);
+  const businessName = toText(intakeValues?.proposedBusinessName || intakeValues?.businessName || blueprintData?.business_snapshot?.business_name, "Your Business");
 
-  const accessLevel = (intakeValues?.accessLevel || intakeValues?.accessTier || "free").toLowerCase();
-  const businessName = normalizeText(intakeValues?.proposedBusinessName, normalizeText(blueprintData?.business_snapshot?.business_name, "your business"));
-  const domain = normalizeText(intakeValues?.domainToCheck, normalizeText(blueprintData?.business_snapshot?.domain, "Not selected"));
-
-  const startupChecklist = getChecklistEntries(blueprintData.startup_requirements || blueprintData.launch_plan_30_days);
-  const timelineItems = getWindowTimelineEntries(blueprintData.next_steps_timeline).length
-    ? getWindowTimelineEntries(blueprintData.next_steps_timeline)
-    : getTimelineEntries(blueprintData.launch_plan_30_days, blueprintData.operations_plan_90_days);
+  const sections = [
+    ["Executive Snapshot", toText(blueprintData?.business_snapshot, `${businessName} is positioned to launch with a focused starter offer and weekly execution cadence.`)],
+    ["Business Name Usage", `${businessName} should be used consistently across domain, social handles, invoice templates, and offer pages.`],
+    ["Market Positioning", toText(blueprintData?.offer_positioning?.core_promise || blueprintData?.ventureSummary?.brandPositioning, `${businessName} should position around one measurable customer outcome with fixed scope.`)],
+    ["Ideal Customer Profile", toText(blueprintData?.customer_avatar?.primary_segment || intakeValues?.targetCustomer)],
+    ["First Offer", toText(blueprintData?.monetization_roadmap?.first_offer || blueprintData?.business_snapshot?.product_or_service || intakeValues?.productOrService)],
+    ["Revenue Model", toText(blueprintData?.monetization_roadmap?.revenue_model)],
+    ["Pricing Strategy", toText(blueprintData?.pricing_strategy?.direction || blueprintData?.monetization_roadmap?.pricing_idea)],
+    ["30-Day Launch Plan", toText(blueprintData?.launch_plan_30_days || blueprintData?.first_30_day_execution_plan)],
+    ["90-Day Growth Plan", toText(blueprintData?.operations_plan_90_days)],
+    ["Brand Identity Direction", toText(blueprintData?.ventureSummary?.brandPositioning, `${businessName} should use clear, practical, no-fluff brand language tied to outcomes.`)],
+    ["Operations Checklist", toText(blueprintData?.startup_requirements)],
+    ["Lead Generation Strategy", toText(blueprintData?.proPlan?.leadGenerationChannels || blueprintData?.monetization_roadmap?.customer_acquisition)],
+    ["Sales Script", toText(blueprintData?.proPlan?.salesProcess, `Use a pain-first script: diagnose problem, quantify cost of delay, present ${businessName}'s fixed-scope paid pilot, and close with one CTA.`)],
+    ["Content Strategy", toText(blueprintData?.scale_plan_12_months?.strategic_targets, `Publish 3 weekly proof-led content pieces showing ${businessName}'s before/after outcomes.`)],
+    ["Tools Needed", toText(blueprintData?.tools_and_software || blueprintData?.proPlan?.toolsNeeded)],
+    ["Risk Warnings", toText(blueprintData?.risk_flags)],
+    ["Next Best Actions", toText(blueprintData?.ai_strategist_recommendation?.next_best_move || blueprintData?.next_steps_timeline)],
+    ["Upgrade CTA", toText(blueprintData?.upgrade_recommendation?.why_now, "Upgrade to Pro or Elite to unlock deeper strategist systems and scaling plans.")],
+  ];
 
   return (
-    <div className="starter-result starter-reveal">
-      <HeroResultCard businessName={businessName} blueprintData={blueprintData} intakeValues={intakeValues} domain={domain} />
-
-      <section className="starter-result__bento">
-        <StartupChecklistCard items={startupChecklist.length ? startupChecklist : [{ task: "Validate your business name and domain", priority: "High" }]} />
-        <TimelineCard items={timelineItems} />
-        <MonetizationRoadmapCard blueprintData={blueprintData} />
-        <PositioningAvatarCard blueprintData={blueprintData} />
-        <First30DaysCard blueprintData={blueprintData} />
-        <UpgradeRecommendationCard blueprintData={blueprintData} />
+    <div className="starter-result starter-reveal is-visible">
+      <section className="starter-result__hero-card">
+        <p className="starter-result__eyebrow">PEN2PRO BLUEPRINT</p>
+        <h2 className="starter-result__hero-title">{businessName} — 10M Business Strategist Blueprint</h2>
+        <p className="starter-result__subtitle">Generated and ready to execute now.</p>
       </section>
 
-      <UpgradeCta accessLevel={accessLevel} onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />
+      <section className="starter-result__bento">
+        {sections.map(([title, content]) => (
+          <ResultCard key={title} title={title} content={content} />
+        ))}
+      </section>
+
+      <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />
 
       <section className="starter-result__cta-block">
         <div className="starter-result__cta-actions">

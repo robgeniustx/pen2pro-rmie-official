@@ -89,7 +89,7 @@ function StarterPage({ navigateTo }) {
   const freeRequiredComplete = useMemo(() => freeRequiredFields.every((field) => String(values[field] || "").trim()), [values]);
 
   const handlePricingRedirect = () => {
-    window.location.href = "/pricing";
+    navigateTo("/pricing#pricing");
   };
 
   const handleAccessLevelChange = (nextAccessLevel) => {
@@ -234,16 +234,22 @@ function StarterPage({ navigateTo }) {
       tier: "starter",
     };
 
+    console.info("PEN2PRO starter form submission:", payload);
+
     setIsGenerating(true);
     setGenerationError("");
     setBlueprintResponse(null);
 
     try {
       const response = await generateStarterBlueprint(payload);
-      console.debug("PEN2PRO starter blueprint response:", response);
+      console.info("PEN2PRO starter API response:", response);
+      if (response?.source === "local-fallback") {
+        setGenerationError("Live strategist service is temporarily unavailable. PEN2PRO generated your blueprint with local premium strategy mode.");
+      }
       setBlueprintResponse(response);
     } catch (error) {
-      setGenerationError(getReadableError(error));
+      console.error("PEN2PRO starter generation failed:", error);
+      setGenerationError("We hit an issue while generating your blueprint. Please try again in a moment.");
     } finally {
       setIsGenerating(false);
     }
