@@ -12,6 +12,7 @@ import Footer from "../components/home/Footer";
 import { fetchBackendStatus, fetchPricingPlans, createFounderCheckout } from "../services/api";
 import "./HomePage.css";
 
+function HomePage({ navigateTo, currentPath = "/" }) {
 function HomePage({ navigateTo, initialSection = "" }) {
   const [backendMessage, setBackendMessage] = useState("Loading backend...");
   const [plans, setPlans] = useState([]);
@@ -99,6 +100,18 @@ function HomePage({ navigateTo, initialSection = "" }) {
     };
   }, []);
 
+
+  useEffect(() => {
+    if (currentPath === "/pricing") {
+      requestAnimationFrame(() => {
+        const pricingSection = document.querySelector("#pricing");
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          setActiveNav("#pricing");
+        }
+      });
+    }
+  }, [currentPath]);
   useEffect(() => {
     if (!initialSection) return;
     const timer = window.setTimeout(() => {
@@ -140,6 +153,8 @@ function HomePage({ navigateTo, initialSection = "" }) {
     navigateTo("/starter");
   };
 
+  const handleFreeForever = () => {
+    navigateTo("/starter");
   const handleSeePricing = () => {
     navigateTo("/pricing");
   };
@@ -204,7 +219,7 @@ function HomePage({ navigateTo, initialSection = "" }) {
         <HeroSection
           backendMessage={backendMessage}
           onPrimaryCta={handleStartRoadmap}
-          onSecondaryCta={handleSeePricing}
+          onFreeForeverCta={handleFreeForever}
         />
         <HowItWorks />
         <FeatureCards />

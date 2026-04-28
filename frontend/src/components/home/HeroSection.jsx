@@ -1,6 +1,6 @@
 import { trustHighlights } from "./content";
 
-function HeroSection({ backendMessage, onPrimaryCta, onSecondaryCta }) {
+function HeroSection({ backendMessage, onPrimaryCta, onFreeForeverCta }) {
   return (
     <section id="top" className="hero-section section" aria-labelledby="hero-title">
       <div className="container hero-grid">
@@ -17,8 +17,8 @@ function HeroSection({ backendMessage, onPrimaryCta, onSecondaryCta }) {
             <button type="button" className="btn btn-primary" onClick={onPrimaryCta}>
               Start Free Business Blueprint
             </button>
-            <button type="button" className="btn btn-secondary" onClick={onSecondaryCta}>
-              See Pricing
+            <button type="button" className="btn btn-secondary" onClick={onFreeForeverCta}>
+              Free Forever
             </button>
           </div>
 
