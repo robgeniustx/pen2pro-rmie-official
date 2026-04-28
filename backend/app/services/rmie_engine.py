@@ -267,6 +267,122 @@ def _build_upgrade_recommendation(access_level: str, short_obstacle: str) -> dic
 	}
 
 
+def _build_next_steps_timeline(business_name: str, target_customer: str, business_idea: str, market_location: str) -> list[dict]:
+	return [
+		{
+			"window": "Next 48 hours",
+			"focus": "Package the first paid offer",
+			"action": (
+				f"Draft a one-page {business_name} offer for {target_customer} around {business_idea} with a fixed outcome, scope, timeline, and price."
+			),
+		},
+		{
+			"window": "Days 3-7",
+			"focus": "Validate with real conversations",
+			"action": f"Run 5 discovery calls with qualified buyers in {market_location}, log objections, and update messaging daily.",
+		},
+		{
+			"window": "Days 8-14",
+			"focus": "Close first paid pilot",
+			"action": "Send 20 personalized outreach messages with 3 booking slots and close 1-2 paid pilot clients.",
+		},
+		{
+			"window": "Days 15-30",
+			"focus": "Turn proof into repeatable growth",
+			"action": "Deliver fast wins, collect testimonials, publish proof assets, and raise pricing for the next batch.",
+		},
+	]
+
+
+def _build_offer_positioning(
+	business_name: str,
+	business_idea: str,
+	target_customer: str,
+	product_or_service: str,
+	biggest_obstacle: str,
+) -> dict:
+	return {
+		"positioning_statement": (
+			f"{business_name} helps {target_customer} solve {business_idea} with a practical {product_or_service} offer that delivers a fast, measurable result."
+		),
+		"core_promise": "One specific measurable outcome in 7-14 days with fixed scope and transparent delivery milestones.",
+		"differentiator": f"Execution-first support that directly addresses '{_compact(biggest_obstacle)}' without overbuilding tools or strategy.",
+		"proof_strategy": "Capture one testimonial per delivery and convert each win into before/after case snippets for sales conversations.",
+	}
+
+
+def _build_customer_avatar(target_customer: str, market_location: str, income_goal: str) -> dict:
+	return {
+		"profile": target_customer,
+		"location_context": f"Primary buying context: {market_location}.",
+		"pain_points": [
+			"Lacks a clear step-by-step path to revenue.",
+			"Has tried generic advice but has not executed consistently.",
+			"Needs a fast return from limited budget and time.",
+		],
+		"buying_triggers": [
+			"Can see a short timeline to first revenue.",
+			"Offer has fixed scope, clear price, and visible examples.",
+			"Support is beginner-friendly with simple weekly actions.",
+		],
+		"value_language": f"Lead with outcomes tied to '{_compact(income_goal)}' and show exactly what happens each week.",
+	}
+
+
+def _build_first_30_day_execution_plan(target_customer: str, market_location: str) -> list[dict]:
+	return [
+		{
+			"week": "Week 1",
+			"objective": "Finalize offer and sales assets",
+			"actions": [
+				"Write one-sentence offer promise with measurable result.",
+				"Create one-page landing page and booking link.",
+				f"Prepare a 10-message outreach script for {target_customer}.",
+			],
+		},
+		{
+			"week": "Week 2",
+			"objective": "Acquire and close first buyers",
+			"actions": [
+				"Run daily outreach and follow-up cadence.",
+				"Conduct 5 discovery calls and close 1-2 paid pilots.",
+				"Collect objections and tighten offer language.",
+			],
+		},
+		{
+			"week": "Week 3",
+			"objective": "Deliver and document proof",
+			"actions": [
+				"Deliver the pilot with a simple client checklist.",
+				"Capture outcome metrics and testimonial statements.",
+				"Publish a case snapshot for future outreach.",
+			],
+		},
+		{
+			"week": "Week 4",
+			"objective": "Systemize and scale",
+			"actions": [
+				"Standardize onboarding and delivery SOP.",
+				f"Launch a referral ask sequence with partners in {market_location}.",
+				"Increase price 10-20% for the next cohort using proof.",
+			],
+		},
+	]
+
+
+def _build_upgrade_recommendation(access_level: str, short_obstacle: str) -> dict:
+	return {
+		"current_tier": access_level,
+		"recommended_path": "Upgrade to Pro after first 2 paying clients; move to Elite once monthly demand is consistent.",
+		"upgrade_triggers": [
+			"Need a repeatable lead engine and conversion scripts.",
+			"Need SOPs, delegation guidance, and performance dashboards.",
+			f"Need strategist support to remove the main bottleneck: {_compact(short_obstacle)}.",
+		],
+		"immediate_free_move": "Until upgrading, execute one channel for 14 days and track bookings, closes, and cash collected.",
+	}
+
+
 def _is_beginner(skill_level: str, skills_resources: str) -> bool:
 	text = f"{skill_level} {skills_resources}".lower()
 	return any(keyword in text for keyword in ["beginner", "new", "novice", "no experience"])
@@ -424,6 +540,11 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	delivery_preference = _pick(payload, "deliveryPreference", fallback="both")
 	domain_to_check = _resolve_domain(payload, business_name)
 	strategist_engine = _build_strategist_engine(payload)
+	short_obstacle = _compact(biggest_obstacle)
+	next_steps_timeline = _build_next_steps_timeline(business_name, target_customer, business_idea, market_location)
+	offer_positioning = _build_offer_positioning(business_name, business_idea, target_customer, product_or_service, biggest_obstacle)
+	customer_avatar = _build_customer_avatar(target_customer, market_location, income_goal)
+	first_30_day_execution_plan = _build_first_30_day_execution_plan(target_customer, market_location)
 	short_goal = _compact(income_goal)
 	short_obstacle = _compact(biggest_obstacle)
 	short_skills = _compact(skills_resources)
@@ -467,6 +588,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				"direction": "Start with one basic offer and test willingness to pay with early buyers.",
 			},
 			"monetization_roadmap": monetization_roadmap,
+			"next_steps_timeline": next_steps_timeline,
 			"offer_positioning": offer_positioning,
 			"customer_avatar": customer_avatar,
 			"first_30_day_execution_plan": first_30_day_execution_plan,
@@ -577,6 +699,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"near_term_goal": "Validate paid demand first, then increase price after documented wins.",
 		},
 		"monetization_roadmap": _build_monetization_roadmap(payload, business_name, market_location),
+		"next_steps_timeline": next_steps_timeline,
 		"offer_positioning": offer_positioning,
 		"customer_avatar": customer_avatar,
 		"first_30_day_execution_plan": first_30_day_execution_plan,
