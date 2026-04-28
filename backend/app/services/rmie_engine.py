@@ -92,6 +92,59 @@ def _build_growth_channels(delivery_preference: str, target_customer: str, marke
 	]
 
 
+def _build_monetization_roadmap(payload: dict, business_name: str, market_location: str) -> dict:
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "your core offer")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "your ideal customer")
+	product_or_service = _clean_text(_pick(payload, "productOrService", "product_service"), "a focused starter package")
+	delivery_preference = _clean_text(_pick(payload, "deliveryPreference", "delivery_preference"), "online").lower()
+	startup_budget = _clean_text(_pick(payload, "startupBudget", "budget"), "lean budget")
+
+	if delivery_preference == "local":
+		revenue_model = (
+			f"Productized local service packages for {target_customer}, with upfront project fees and recurring maintenance add-ons in {market_location}."
+		)
+		customer_acquisition = (
+			f"Local referral partnerships, Google Business Profile optimization, and direct outreach to nearby {target_customer} communities."
+		)
+	elif delivery_preference == "online":
+		revenue_model = (
+			f"Productized digital offer for {target_customer} with an entry package and optional monthly retainer upsell."
+		)
+		customer_acquisition = (
+			f"LinkedIn and email outreach to {target_customer}, plus proof-driven social content and referral asks after each delivery."
+		)
+	else:
+		revenue_model = (
+			f"Hybrid productized offer model for {target_customer}, combining fixed-scope delivery with recurring support retainers."
+		)
+		customer_acquisition = (
+			f"Blend local partnerships in {market_location} with outbound email/DM and niche content that speaks to {target_customer} pain points."
+		)
+
+	if _is_low_budget(startup_budget):
+		pricing_idea = "Launch with a paid pilot in the $99-$299 range, then move to $300-$900 after 2-3 documented wins."
+	else:
+		pricing_idea = "Launch with a starter package in the $300-$900 range, then introduce $1,000-$2,500 premium tiers with stronger outcomes."
+
+	first_offer = (
+		f"{product_or_service}: a 7-day starter implementation for {target_customer} with one clear measurable outcome and a fixed scope."
+	)
+	launch_actions = [
+		f"Publish a one-page {business_name} starter offer with scope, timeline, proof placeholder, and a clear call-to-action.",
+		f"Message 20 qualified {target_customer} prospects with a short pain-first pitch and 3 booking slots.",
+		"Run 5 discovery calls, close 1-2 paid pilots, and capture objections to improve your script.",
+		"Deliver the pilot fast, collect a testimonial, and reuse it in your next outreach sprint.",
+	]
+
+	return {
+		"revenue_model": _clean_text(revenue_model, "Productized starter offer with clear scope and recurring upsell path."),
+		"first_offer": _clean_text(first_offer, "Fixed-scope starter package with a measurable outcome."),
+		"pricing_idea": _clean_text(pricing_idea, "Start with an entry paid pilot and increase pricing after documented wins."),
+		"customer_acquisition": _clean_text(customer_acquisition, "Use direct outreach, referrals, and proof-based content to acquire first buyers."),
+		"launch_actions": launch_actions[:5],
+	}
+
+
 def _is_beginner(skill_level: str, skills_resources: str) -> bool:
 	text = f"{skill_level} {skills_resources}".lower()
 	return any(keyword in text for keyword in ["beginner", "new", "novice", "no experience"])
@@ -257,6 +310,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	]
 
 	if access_level == "free":
+		monetization_roadmap = _build_monetization_roadmap(payload, business_name, market_location)
 		free_blueprint = {
 			"business_snapshot": {
 				"business_name": business_name,
@@ -279,6 +333,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"pricing_strategy": {
 				"direction": "Start with one basic offer and test willingness to pay with early buyers.",
 			},
+			"monetization_roadmap": monetization_roadmap,
 			"launch_plan_30_days": {
 				"week_1": "Clarify offer, audience, and domain/brand basics.",
 				"weeks_2_4": "Run outreach, validate offer demand, and refine messaging from real calls.",
@@ -388,6 +443,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"model": "Three-tier offer (starter, standard, premium) with clear scope and timeline.",
 			"near_term_goal": "Validate paid demand first, then increase price after documented wins.",
 		},
+		"monetization_roadmap": _build_monetization_roadmap(payload, business_name, market_location),
 		"launch_plan_30_days": {
 			"top3_actions": [
 				"Define a single sentence value proposition with a measurable before/after outcome.",
