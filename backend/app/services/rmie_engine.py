@@ -145,6 +145,69 @@ def _build_monetization_roadmap(payload: dict, business_name: str, market_locati
 	}
 
 
+def _build_offer_positioning(business_name: str, business_idea: str, target_customer: str, product_or_service: str) -> dict:
+	return {
+		"core_promise": (
+			f"{business_name} helps {target_customer} achieve a fast, measurable win with {product_or_service}."
+		),
+		"problem_statement": (
+			f"{target_customer} are losing time and money because '{business_idea}' is usually delivered with vague scope and slow execution."
+		),
+		"differentiator": "Fixed scope, beginner-friendly onboarding, and proof-first execution in the first 7-14 days.",
+		"proof_angle": "Track before/after outcomes for each pilot and reuse those wins in sales conversations.",
+	}
+
+
+def _build_customer_avatar(target_customer: str, market_location: str, biggest_obstacle: str) -> dict:
+	return {
+		"primary_segment": target_customer,
+		"location_context": market_location,
+		"top_pains": [
+			"Wasting money on generic solutions that do not create fast outcomes.",
+			"Not having a clear plan they can execute in small weekly time blocks.",
+			f"Feeling blocked by: {biggest_obstacle}.",
+		],
+		"buying_triggers": [
+			"Needs a result quickly for revenue, deadlines, or client delivery pressure.",
+			"Wants fixed pricing and clear milestones before committing.",
+		],
+		"best_channel_to_reach": "Direct outreach (DM/email/referrals) with a pain-first message and a single call-to-action.",
+	}
+
+
+def _build_next_steps_timeline(business_name: str, target_customer: str) -> list[dict]:
+	return [
+		{"window": "Next 24 hours", "action": f"Finalize one paid starter offer for {target_customer} under the {business_name} brand."},
+		{"window": "Days 2-7", "action": "Publish a one-page offer, contact 20 qualified prospects, and book at least 5 discovery calls."},
+		{"window": "Days 8-14", "action": "Close 1-2 paid pilots, deliver fast wins, and collect testimonial-ready proof."},
+		{"window": "Days 15-30", "action": "Refine script from objections, raise price modestly, and repeat the same winning channel."},
+	]
+
+
+def _build_first_30_day_execution_plan(business_name: str, target_customer: str, short_goal: str) -> dict:
+	return {
+		"week_1": f"Clarify offer messaging for {target_customer}, finalize pricing, and launch your booking page for {business_name}.",
+		"week_2": "Run discovery calls daily, close paid pilots, and deliver quick outcome-focused wins.",
+		"week_3": "Turn delivery results into simple proof assets (testimonial + before/after snapshot).",
+		"week_4": f"Standardize outreach and delivery checklist to hit a repeatable path toward {short_goal}.",
+	}
+
+
+def _build_upgrade_recommendation(access_level: str, short_obstacle: str) -> dict:
+	return {
+		"current_tier": access_level,
+		"recommended_tier": "pro" if access_level == "free" else "elite",
+		"why_now": (
+			f"Upgrade when '{short_obstacle}' is slowing execution and you need tighter strategist guidance, scripts, and operating cadence."
+		),
+		"what_unlocks_next": [
+			"Sharper monetization playbooks with weekly execution priorities.",
+			"Deeper channel strategy and conversion optimization support.",
+			"Scaling systems and delegation guidance for consistent growth.",
+		],
+	}
+
+
 def _is_beginner(skill_level: str, skills_resources: str) -> bool:
 	text = f"{skill_level} {skills_resources}".lower()
 	return any(keyword in text for keyword in ["beginner", "new", "novice", "no experience"])
@@ -302,6 +365,16 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	delivery_preference = _pick(payload, "deliveryPreference", fallback="both")
 	domain_to_check = _resolve_domain(payload, business_name)
 	strategist_engine = _build_strategist_engine(payload)
+	short_goal = _compact(income_goal)
+	short_obstacle = _compact(biggest_obstacle)
+	short_skills = _compact(skills_resources)
+	short_idea = _compact(business_idea)
+	short_offer = _compact(product_or_service)
+	offer_positioning = _build_offer_positioning(business_name, business_idea, target_customer, product_or_service)
+	customer_avatar = _build_customer_avatar(target_customer, market_location, biggest_obstacle)
+	next_steps_timeline = _build_next_steps_timeline(business_name, target_customer)
+	first_30_day_execution_plan = _build_first_30_day_execution_plan(business_name, target_customer, short_goal)
+	upgrade_recommendation = _build_upgrade_recommendation(access_level, short_obstacle)
 
 	sources = [
 		{"name": "IRS EIN Online", "url": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers"},
@@ -324,6 +397,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				{"task": "Set up a simple one-page offer or landing page", "priority": "High"},
 				{"task": "Reach out to 10 potential customers and collect feedback", "priority": "High"},
 			],
+			"next_steps_timeline": next_steps_timeline,
 			"licenses_and_compliance": [
 				{"note": "Basic starter blueprint only. Upgrade for legal/foundation strategist mode details."}
 			],
@@ -334,6 +408,10 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				"direction": "Start with one basic offer and test willingness to pay with early buyers.",
 			},
 			"monetization_roadmap": monetization_roadmap,
+			"offer_positioning": offer_positioning,
+			"customer_avatar": customer_avatar,
+			"first_30_day_execution_plan": first_30_day_execution_plan,
+			"upgrade_recommendation": upgrade_recommendation,
 			"launch_plan_30_days": {
 				"week_1": "Clarify offer, audience, and domain/brand basics.",
 				"weeks_2_4": "Run outreach, validate offer demand, and refine messaging from real calls.",
@@ -368,11 +446,6 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 
 	delivery_model = _delivery_model(delivery_preference)
 	pricing_direction = _pricing_direction(startup_budget, delivery_preference)
-	short_goal = _compact(income_goal)
-	short_obstacle = _compact(biggest_obstacle)
-	short_skills = _compact(skills_resources)
-	short_idea = _compact(business_idea)
-	short_offer = _compact(product_or_service)
 	channels = _build_growth_channels(delivery_preference, target_customer, market_location)
 	startup_requirements = [
 		{
@@ -436,6 +509,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 		},
 		"ai_strategist_recommendation": strategist_engine,
 		"startup_requirements": startup_requirements,
+		"next_steps_timeline": next_steps_timeline,
 		"licenses_and_compliance": licenses_and_compliance,
 		"tools_and_software": tools_and_software,
 		"pricing_strategy": {
@@ -444,6 +518,10 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"near_term_goal": "Validate paid demand first, then increase price after documented wins.",
 		},
 		"monetization_roadmap": _build_monetization_roadmap(payload, business_name, market_location),
+		"offer_positioning": offer_positioning,
+		"customer_avatar": customer_avatar,
+		"first_30_day_execution_plan": first_30_day_execution_plan,
+		"upgrade_recommendation": upgrade_recommendation,
 		"launch_plan_30_days": {
 			"top3_actions": [
 				"Define a single sentence value proposition with a measurable before/after outcome.",
