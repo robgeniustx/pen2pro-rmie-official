@@ -88,6 +88,19 @@ function getTimelineEntries(launchPlan, operationsPlan) {
   ];
 }
 
+function getWindowTimelineEntries(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!isPlainObject(item)) return null;
+      const label = normalizeText(item.window || item.label, "");
+      const detail = compactText(item.action || item.detail, "");
+      if (!label || !detail) return null;
+      return { label, detail };
+    })
+    .filter(Boolean);
+}
+
 function ResultSectionCard({ title, children, span = "half", animated = false }) {
   return (
     <article className={`starter-result__bento-card starter-result__bento-card--${span} ${animated ? "starter-result__bento-card--animated" : ""}`}>
@@ -202,6 +215,57 @@ function MonetizationRoadmapCard({ blueprintData }) {
   );
 }
 
+function PositioningAvatarCard({ blueprintData }) {
+  return (
+    <ResultSectionCard title="Offer Positioning + Customer Avatar" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div>
+          <h4>Core promise</h4>
+          <p>{compactText(blueprintData?.offer_positioning?.core_promise)}</p>
+        </div>
+        <div>
+          <h4>Differentiator</h4>
+          <p>{compactText(blueprintData?.offer_positioning?.differentiator)}</p>
+        </div>
+        <div>
+          <h4>Primary segment</h4>
+          <p>{compactText(blueprintData?.customer_avatar?.primary_segment)}</p>
+        </div>
+        <div>
+          <h4>Top pains</h4>
+          <p>{compactText(blueprintData?.customer_avatar?.top_pains)}</p>
+        </div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
+function First30DaysCard({ blueprintData }) {
+  return (
+    <ResultSectionCard title="First 30-Day Execution Plan" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div><h4>Week 1</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_1)}</p></div>
+        <div><h4>Week 2</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_2)}</p></div>
+        <div><h4>Week 3</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_3)}</p></div>
+        <div><h4>Week 4</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_4)}</p></div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
+function UpgradeRecommendationCard({ blueprintData }) {
+  const recommendation = blueprintData?.upgrade_recommendation;
+  return (
+    <ResultSectionCard title="Upgrade Recommendation" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div><h4>Recommended tier</h4><p>{compactText(recommendation?.recommended_tier)}</p></div>
+        <div><h4>Why now</h4><p>{compactText(recommendation?.why_now)}</p></div>
+        <div><h4>What unlocks next</h4><p>{compactText(recommendation?.what_unlocks_next)}</p></div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
 function UpgradeCta({ accessLevel, onUpgradePro, onSeeElite }) {
   const isFree = accessLevel === "free";
   return (
@@ -235,7 +299,9 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
   const domain = normalizeText(intakeValues?.domainToCheck, normalizeText(blueprintData?.business_snapshot?.domain, "Not selected"));
 
   const startupChecklist = getChecklistEntries(blueprintData.startup_requirements || blueprintData.launch_plan_30_days);
-  const timelineItems = getTimelineEntries(blueprintData.launch_plan_30_days, blueprintData.operations_plan_90_days);
+  const timelineItems = getWindowTimelineEntries(blueprintData.next_steps_timeline).length
+    ? getWindowTimelineEntries(blueprintData.next_steps_timeline)
+    : getTimelineEntries(blueprintData.launch_plan_30_days, blueprintData.operations_plan_90_days);
 
   return (
     <div className="starter-result starter-reveal">
@@ -245,6 +311,9 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
         <StartupChecklistCard items={startupChecklist.length ? startupChecklist : [{ task: "Validate your business name and domain", priority: "High" }]} />
         <TimelineCard items={timelineItems} />
         <MonetizationRoadmapCard blueprintData={blueprintData} />
+        <PositioningAvatarCard blueprintData={blueprintData} />
+        <First30DaysCard blueprintData={blueprintData} />
+        <UpgradeRecommendationCard blueprintData={blueprintData} />
       </section>
 
       <UpgradeCta accessLevel={accessLevel} onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />
