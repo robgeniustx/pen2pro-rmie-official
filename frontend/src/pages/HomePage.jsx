@@ -12,8 +12,7 @@ import Footer from "../components/home/Footer";
 import { fetchBackendStatus, fetchPricingPlans, createFounderCheckout } from "../services/api";
 import "./HomePage.css";
 
-function HomePage({ navigateTo, currentPath = "/" }) {
-function HomePage({ navigateTo, initialSection = "" }) {
+function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
   const [backendMessage, setBackendMessage] = useState("Loading backend...");
   const [plans, setPlans] = useState([]);
   const [isPricingLoading, setIsPricingLoading] = useState(true);
@@ -155,6 +154,8 @@ function HomePage({ navigateTo, initialSection = "" }) {
 
   const handleFreeForever = () => {
     navigateTo("/starter");
+  };
+
   const handleSeePricing = () => {
     navigateTo("/pricing");
   };

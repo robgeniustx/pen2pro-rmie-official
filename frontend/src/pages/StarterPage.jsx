@@ -264,25 +264,19 @@ function StarterPage({ navigateTo }) {
     try {
       const response = await generateStarterBlueprint(payload);
       console.info("PEN2PRO starter API response:", response);
-      if (response?.source === "local-fallback") {
-        setGenerationError("Live strategist service is temporarily unavailable. PEN2PRO generated your blueprint with local premium strategy mode.");
-      }
-      setBlueprintResponse(response);
-    } catch (error) {
-      console.error("PEN2PRO starter generation failed:", error);
-      setGenerationError("We hit an issue while generating your blueprint. Please try again in a moment.");
-
       if (!response?.blueprint) {
         throw new Error("Starter API returned without blueprint payload.");
       }
-
+      if (response?.source === "local-fallback") {
+        setGenerationError("Live strategist service is temporarily unavailable. PEN2PRO generated your blueprint with local premium strategy mode.");
+      }
       setBlueprintResponse(response);
     } catch (error) {
       console.error("PEN2PRO starter generation failed, using local strategist engine:", error);
       const fallbackBlueprint = buildLocalStarterBlueprint(payload);
       setBlueprintResponse({
         success: true,
-        source: "local_fallback",
+        source: "local-fallback",
         blueprint: fallbackBlueprint,
       });
       setGenerationError("Live strategist is temporarily unavailable. PEN2PRO generated your blueprint using the local strategy engine.");
