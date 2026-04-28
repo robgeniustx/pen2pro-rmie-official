@@ -67,7 +67,20 @@ function getChecklistEntries(value) {
   return [];
 }
 
-function getTimelineEntries(launchPlan, operationsPlan) {
+function getTimelineEntries(nextStepsTimeline, launchPlan, operationsPlan) {
+  if (Array.isArray(nextStepsTimeline) && nextStepsTimeline.length) {
+    const normalized = nextStepsTimeline
+      .map((item) => {
+        if (!isPlainObject(item)) return null;
+        const label = normalizeText(item.window || item.phase || item.label, "");
+        const detail = compactText(item.action || item.focus || item.step, "");
+        if (!label || !detail) return null;
+        return { label, detail };
+      })
+      .filter(Boolean);
+    if (normalized.length) return normalized;
+  }
+
   const week1 = compactText(
     isPlainObject(launchPlan) ? launchPlan.week_1 || launchPlan.week1 || launchPlan.first_week : Array.isArray(launchPlan) ? launchPlan[0] : launchPlan,
     "Define your first offer, set up your business profile, and map your MVP actions."
@@ -86,6 +99,85 @@ function getTimelineEntries(launchPlan, operationsPlan) {
     { label: "Weeks 2–4", detail: weeks2to4 },
     { label: "30-Day Plan", detail: day30 },
   ];
+}
+
+function OfferPositioningCard({ offerPositioning, customerAvatar }) {
+  return (
+    <ResultSectionCard title="Offer Positioning + Customer Avatar" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div>
+          <h4>Positioning statement</h4>
+          <p>{compactText(offerPositioning?.positioning_statement)}</p>
+        </div>
+        <div>
+          <h4>Core promise</h4>
+          <p>{compactText(offerPositioning?.core_promise)}</p>
+        </div>
+        <div>
+          <h4>Differentiator</h4>
+          <p>{compactText(offerPositioning?.differentiator)}</p>
+        </div>
+        <div>
+          <h4>Customer profile</h4>
+          <p>{compactText(customerAvatar?.profile)}</p>
+        </div>
+        <div>
+          <h4>Pain points</h4>
+          <p>{compactText(customerAvatar?.pain_points)}</p>
+        </div>
+        <div>
+          <h4>Buying triggers</h4>
+          <p>{compactText(customerAvatar?.buying_triggers)}</p>
+        </div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
+function First30DayExecutionCard({ executionPlan }) {
+  const rows = Array.isArray(executionPlan) && executionPlan.length
+    ? executionPlan
+    : [{ week: "Week 1", objective: "Finalize your first offer and run direct outreach.", actions: ["Publish one-page offer", "Book first discovery calls", "Close first paid pilot"] }];
+  return (
+    <ResultSectionCard title="First 30-Day Execution Plan" span="wide">
+      <ol className="starter-result__timeline-grid">
+        {rows.map((item, idx) => (
+          <li key={`${item?.week || "week"}-${idx}`} className="starter-result__timeline-card">
+            <p>{normalizeText(item?.week, `Week ${idx + 1}`)}</p>
+            <span>{compactText(item?.objective)}</span>
+            {Array.isArray(item?.actions) && item.actions.length > 0 && (
+              <ul>
+                {item.actions.map((action, actionIndex) => (
+                  <li key={`${action}-${actionIndex}`}>{action}</li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ol>
+    </ResultSectionCard>
+  );
+}
+
+function UpgradeRecommendationCard({ recommendation }) {
+  return (
+    <ResultSectionCard title="Upgrade Recommendation" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div>
+          <h4>Recommended path</h4>
+          <p>{compactText(recommendation?.recommended_path)}</p>
+        </div>
+        <div>
+          <h4>Upgrade triggers</h4>
+          <p>{compactText(recommendation?.upgrade_triggers)}</p>
+        </div>
+        <div>
+          <h4>Immediate move</h4>
+          <p>{compactText(recommendation?.immediate_free_move)}</p>
+        </div>
+      </div>
+    </ResultSectionCard>
+  );
 }
 
 function ResultSectionCard({ title, children, span = "half", animated = false }) {
@@ -234,7 +326,7 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
   const domain = normalizeText(intakeValues?.domainToCheck, normalizeText(blueprintData?.business_snapshot?.domain, "Not selected"));
 
   const startupChecklist = getChecklistEntries(blueprintData.startup_requirements || blueprintData.launch_plan_30_days);
-  const timelineItems = getTimelineEntries(blueprintData.launch_plan_30_days, blueprintData.operations_plan_90_days);
+  const timelineItems = getTimelineEntries(blueprintData.next_steps_timeline, blueprintData.launch_plan_30_days, blueprintData.operations_plan_90_days);
 
   return (
     <div className="starter-result starter-reveal">
@@ -244,6 +336,9 @@ function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePr
         <StartupChecklistCard items={startupChecklist.length ? startupChecklist : [{ task: "Validate your business name and domain", priority: "High" }]} />
         <TimelineCard items={timelineItems} />
         <MonetizationRoadmapCard blueprintData={blueprintData} />
+        <OfferPositioningCard offerPositioning={blueprintData.offer_positioning} customerAvatar={blueprintData.customer_avatar} />
+        <First30DayExecutionCard executionPlan={blueprintData.first_30_day_execution_plan} />
+        <UpgradeRecommendationCard recommendation={blueprintData.upgrade_recommendation} />
       </section>
 
       <UpgradeCta accessLevel={accessLevel} onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />
