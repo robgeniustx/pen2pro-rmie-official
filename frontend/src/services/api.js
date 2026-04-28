@@ -139,8 +139,10 @@ function normalizeBlueprintResponse(data) {
     data?.content ||
     data?.output ||
     data?.plan ||
+    data?.message ||
     data?.data?.blueprint ||
     data?.data ||
+    data ||
     null;
 
   if (typeof blueprintPayload === "string" && blueprintPayload.trim()) {
@@ -157,7 +159,12 @@ function normalizeBlueprintResponse(data) {
     };
   }
 
-  throw new Error("Blueprint generated, but no blueprint content was returned.");
+  return {
+    ...(typeof data === "object" && data !== null ? data : {}),
+    blueprint: {
+      content: "Blueprint generated, but response was empty. Showing fallback structure.",
+    },
+  };
 }
 
 function buildFallbackResponse(payload, reason = "API unavailable") {

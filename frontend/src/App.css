@@ -225,6 +225,8 @@
 .starter-result__bento-card { border: 1px solid rgba(131, 171, 233, 0.35); border-radius: 16px; padding: 14px; background: var(--p2p-card); backdrop-filter: blur(4px); }
 .starter-result__bento-card h3 { margin: 0 0 8px; color: #e7f0ff; }
 .starter-result__bento-card p { margin: 0; color: #b8cdef; line-height: 1.5; }
+.starter-result__list { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: #c5d9f8; }
+.starter-result__list li { line-height: 1.45; }
 .starter-result__bento-card--wide { grid-column: 1 / -1; }
 .starter-result__bento-card--animated { animation: fadeUp 0.45s ease both; }
 

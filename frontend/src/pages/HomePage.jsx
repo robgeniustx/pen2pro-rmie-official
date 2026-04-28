@@ -13,6 +13,7 @@ import { fetchBackendStatus, fetchPricingPlans, createFounderCheckout } from "..
 import "./HomePage.css";
 
 function HomePage({ navigateTo, currentPath = "/" }) {
+function HomePage({ navigateTo, initialSection = "" }) {
   const [backendMessage, setBackendMessage] = useState("Loading backend...");
   const [plans, setPlans] = useState([]);
   const [isPricingLoading, setIsPricingLoading] = useState(true);
@@ -111,6 +112,17 @@ function HomePage({ navigateTo, currentPath = "/" }) {
       });
     }
   }, [currentPath]);
+  useEffect(() => {
+    if (!initialSection) return;
+    const timer = window.setTimeout(() => {
+      const element = document.querySelector(initialSection);
+      if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (initialSection === "#pricing") setActiveNav("#pricing");
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [initialSection]);
+
   const hasPlans = plans.length > 0;
 
   const scrollTo = (id) => {
@@ -143,6 +155,8 @@ function HomePage({ navigateTo, currentPath = "/" }) {
 
   const handleFreeForever = () => {
     navigateTo("/starter");
+  const handleSeePricing = () => {
+    navigateTo("/pricing");
   };
 
   const handleSampleRoadmap = () => {
