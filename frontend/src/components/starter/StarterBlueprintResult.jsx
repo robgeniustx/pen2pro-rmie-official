@@ -48,6 +48,88 @@ function normalizeBlueprintData(response, intakeValues) {
       next_best_actions: premium.next_best_actions || read(raw, "starterPlan.top3Actions", []),
       upgrade_cta: premium.upgrade_cta || "Unlock Full Strategy",
     },
+  if (typeof value === "string" && value.trim()) {
+    return value
+      .split(/\n|•|;/)
+      .map((item) => ({ task: item.trim(), priority: "Medium" }))
+      .filter((item) => item.task);
+  }
+
+  return [];
+}
+
+function getTimelineEntries(launchPlan, operationsPlan) {
+  const week1 = compactText(
+    isPlainObject(launchPlan) ? launchPlan.week_1 || launchPlan.week1 || launchPlan.first_week : Array.isArray(launchPlan) ? launchPlan[0] : launchPlan,
+    "Define your first offer, set up your business profile, and map your MVP actions."
+  );
+  const weeks2to4 = compactText(
+    isPlainObject(launchPlan) ? launchPlan.weeks_2_4 || launchPlan.weeks2_4 || launchPlan.weeks_2_to_4 : Array.isArray(launchPlan) ? launchPlan.slice(1).join(" • ") : "",
+    "Validate demand, publish your offer, and run your first customer acquisition sprint."
+  );
+  const day30 = compactText(
+    isPlainObject(operationsPlan) ? operationsPlan.day_30 || operationsPlan.first_30_days || operationsPlan.month_1 : operationsPlan,
+    "Review traction metrics, optimize your funnel, and set your next 60-day growth goals."
+  );
+
+  return [
+    { label: "Week 1", detail: week1 },
+    { label: "Weeks 2–4", detail: weeks2to4 },
+    { label: "30-Day Plan", detail: day30 },
+  ];
+}
+
+function getWindowTimelineEntries(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!isPlainObject(item)) return null;
+      const label = normalizeText(item.window || item.label, "");
+      const detail = compactText(item.action || item.detail, "");
+      if (!label || !detail) return null;
+      return { label, detail };
+    })
+    .filter(Boolean);
+}
+
+function ResultSectionCard({ title, children, span = "half", animated = false }) {
+  return (
+    <article className={`starter-result__bento-card starter-result__bento-card--${span} ${animated ? "starter-result__bento-card--animated" : ""}`}>
+      <h3>{title}</h3>
+      {children}
+    </article>
+  );
+}
+
+function HeroResultCard({ businessName, blueprintData, intakeValues, domain }) {
+  return (
+    <section className="starter-result__hero-card">
+      <p className="starter-result__eyebrow">PEN2PRO BLUEPRINT</p>
+      <h2 className="starter-result__hero-title">Your Business Blueprint</h2>
+      <p className="starter-result__subtitle">Built for {businessName}</p>
+      <div className="starter-result__hero-grid">
+        <ResultSectionCard title="Business Idea" animated>
+          <p>{normalizeText(intakeValues?.businessIdea, normalizeText(blueprintData?.business_snapshot?.business_summary))}</p>
+        </ResultSectionCard>
+        <ResultSectionCard title="Target Customer" animated>
+          <p>{normalizeText(blueprintData?.business_snapshot?.target_customer, normalizeText(intakeValues?.targetCustomer))}</p>
+        </ResultSectionCard>
+        <ResultSectionCard title="Offer Idea" animated>
+          <p>{normalizeText(blueprintData?.business_snapshot?.basic_offer_idea || blueprintData?.business_snapshot?.product_or_service, normalizeText(intakeValues?.productOrService))}</p>
+        </ResultSectionCard>
+        <ResultSectionCard title="Domain" animated>
+          <p>{normalizeText(domain, "Choose a domain to strengthen your brand positioning.")}</p>
+        </ResultSectionCard>
+      </div>
+    </section>
+  );
+}
+
+function StartupChecklistCard({ items }) {
+  const [checkedItems, setCheckedItems] = useState({});
+
+  const handleToggle = (index) => {
+    setCheckedItems((current) => ({ ...current, [index]: !current[index] }));
   };
 }
 
@@ -67,6 +149,30 @@ function SectionCard({ title, value }) {
         <ul className="starter-result__list">
           {lines.map((line, idx) => (
             <li key={`${title}-${idx}`}>{line}</li>
+function MonetizationRoadmapCard({ blueprintData }) {
+  const monetization = isPlainObject(blueprintData?.monetization_roadmap) ? blueprintData.monetization_roadmap : null;
+  const readRoadmapText = (value) => (typeof value === "string" && value.trim() ? value.trim() : "—");
+  const rows = monetization
+    ? [
+        ["Revenue model", readRoadmapText(monetization.revenue_model)],
+        ["First offer", readRoadmapText(monetization.first_offer)],
+        ["Pricing idea", readRoadmapText(monetization.pricing_idea)],
+        ["Customer acquisition", readRoadmapText(monetization.customer_acquisition)],
+      ]
+    : [];
+  const launchActions = Array.isArray(monetization?.launch_actions) ? monetization.launch_actions.filter((item) => typeof item === "string" && item.trim()) : [];
+
+  return (
+    <ResultSectionCard title="Monetization Roadmap" span="wide">
+      {!monetization ? (
+        <p>Monetization roadmap is temporarily unavailable. Regenerate your blueprint to restore this section.</p>
+      ) : (
+        <div className="starter-result__roadmap-grid">
+          {rows.map(([label, value]) => (
+            <div key={label}>
+              <h4>{label}</h4>
+              <p>{value}</p>
+            </div>
           ))}
         </ul>
       ) : (
@@ -77,6 +183,59 @@ function SectionCard({ title, value }) {
 }
 
 function UpgradeCta({ onUpgradePro, onSeeElite, ctaLabel }) {
+function PositioningAvatarCard({ blueprintData }) {
+  return (
+    <ResultSectionCard title="Offer Positioning + Customer Avatar" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div>
+          <h4>Core promise</h4>
+          <p>{compactText(blueprintData?.offer_positioning?.core_promise)}</p>
+        </div>
+        <div>
+          <h4>Differentiator</h4>
+          <p>{compactText(blueprintData?.offer_positioning?.differentiator)}</p>
+        </div>
+        <div>
+          <h4>Primary segment</h4>
+          <p>{compactText(blueprintData?.customer_avatar?.primary_segment)}</p>
+        </div>
+        <div>
+          <h4>Top pains</h4>
+          <p>{compactText(blueprintData?.customer_avatar?.top_pains)}</p>
+        </div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
+function First30DaysCard({ blueprintData }) {
+  return (
+    <ResultSectionCard title="First 30-Day Execution Plan" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div><h4>Week 1</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_1)}</p></div>
+        <div><h4>Week 2</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_2)}</p></div>
+        <div><h4>Week 3</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_3)}</p></div>
+        <div><h4>Week 4</h4><p>{compactText(blueprintData?.first_30_day_execution_plan?.week_4)}</p></div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
+function UpgradeRecommendationCard({ blueprintData }) {
+  const recommendation = blueprintData?.upgrade_recommendation;
+  return (
+    <ResultSectionCard title="Upgrade Recommendation" span="wide">
+      <div className="starter-result__roadmap-grid">
+        <div><h4>Recommended tier</h4><p>{compactText(recommendation?.recommended_tier)}</p></div>
+        <div><h4>Why now</h4><p>{compactText(recommendation?.why_now)}</p></div>
+        <div><h4>What unlocks next</h4><p>{compactText(recommendation?.what_unlocks_next)}</p></div>
+      </div>
+    </ResultSectionCard>
+  );
+}
+
+function UpgradeCta({ accessLevel, onUpgradePro, onSeeElite }) {
+  const isFree = accessLevel === "free";
   return (
     <section className="starter-upsell starter-upsell--join-now">
       <h3>Upgrade Your PEN2PRO Strategy</h3>
@@ -99,6 +258,17 @@ function UpgradeCta({ onUpgradePro, onSeeElite, ctaLabel }) {
 function StarterBlueprintResult({ response, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprintData = useMemo(() => normalizeBlueprintData(response, intakeValues), [response, intakeValues]);
   const sections = blueprintData.premium_sections || {};
+function StarterBlueprintResult({ response, blueprint, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
+  const blueprintData = useMemo(() => resolveBlueprintData(response, blueprint), [response, blueprint]);
+
+  const accessLevel = (intakeValues?.accessLevel || intakeValues?.accessTier || "free").toLowerCase();
+  const businessName = normalizeText(intakeValues?.proposedBusinessName, normalizeText(blueprintData?.business_snapshot?.business_name, "your business"));
+  const domain = normalizeText(intakeValues?.domainToCheck, normalizeText(blueprintData?.business_snapshot?.domain, "Not selected"));
+
+  const startupChecklist = getChecklistEntries(blueprintData.startup_requirements || blueprintData.launch_plan_30_days);
+  const timelineItems = getWindowTimelineEntries(blueprintData.next_steps_timeline).length
+    ? getWindowTimelineEntries(blueprintData.next_steps_timeline)
+    : getTimelineEntries(blueprintData.launch_plan_30_days, blueprintData.operations_plan_90_days);
 
   return (
     <div className="starter-result starter-reveal is-visible">
@@ -125,6 +295,12 @@ function StarterBlueprintResult({ response, intakeValues, onUpgradePro, onSeeEli
         <SectionCard title="Tools Needed" value={sections.tools_needed} />
         <SectionCard title="Risk Warnings" value={sections.risk_warnings} />
         <SectionCard title="Next Best Actions" value={sections.next_best_actions} />
+        <StartupChecklistCard items={startupChecklist.length ? startupChecklist : [{ task: "Validate your business name and domain", priority: "High" }]} />
+        <TimelineCard items={timelineItems} />
+        <MonetizationRoadmapCard blueprintData={blueprintData} />
+        <PositioningAvatarCard blueprintData={blueprintData} />
+        <First30DaysCard blueprintData={blueprintData} />
+        <UpgradeRecommendationCard blueprintData={blueprintData} />
       </section>
 
       <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} ctaLabel={sections.upgrade_cta || "Unlock Full Strategy"} />
