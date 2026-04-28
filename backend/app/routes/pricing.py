@@ -20,7 +20,7 @@ def pricing():
                     "Email support",
                 ],
                 "badge_text": "Free Forever",
-                "cta_label": "Start Free",
+                "cta_label": "Free Forever",
                 "featured": False,
             },
             {

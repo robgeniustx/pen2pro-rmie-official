@@ -12,7 +12,7 @@ import Footer from "../components/home/Footer";
 import { fetchBackendStatus, fetchPricingPlans, createFounderCheckout } from "../services/api";
 import "./HomePage.css";
 
-function HomePage({ navigateTo }) {
+function HomePage({ navigateTo, initialSection = "" }) {
   const [backendMessage, setBackendMessage] = useState("Loading backend...");
   const [plans, setPlans] = useState([]);
   const [isPricingLoading, setIsPricingLoading] = useState(true);
@@ -99,6 +99,17 @@ function HomePage({ navigateTo }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!initialSection) return;
+    const timer = window.setTimeout(() => {
+      const element = document.querySelector(initialSection);
+      if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (initialSection === "#pricing") setActiveNav("#pricing");
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [initialSection]);
+
   const hasPlans = plans.length > 0;
 
   const scrollTo = (id) => {
@@ -130,8 +141,7 @@ function HomePage({ navigateTo }) {
   };
 
   const handleSeePricing = () => {
-    scrollTo("#pricing");
-    setActiveNav("#pricing");
+    navigateTo("/pricing");
   };
 
   const handleSampleRoadmap = () => {
