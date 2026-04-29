@@ -689,7 +689,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			},
 			"upgrade_cta": {
 				"title": "Ready to unlock the full PEN2PRO business buildout?",
-				"copy": "This free blueprint gives you the starting map. Elite unlocks the deeper execution system, including entity setup guidance, domain strategy, branding direction, pricing systems, customer acquisition, CRM setup, payment setup, and 90-day growth execution.",
+				"copy": "Go beyond the starter roadmap and unlock the execution system. Pro gives you the strategy behind the business: outreach, content, customer acquisition, launch planning, CRM structure, follow-up scripts, weekly execution, and growth tracking. Free Forever gives you the foundation. Pro gives you the strategy. Elite gives you the full business buildout.",
 				"offer": "Elite Offer: First month only $99.",
 				"button": "Unlock Elite Strategy",
 				"route": "/pricing",
@@ -1025,7 +1025,7 @@ def _build_premium_structured_blueprint(payload: dict, business_name: str, domai
 		"risk_flags": ["Overbuilding before validating demand", "Underpricing too long", "Skipping follow-up consistency"],
 		"beginner_mistakes_to_avoid": ["Trying to launch everything at once", "Waiting for perfect branding", "Not asking for the sale"],
 		"next_7_actions": ["Define one customer outcome", "Finalize offer scope", "Publish landing page", "Set up Stripe/Square", "Claim Google profile", "Set up Apple Business Connect", "Start outreach today"],
-		"upgrade_cta": {"title": "Ready to unlock the full PEN2PRO business buildout?", "copy": "This free blueprint gives you the starting map. Elite unlocks the deeper execution system, including entity setup guidance, domain strategy, branding direction, pricing systems, customer acquisition, CRM setup, payment setup, and 90-day growth execution.", "offer": "Elite Offer: First month only $99.", "button": "Unlock Elite Strategy", "route": "/pricing"},
+		"upgrade_cta": {"title": "Ready to unlock the full PEN2PRO business buildout?", "copy": "Go beyond the starter roadmap and unlock the execution system. Pro gives you the strategy behind the business: outreach, content, customer acquisition, launch planning, CRM structure, follow-up scripts, weekly execution, and growth tracking. Free Forever gives you the foundation. Pro gives you the strategy. Elite gives you the full business buildout.", "offer": "Elite Offer: First month only $99.", "button": "Unlock Elite Strategy", "route": "/pricing"},
 		"sources": [{"name": "IRS EIN Online", "url": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers"}, {"name": "SBA business guide", "url": "https://www.sba.gov/business-guide"}, {"name": "Google Business Profile", "url": "https://www.google.com/business/"}, {"name": "Apple Business Connect", "url": "https://businessconnect.apple.com/"}]
 	}
 	if saas_mode:

@@ -42,6 +42,6 @@ export function buildLocalStarterBlueprint(payload = {}) {
     risk_flags: ["Overbuilding before validation", "Underpricing too long", "Ignoring follow-up discipline"],
     beginner_mistakes_to_avoid: ["Launching too many offers at once", "Waiting for perfect branding", "Avoiding direct sales asks"],
     next_7_actions: ["Define one customer outcome", "Finalize offer scope", "Publish landing page", "Set up Stripe or Square", "Claim Google profile", "Set up Apple Business Connect", "Start outreach today"],
-    upgrade_cta: { title: "Ready to unlock the full PEN2PRO business buildout?", copy: "This free blueprint gives you the starting map. Elite unlocks deeper execution systems for launch and growth.", offer: "Elite Offer: First month only $99.", button: "Unlock Elite Strategy", route: "/pricing" },
+    upgrade_cta: { title: "Ready to unlock the full PEN2PRO business buildout?", copy: "Go beyond the starter roadmap and unlock the execution system. Pro gives you the strategy behind the business: outreach, content, customer acquisition, launch planning, CRM structure, follow-up scripts, weekly execution, and growth tracking. Free Forever gives you the foundation. Pro gives you the strategy. Elite gives you the full business buildout.", offer: "Elite Offer: First month only $99.", button: "Unlock Elite Strategy", route: "/pricing" },
   };
 }
