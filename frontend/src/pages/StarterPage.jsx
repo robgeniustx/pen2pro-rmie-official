@@ -336,6 +336,11 @@ function StarterPage({ navigateTo }) {
           <h1>Starter Blueprint Access</h1>
           <p className="starter-page__subtitle">{pageSubtitle}</p>
           <p className="starter-page__reassurance">Premium guidance, structured execution, and clear upgrade paths from Free Forever to Elite 10M Strategist.</p>
+          <div className="starter-page__hero-stats">
+            <span>✅ Structured output blocks</span>
+            <span>⚡ 30/90/365-day planning</span>
+            <span>📱 Mobile-ready intake</span>
+          </div>
         </section>
 
         {!hasResult && (
