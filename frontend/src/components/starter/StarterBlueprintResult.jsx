@@ -52,7 +52,22 @@ function normalizeBlueprint(response) {
   return {};
 }
 
-function ResultCard({ title, content }) {
+const ACCESS_RANK = { free: 0, pro: 1, elite: 2 };
+
+function ResultCard({ title, content, locked = false, onUpgradePro, onSeeElite }) {
+  if (locked) {
+    const isProLocked = title === "Outreach Strategy" || title === "Content Strategy" || title === "30-Day Launch Plan" || title === "90-Day Operations Plan" || title === "Risk Flags" || title === "Beginner Mistakes to Avoid" || title === "Next 7 Actions" || title === "Weekly Execution Checklist" || title === "Lead Follow-Up Script" || title === "Basic CRM Pipeline" || title === "Customer Acquisition Plan" || title === "Local Partner Strategy" || title === "Review/Testimonial Collection Plan" || title === "Simple KPI Tracker";
+    return (
+      <article className="starter-result__bento-card starter-upsell__plan is-locked">
+        <h3>{title}</h3>
+        <p>{isProLocked ? "Upgrade to Pro to unlock this execution section." : "Upgrade to Elite to unlock this advanced strategy section."}</p>
+        <span className="starter-upsell__lock">{isProLocked ? "Locked on Free Forever" : "Locked on Pro"}</span>
+        <button className="starter-button starter-button--secondary" onClick={isProLocked ? onUpgradePro : onSeeElite}>
+          {isProLocked ? "Upgrade to Pro" : "Unlock Elite"}
+        </button>
+      </article>
+    );
+  }
   return (
     <article className="starter-result__bento-card">
       <h3>{title}</h3>
@@ -136,37 +151,67 @@ function PartnerCard() {
 export default function StarterBlueprintResult({ response, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprint = useMemo(() => normalizeBlueprint(response), [response]);
   const sections = [
-    ["Executive Business Snapshot", "executive_business_snapshot"],
-    ["Business Type Classification", "business_type_classification"],
-    ["Founder Readiness Level", "founder_readiness_level"],
-    ["Customer Problem Breakdown", "customer_problem_breakdown"],
-    ["Target Customer Profile", "target_customer_profile"],
-    ["Market Positioning", "market_positioning"],
-    ["Core Promise", "core_promise"],
-    ["First Paid Offer", "first_paid_offer"],
-    ["Pricing Ladder", "pricing_ladder"],
-    ["Revenue Model", "revenue_model"],
-    ["Business Name Strategy", "business_name_strategy"],
-    ["Domain Strategy", "domain_strategy"],
-    ["Legal Setup Roadmap", "legal_setup_roadmap"],
-    ["Business Banking Setup", "business_banking_setup"],
-    ["Payment Processing Setup", "payment_processing_setup"],
-    ["Website / Landing Page Plan", "website_landing_page_plan"],
-    ["Google Business Profile Setup", "google_business_profile_setup"],
-    ["Apple Maps / Apple Business Connect Setup", "apple_maps_apple_business_connect_setup"],
-    ["Social Media Setup", "social_media_setup"],
-    ["Sales Script", "sales_script"],
-    ["Outreach Strategy", "outreach_strategy"],
-    ["Content Strategy", "content_strategy"],
-    ["30-Day Launch Plan", "launch_plan_30_days"],
-    ["90-Day Operations Plan", "operations_plan_90_days"],
-    ["12-Month Scale Plan", "scale_plan_12_months"],
-    ["Credit & Funding Readiness", "credit_funding_readiness"],
-    ["Risk Flags", "risk_flags"],
-    ["Beginner Mistakes to Avoid", "beginner_mistakes_to_avoid"],
-    ["Next 7 Actions", "next_7_actions"],
-    ["Upgrade CTA", "upgrade_cta"],
+    ["Executive Business Snapshot", "executive_business_snapshot", "free"],
+    ["Business Type Classification", "business_type_classification", "free"],
+    ["Founder Readiness Level", "founder_readiness_level", "free"],
+    ["Customer Problem Breakdown", "customer_problem_breakdown", "free"],
+    ["Target Customer Profile", "target_customer_profile", "free"],
+    ["Market Positioning", "market_positioning", "free"],
+    ["Core Promise", "core_promise", "free"],
+    ["First Paid Offer", "first_paid_offer", "free"],
+    ["Pricing Ladder", "pricing_ladder", "free"],
+    ["Business Name Strategy", "business_name_strategy", "free"],
+    ["Domain Strategy", "domain_strategy", "free"],
+    ["Legal Setup Roadmap", "legal_setup_roadmap", "free"],
+    ["Business Banking Setup", "business_banking_setup", "free"],
+    ["Payment Processing Setup", "payment_processing_setup", "free"],
+    ["Website / Landing Page Plan", "website_landing_page_plan", "free"],
+    ["Google Business Profile Setup", "google_business_profile_setup", "free"],
+    ["Apple Maps / Apple Business Connect Setup", "apple_maps_apple_business_connect_setup", "free"],
+    ["Social Media Setup", "social_media_setup", "free"],
+    ["Sales Script", "sales_script", "free"],
+    ["Outreach Strategy", "outreach_strategy", "pro"],
+    ["Content Strategy", "content_strategy", "pro"],
+    ["30-Day Launch Plan", "launch_plan_30_days", "pro"],
+    ["90-Day Operations Plan", "operations_plan_90_days", "pro"],
+    ["Risk Flags", "risk_flags", "pro"],
+    ["Beginner Mistakes to Avoid", "beginner_mistakes_to_avoid", "pro"],
+    ["Next 7 Actions", "next_7_actions", "pro"],
+    ["Weekly Execution Checklist", "weekly_execution_checklist", "pro"],
+    ["Lead Follow-Up Script", "lead_follow_up_script", "pro"],
+    ["Basic CRM Pipeline", "basic_crm_pipeline", "pro"],
+    ["Customer Acquisition Plan", "customer_acquisition_plan", "pro"],
+    ["Local Partner Strategy", "local_partner_strategy", "pro"],
+    ["Review/Testimonial Collection Plan", "review_testimonial_collection_plan", "pro"],
+    ["Simple KPI Tracker", "simple_kpi_tracker", "pro"],
+    ["Entity Structure Strategy", "entity_structure_strategy", "elite"],
+    ["LLC Development Roadmap", "llc_development_roadmap", "elite"],
+    ["S-Corp Election Readiness", "s_corp_election_readiness", "elite"],
+    ["C-Corp Development Considerations", "c_corp_development_considerations", "elite"],
+    ["501(c)(3) Nonprofit Development Roadmap", "nonprofit_development_roadmap", "elite"],
+    ["Trademark Registration Roadmap", "trademark_registration_roadmap", "elite"],
+    ["Brand Identity System", "brand_identity_system", "elite"],
+    ["Logo Direction", "logo_direction", "elite"],
+    ["Social Media Marketing System", "social_media_marketing_system", "elite"],
+    ["Paid Ad Readiness", "paid_ad_readiness", "elite"],
+    ["Business Credit Readiness", "business_credit_readiness", "elite"],
+    ["Funding Readiness", "funding_readiness", "elite"],
+    ["Grant Readiness", "grant_readiness", "elite"],
+    ["Government Contracting Readiness", "government_contracting_readiness", "elite"],
+    ["CRM Automation Plan", "crm_automation_plan", "elite"],
+    ["Email/SMS Campaign Strategy", "email_sms_campaign_strategy", "elite"],
+    ["Payment + Subscription Monetization System", "payment_subscription_monetization_system", "elite"],
+    ["Hiring / Contractor Setup", "hiring_contractor_setup", "elite"],
+    ["SOP Development", "sop_development", "elite"],
+    ["12-Month Scale Plan", "scale_plan_12_months", "elite"],
+    ["Strategic Partnership Plan", "strategic_partnership_plan", "elite"],
+    ["Investor/Lender-Ready Summary", "investor_lender_ready_summary", "elite"],
+    ["Business Risk Protection Plan", "business_risk_protection_plan", "elite"],
+    ["Compliance Calendar", "compliance_calendar", "elite"],
+    ["AI Business Coach Next Steps", "ai_business_coach_next_steps", "elite"],
   ];
+  const accessLevel = String(read(blueprint, "accessLevel", intakeValues?.accessLevel || "free")).toLowerCase();
+  const accessRank = ACCESS_RANK[accessLevel] ?? 0;
 
   const businessName = asText(read(blueprint, "business_snapshot.business_name", read(blueprint, "businessIdentity.displayBusinessName", intakeValues?.proposedBusinessName || "Your Business")), "Your Business");
   const upgradeData = read(blueprint, "upgrade_cta", {});
@@ -180,8 +225,15 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
       </header>
 
       <div className="starter-result__bento-grid">
-        {sections.map(([title, key]) => (
-          <ResultCard key={key} title={title} content={asText(read(blueprint, key, ""))} />
+        {sections.map(([title, key, minimumTier]) => (
+          <ResultCard
+            key={key}
+            title={title}
+            content={asText(read(blueprint, key, ""))}
+            locked={accessRank < ACCESS_RANK[minimumTier]}
+            onUpgradePro={onUpgradePro}
+            onSeeElite={onSeeElite}
+          />
         ))}
         <PartnerCard />
       </div>
