@@ -121,7 +121,7 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectio
   const accessLevel = values.accessLevel || "free";
   const isLockedPro = accessLevel === "pro" && !hasProAccess;
   const isLockedElite = accessLevel === "elite" && !hasEliteAccess;
-  const generateButtonLabel = isLockedPro ? "Upgrade to Pro" : isLockedElite ? "Unlock Elite" : "Generate Blueprint";
+  const generateButtonLabel = isLockedPro ? "Start Pro Strategy" : isLockedElite ? "Unlock Pro Execution" : "Activate My Launch Strategy";
 
   const openRegistrarSearch = () => {
     const domain = (domainToCheck || "").trim();

@@ -64,7 +64,7 @@ function UpgradePromptCard({ accessLevel, onUpgradePro, onSeeElite }) {
 
   return (
     <article className="starter-sidebar-card starter-sidebar-card--upgrade starter-reveal">
-      <h3>Unlock More With Pro/Elite</h3>
+      <h3>Unlock Strategist Level</h3>
       <p>{accessLevel === "free" ? "Pro unlocks strategist focus and deeper execution guidance." : "Elite unlocks advanced strategist output and scaling depth."}</p>
       <div className="starter-result__cta-actions">
         {accessLevel === "free" && <button className="starter-button starter-button--secondary" type="button" onClick={onUpgradePro}>Upgrade to Pro</button>}
