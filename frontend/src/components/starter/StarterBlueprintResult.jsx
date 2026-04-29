@@ -94,7 +94,7 @@ function PartnerToolsCard() {
   );
 }
 
-function UpgradeCta({ onUpgradePro, onSeeElite }) {
+function UpgradeCta({ onUpgradePro, onSeeElite, upgradeData = {} }) {
   return (
     <section className="starter-upsell starter-upsell--join-now">
       <h3>{upgradeData?.title || "Ready to unlock the full PEN2PRO business buildout?"}</h3>
