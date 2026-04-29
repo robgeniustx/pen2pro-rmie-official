@@ -157,6 +157,10 @@
   color: #ffe8c2; border-radius: 14px; padding: 13px;
 }
 
+
+.starter-tier-notice strong { display: block; margin-bottom: 4px; }
+.starter-tier-notice span { display: block; margin-top: 6px; }
+
 .starter-sidebar { position: sticky; top: 86px; display: grid; gap: 12px; }
 .starter-sidebar-card {
   border: 1px solid rgba(115, 155, 223, 0.35);
