@@ -1,116 +1,47 @@
-function text(value, fallback = "Not provided") {
+function text(value, fallback) {
   const normalized = String(value ?? "").trim();
   return normalized || fallback;
 }
 
-function cleanName(name) {
-  const value = text(name, "Your Business");
-  return value.toLowerCase() === "pen2pro" ? "Your Business" : value;
-}
-
-function list(items) {
-  return items.filter(Boolean);
-}
-
 export function buildLocalStarterBlueprint(payload = {}) {
-  const businessName = cleanName(payload.proposedBusinessName || payload.businessName);
-  const businessIdea = text(payload.businessIdea);
-  const targetCustomer = text(payload.targetCustomer);
-  const location = text(payload.location || payload.marketLocation, "Your local market");
-  const startupBudget = text(payload.startupBudget || payload.budget, "$500-$2,000");
-  const stage = text(payload.currentStage, "Idea stage");
-  const productOrService = text(payload.productOrService);
+  const businessName = text(payload.proposedBusinessName || payload.businessName, "Your Business");
+  const idea = text(payload.businessIdea, "A practical service solving an urgent business problem");
+  const customer = text(payload.targetCustomer, "Busy professionals and local business owners");
+  const offer = text(payload.productOrService, "Done-for-you launch support");
+  const location = text(payload.location || payload.marketLocation, "Online + local market");
+  const domainBase = businessName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24) || "founderlaunch";
+  const domain = text(payload.domainToCheck || payload.domain, `${domainBase}.com`);
 
   return {
-    business_snapshot: {
-      business_name: businessName,
-      business_summary: `${businessName} helps ${targetCustomer} by delivering ${productOrService} in ${location}.`,
-      stage,
-      startup_budget: startupBudget,
-    },
-    startup_requirements: [
-      { task: `Confirm the final business name for ${businessName}`, priority: "High" },
-      { task: "Check domain availability", priority: "High" },
-      { task: "Register domain once available", priority: "High" },
-      { task: "Set up Google Business Profile", priority: "High" },
-      { task: "Set up Apple Maps / Apple Business Connect", priority: "High" },
-      { task: "Set up social handles for Facebook, Instagram, TikTok, and LinkedIn", priority: "High" },
-      { task: "Set up booking/contact form", priority: "High" },
-      { task: "Implement a review collection system", priority: "Medium" },
-      { task: "Set up local SEO", priority: "Medium" },
-    ],
-    licenses_and_compliance: [
-      { note: `Check city/state licensing requirements in ${location}` },
-      { note: "Create basic client agreement, terms, and privacy policy" },
-    ],
-    tools_and_software: [
-      { tool: "CRM (HubSpot Free)", purpose: "Track leads and follow-up" },
-      { tool: "Stripe", purpose: "Payments and invoices" },
-      { tool: "Canva + Notion", purpose: "Brand assets and SOPs" },
-    ],
-    pricing_strategy: {
-      direction: `Launch ${businessName} with a 3-tier package anchored around clear outcomes and fast wins.`,
-      offer_floor: "Entry offer: $149-$499",
-      core_offer: "Main offer: $500-$2,500",
-      premium_offer: "Premium offer: $2,500+",
-    },
-    launch_plan_30_days: {
-      week_1: `Confirm business name, check domain availability, register domain if available, set up Google Business Profile, set up Apple Maps / Apple Business Connect, set up Facebook + Instagram + TikTok + LinkedIn profiles, and create basic logo, brand colors, and tagline for ${businessName}.`,
-      week_2: "Build a simple landing page/starter website, add contact or booking form, create first offer, create pricing package, and prepare sales script + outreach message.",
-      week_3: "Begin customer outreach, post proof-based content, ask for first reviews, add reviews to website and Google Business Profile, and start local SEO content.",
-      week_4: "Raise pricing after first customers, launch monthly/recurring offer, add email/SMS follow-up, and push customers toward Pro or Elite when they need full strategy support.",
-    },
-    operations_plan_90_days: {
-      focus: "Build repeatable delivery SOPs, pipeline review rhythm, and weekly KPI dashboard.",
-    },
-    scale_plan_12_months: {
-      focus: "Add one repeatable acquisition channel, one referral channel, and delegate non-sales operations.",
-    },
-    risk_flags: [
-      "Underpricing offers without a clear scope and outcome.",
-      "Trying to scale before proving repeatable conversions.",
-      "Ignoring fulfillment capacity while increasing acquisition.",
-    ],
-    sources: [
-      { name: "SBA Business Guide", url: "https://www.sba.gov/business-guide" },
-      { name: "IRS EIN", url: "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers" },
-    ],
-    premium_sections: {
-      executive_snapshot: `${businessName} is positioned as a focused offer-first business for ${targetCustomer} in ${location}.`,
-      business_name_usage: `Use ${businessName} consistently in website headers, invoices, social handles, and sales scripts for trust consistency.`,
-      market_positioning: `${businessName} should position against slow generic competitors by promising speed, clarity, and measurable outcomes.`,
-      ideal_customer_profile: `${targetCustomer} with urgent pain, buying authority, and budget to act in the next 30 days.`,
-      first_offer: `Launch a fixed-scope ${productOrService} starter package with a 7-14 day delivery timeline.`,
-      revenue_model: "Primary: service/package revenue. Secondary: retainers and upsells after proof.",
-      pricing_strategy: `Anchor ${businessName} pricing with three tiers and outcome-based naming to avoid commodity pricing.`,
-      launch_plan_30_days: list([
-        "Week 1: Positioning, offer packaging, booking funnel setup.",
-        "Week 2: 20 direct outreaches + 5 discovery calls.",
-        "Week 3: Close pilots, deliver quick wins, collect proof.",
-        "Week 4: Raise pricing 10-15% with testimonial assets.",
-      ]),
-      growth_plan_90_days: list([
-        "Productize delivery into repeatable SOPs.",
-        "Launch referral loop and one content channel.",
-        "Install CRM pipeline reviews and weekly KPI check-ins.",
-      ]),
-      brand_identity_direction: `${businessName} brand voice: confident, practical, and founder-friendly. Design direction: clean premium with trust cues and proof assets.`,
-      operations_checklist: list([
-        "Business registration + banking complete.",
-        "CRM + calendar + payment stack live.",
-        "Offer SOP and onboarding checklist documented.",
-      ]),
-      lead_generation_strategy: "Prioritize founder-led outbound, warm referrals, and short-form educational content tied to one CTA.",
-      sales_script: `"Hi, I'm from ${businessName}. We help ${targetCustomer} achieve [specific outcome] in [timeframe]. Can I ask 3 questions to see if this fits your goals?"`,
-      content_strategy: "Publish 3 weekly assets: one proof post, one educational post, one objection-handling post.",
-      tools_needed: list(["HubSpot", "Stripe", "Canva", "Notion", "Google Workspace"]),
-      risk_warnings: "Avoid custom one-off fulfillment for every client; force standardization early.",
-      next_best_actions: list([
-        `Finalize ${businessName} starter offer today.`,
-        "Build booking page and payment link.",
-        "Book first 5 discovery calls this week.",
-      ]),
-      upgrade_cta: "Unlock Elite Strategy",
-    },
+    executive_business_snapshot: { what_to_do: `Launch ${businessName} with one paid offer tied to a measurable customer result.`, why_it_matters: "Focused execution creates faster revenue proof and confidence.", execution_order: ["Define one outcome", "Package offer", "Sell pilot", "Deliver + capture proof"] },
+    business_type_classification: { primary_model: "Service-led startup", go_to_market: "Outreach + proof content + referrals" },
+    founder_readiness_level: { level: "Beginner-ready", support_note: "Built for founders with no prior business education.", first_skill_to_build: "Confident sales conversations" },
+    customer_problem_breakdown: { core_problem: `${customer} are struggling to solve ${idea} reliably.`, cost_of_inaction: "Lost time, lost revenue, and delayed growth.", problem_signals: ["No repeatable workflow", "Inconsistent lead flow", "Unclear next steps"] },
+    target_customer_profile: { ideal_buyer: customer, buying_trigger: "They need a practical result fast.", where_to_reach: ["LinkedIn", "Local communities", "Referral partners"] },
+    market_positioning: { positioning_statement: `${businessName} is the beginner-friendly execution partner for ${customer}.`, differentiators: ["Simple action order", "Fast time-to-value", "Founder-friendly language"] },
+    core_promise: `Deliver a visible progress win in 14 days with ${offer}.`,
+    first_paid_offer: { offer_name: "14-Day Launch Sprint", deliverables: ["Audit", "Action plan", "Hands-on setup", "Review"], starter_price_range: "$149-$499" },
+    pricing_ladder: { free: "Mini audit/checklist", pro: "Implementation sprint", elite: "Ongoing optimization advisory" },
+    revenue_model: { primary: "Paid implementation", recurring: "Monthly support retainers", expansion: "Upsells and partner referrals" },
+    business_name_strategy: { rules: ["Use 2-3 clear words", "Make it easy to spell", "Tie to customer outcome"], example: businessName },
+    domain_strategy: { primary_domain: domain, alternatives: [`${domainBase}hq.com`, `join${domainBase}.com`], screening_rules: ["Easy to pronounce", "No hyphens", "No awkward spelling"] },
+    legal_setup_roadmap: [{ step: 1, action: "Choose entity structure", why: "Liability and tax setup" }, { step: 2, action: "Apply for EIN", why: "Required for bank and payments" }, { step: 3, action: "Check local/state licenses", why: "Avoid delays and fines" }],
+    business_banking_setup: { order: ["Open business checking", "Separate business expenses", "Track weekly cashflow"] },
+    payment_processing_setup: { providers: ["Stripe", "Square"], setup_order: ["Create account", "Connect bank", "Create payment links", "Test checkout"] },
+    website_landing_page_plan: { sections: ["Problem", "Promise", "Offer", "Proof", "CTA"], cta: "Book strategy call" },
+    google_business_profile_setup: { relevant_when: "Local or hybrid business", steps: ["Claim listing", "Add services", "Add photos", "Request first reviews"] },
+    apple_maps_apple_business_connect_setup: { relevant_when: "Local or hybrid business", steps: ["Create account", "Verify business", "Publish details"] },
+    social_media_setup: { priority_channels: ["LinkedIn", "Instagram", "YouTube Shorts/TikTok"], setup_order: ["Brand bio", "Pinned offer post", "Proof content loop"] },
+    sales_script: { script: "You shared [pain]. We solve that by [offer]. In 14 days you get [result]. Want the pilot this week?" },
+    outreach_strategy: { daily_activity: "10 targeted messages + 2 follow-ups", weekly_target: "5 discovery calls", sequence: ["Warm network", "Partners", "Direct outbound"] },
+    content_strategy: { weekly_plan: ["2 pain-education posts", "1 proof post", "1 CTA post"], goal: "Turn attention into booked calls" },
+    launch_plan_30_days: { week_1: "Package offer and script", week_2: "Run outreach and calls", week_3: "Close + deliver pilots", week_4: "Collect testimonials and optimize pricing" },
+    operations_plan_90_days: { focus: ["Document SOPs", "Track KPIs weekly", "Install follow-up automation"] },
+    scale_plan_12_months: { focus: ["Add referral partners", "Raise pricing with proof", "Delegate repeat tasks"] },
+    credit_funding_readiness: { foundation_steps: ["Keep personal and business finances separate", "Maintain on-time payments", "Track monthly profit and cashflow"], documents_to_prepare: ["EIN confirmation", "Business bank statements", "Simple P&L"], starter_guidance: "Use funding after validated demand and delivery consistency." },
+    risk_flags: ["Overbuilding before validation", "Underpricing too long", "Ignoring follow-up discipline"],
+    beginner_mistakes_to_avoid: ["Launching too many offers at once", "Waiting for perfect branding", "Avoiding direct sales asks"],
+    next_7_actions: ["Define one customer outcome", "Finalize offer scope", "Publish landing page", "Set up Stripe or Square", "Claim Google profile", "Set up Apple Business Connect", "Start outreach today"],
+    upgrade_cta: { title: "Ready to unlock the full PEN2PRO business buildout?", copy: "This free blueprint gives you the starting map. Elite unlocks deeper execution systems for launch and growth.", offer: "Elite Offer: First month only $99.", button: "Unlock Elite Strategy", route: "/pricing" },
   };
 }

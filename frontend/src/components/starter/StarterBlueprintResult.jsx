@@ -4,13 +4,16 @@ function isObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function asText(value, fallback = "Not provided") {
+function asText(value, fallback = "PEN2PRO strategist guidance is available in this section.") {
   if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number") return String(value);
   if (Array.isArray(value)) {
     const parts = value
       .map((item) => {
         if (typeof item === "string") return item;
-        if (isObject(item)) return item.task || item.note || item.requirement || item.tool || item.action || "";
+        if (isObject(item)) {
+          return Object.values(item).filter((entry) => typeof entry === "string" && entry.trim()).join(" • ");
+        }
         return "";
       })
       .map((item) => String(item).trim())
@@ -18,8 +21,13 @@ function asText(value, fallback = "Not provided") {
     return parts.length ? parts.join(" • ") : fallback;
   }
   if (isObject(value)) {
-    const parts = Object.values(value)
-      .map((item) => (typeof item === "string" ? item.trim() : ""))
+    const parts = Object.entries(value)
+      .map(([, item]) => {
+        if (typeof item === "string" && item.trim()) return item.trim();
+        if (Array.isArray(item)) return asText(item, "");
+        if (isObject(item)) return asText(item, "");
+        return "";
+      })
       .filter(Boolean);
     return parts.length ? parts.join(" • ") : fallback;
   }
@@ -53,6 +61,7 @@ function ResultCard({ title, content }) {
   );
 }
 
+function UpgradeCta({ onUpgradePro, onSeeElite, upgradeData }) {
 function PartnerToolsCard() {
   const smartCreditAffiliateUrl = String(import.meta.env.VITE_SMARTCREDIT_AFFILIATE_URL || "").trim();
 
@@ -89,14 +98,14 @@ function PartnerToolsCard() {
 function UpgradeCta({ onUpgradePro, onSeeElite }) {
   return (
     <section className="starter-upsell starter-upsell--join-now">
-      <h3>Ready to unlock the full PEN2PRO business buildout?</h3>
-      <p>This free blueprint gives you the starting map. Elite unlocks deeper execution systems for launch and growth.</p>
+      <h3>{upgradeData?.title || "Ready to unlock the full PEN2PRO business buildout?"}</h3>
+      <p>{upgradeData?.copy || "This free blueprint gives you the starting map. Elite unlocks deeper execution systems for launch and growth."}</p>
       <div className="starter-upsell__plans">
         <article className="starter-upsell__plan is-locked">
           <h4>Pro Plan</h4>
           <p>Conversion playbooks, deeper positioning, and advanced launch systems.</p>
           <span className="starter-upsell__lock">Locked on Free Forever</span>
-          <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>Unlock Elite Strategy</button>
+          <button className="starter-button starter-button--secondary" onClick={onUpgradePro}>View Pricing</button>
         </article>
         <article className="starter-upsell__plan starter-upsell__plan--elite is-locked">
           <h4>Elite Plan</h4>
@@ -110,36 +119,75 @@ function UpgradeCta({ onUpgradePro, onSeeElite }) {
   );
 }
 
+function PartnerCard() {
+  const partnerUrl = import.meta.env.VITE_SMARTCREDIT_AFFILIATE_URL;
+  return (
+    <article className="starter-result__bento-card">
+      <h3>Credit & Funding Readiness Partner</h3>
+      <p>Use this recommended partner resource to strengthen credit profile, funding readiness, and lender confidence before scaling.</p>
+      {partnerUrl ? (
+        <a className="starter-button starter-button--secondary" href={partnerUrl} target="_blank" rel="noreferrer">Start SmartCredit Trial</a>
+      ) : (
+        <p>Partner link coming soon.</p>
+      )}
+    </article>
+  );
+}
+
 export default function StarterBlueprintResult({ response, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprint = useMemo(() => normalizeBlueprint(response), [response]);
+  const sections = [
+    ["Executive Business Snapshot", "executive_business_snapshot"],
+    ["Business Type Classification", "business_type_classification"],
+    ["Founder Readiness Level", "founder_readiness_level"],
+    ["Customer Problem Breakdown", "customer_problem_breakdown"],
+    ["Target Customer Profile", "target_customer_profile"],
+    ["Market Positioning", "market_positioning"],
+    ["Core Promise", "core_promise"],
+    ["First Paid Offer", "first_paid_offer"],
+    ["Pricing Ladder", "pricing_ladder"],
+    ["Revenue Model", "revenue_model"],
+    ["Business Name Strategy", "business_name_strategy"],
+    ["Domain Strategy", "domain_strategy"],
+    ["Legal Setup Roadmap", "legal_setup_roadmap"],
+    ["Business Banking Setup", "business_banking_setup"],
+    ["Payment Processing Setup", "payment_processing_setup"],
+    ["Website / Landing Page Plan", "website_landing_page_plan"],
+    ["Google Business Profile Setup", "google_business_profile_setup"],
+    ["Apple Maps / Apple Business Connect Setup", "apple_maps_apple_business_connect_setup"],
+    ["Social Media Setup", "social_media_setup"],
+    ["Sales Script", "sales_script"],
+    ["Outreach Strategy", "outreach_strategy"],
+    ["Content Strategy", "content_strategy"],
+    ["30-Day Launch Plan", "launch_plan_30_days"],
+    ["90-Day Operations Plan", "operations_plan_90_days"],
+    ["12-Month Scale Plan", "scale_plan_12_months"],
+    ["Credit & Funding Readiness", "credit_funding_readiness"],
+    ["Risk Flags", "risk_flags"],
+    ["Beginner Mistakes to Avoid", "beginner_mistakes_to_avoid"],
+    ["Next 7 Actions", "next_7_actions"],
+    ["Upgrade CTA", "upgrade_cta"],
+  ];
 
-  const businessName = asText(
-    read(blueprint, "business_snapshot.business_name", intakeValues?.proposedBusinessName || "Your Business"),
-    "Your Business",
-  );
-  const domain = asText(read(blueprint, "business_snapshot.suggested_domain", intakeValues?.domainToCheck || intakeValues?.domain || ""), "Not provided");
+  const businessName = asText(read(blueprint, "business_snapshot.business_name", read(blueprint, "businessIdentity.displayBusinessName", intakeValues?.proposedBusinessName || "Your Business")), "Your Business");
+  const upgradeData = read(blueprint, "upgrade_cta", {});
 
   return (
     <section className="starter-result" aria-live="polite">
       <header className="starter-result__hero-card">
         <p className="starter-result__eyebrow">PEN2PRO BLUEPRINT</p>
-        <h2 className="starter-result__hero-title">Your Business Blueprint</h2>
+        <h2 className="starter-result__hero-title">Your Strategist Blueprint</h2>
         <p className="starter-result__subtitle">Built for {businessName}</p>
       </header>
 
       <div className="starter-result__bento-grid">
-        <ResultCard title="Business Snapshot" content={asText(read(blueprint, "business_snapshot.business_summary", intakeValues?.businessIdea))} />
-        <ResultCard title="Startup Requirements" content={asText(read(blueprint, "startup_requirements", []))} />
-        <ResultCard title="Licenses & Compliance" content={asText(read(blueprint, "licenses_and_compliance", []))} />
-        <ResultCard title="Tools & Software" content={asText(read(blueprint, "tools_and_software", []))} />
-        <ResultCard title="Pricing Strategy" content={asText(read(blueprint, "pricing_strategy.direction", read(blueprint, "pricing_strategy", "")))} />
-        <ResultCard title="Launch Plan (30 Days)" content={asText(read(blueprint, "launch_plan_30_days", []))} />
-        <ResultCard title="Operations Plan (90 Days)" content={asText(read(blueprint, "operations_plan_90_days", []))} />
-        <ResultCard title="Scale Plan (12 Months)" content={asText(read(blueprint, "scale_plan_12_months", []))} />
-        <ResultCard title="Risk Flags" content={asText(read(blueprint, "risk_flags", []))} />
-        <ResultCard title="Suggested Domain" content={domain} />
+        {sections.map(([title, key]) => (
+          <ResultCard key={key} title={title} content={asText(read(blueprint, key, ""))} />
+        ))}
+        <PartnerCard />
       </div>
 
+      <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} upgradeData={upgradeData} />
       <PartnerToolsCard />
 
       <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />

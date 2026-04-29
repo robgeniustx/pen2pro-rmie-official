@@ -361,7 +361,7 @@ function StarterPage({ navigateTo }) {
               )}
               {isGenerating && (
                 <div className="starter-state-card starter-state-card--loading" role="status" aria-live="polite">
-                  <h2>Building your PEN2PRO blueprint…</h2>
+                  <h2>Building your PEN2PRO strategist blueprint…</h2>
                   <p>Your request was received. PEN2PRO is analyzing your business idea, offer, target customer, domain, access level, and launch path.</p>
                   <ul className="starter-loading-steps">
                     <li>✅ Reviewing your business details</li>

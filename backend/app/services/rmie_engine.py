@@ -1021,10 +1021,11 @@ def _build_premium_structured_blueprint(payload: dict, business_name: str, domai
 		"launch_plan_30_days": {"week_1": "Positioning, offer packaging, sales script", "week_2": "Outreach and discovery calls", "week_3": "Close and deliver first clients", "week_4": "Collect proof and improve pricing"},
 		"operations_plan_90_days": {"focus": ["Document SOPs", "Track KPIs weekly", "Install follow-up automation"]},
 		"scale_plan_12_months": {"focus": ["Add referral partnerships", "Increase pricing after proof", "Hire support for repeat tasks"]},
+		"credit_funding_readiness": {"foundation_steps": ["Open business checking and keep personal/business expenses separate", "Track monthly revenue and gross margin in a simple ledger", "Pay obligations on time and maintain low credit utilization"], "documents_to_prepare": ["Business registration and EIN confirmation", "Three months of bank statements", "Profit-and-loss snapshot and cashflow summary"], "starter_guidance": "Use small, low-risk funding only after offer validation and consistent delivery."},
 		"risk_flags": ["Overbuilding before validating demand", "Underpricing too long", "Skipping follow-up consistency"],
 		"beginner_mistakes_to_avoid": ["Trying to launch everything at once", "Waiting for perfect branding", "Not asking for the sale"],
 		"next_7_actions": ["Define one customer outcome", "Finalize offer scope", "Publish landing page", "Set up Stripe/Square", "Claim Google profile", "Set up Apple Business Connect", "Start outreach today"],
-		"upgrade_cta": {"title": "Upgrade for full strategist execution", "offer": "Elite Offer: First month only $99.", "button": "Unlock Elite"},
+		"upgrade_cta": {"title": "Ready to unlock the full PEN2PRO business buildout?", "copy": "This free blueprint gives you the starting map. Elite unlocks the deeper execution system, including entity setup guidance, domain strategy, branding direction, pricing systems, customer acquisition, CRM setup, payment setup, and 90-day growth execution.", "offer": "Elite Offer: First month only $99.", "button": "Unlock Elite Strategy", "route": "/pricing"},
 		"sources": [{"name": "IRS EIN Online", "url": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers"}, {"name": "SBA business guide", "url": "https://www.sba.gov/business-guide"}, {"name": "Google Business Profile", "url": "https://www.google.com/business/"}, {"name": "Apple Business Connect", "url": "https://businessconnect.apple.com/"}]
 	}
 	if saas_mode:
