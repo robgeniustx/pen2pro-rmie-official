@@ -968,4 +968,76 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"Phase 3: Expand monetization paths and strategic partnerships toward $10M trajectory.",
 		]
 
-	return _inject_business_name(blueprint, business_name)
+	return _inject_business_name(_build_premium_structured_blueprint(payload, business_name, domain_to_check), business_name)
+
+
+def build_starter_business_blueprint_with_fallback(payload: dict) -> dict:
+	try:
+		return build_starter_business_blueprint(payload)
+	except Exception:
+		business_name = _resolve_business_name(payload)
+		domain_to_check = _resolve_domain(payload, business_name)
+		fallback = _build_premium_structured_blueprint(payload, business_name, domain_to_check)
+		fallback["engine"] = "local-fallback"
+		return _inject_business_name(fallback, business_name)
+
+
+def _build_premium_structured_blueprint(payload: dict, business_name: str, domain_to_check: str) -> dict:
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "A practical business solving an urgent customer problem")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "Busy working professionals and local households")
+	market_location = _clean_text(_pick(payload, "marketLocation", "location"), "Online + local market")
+	product_or_service = _clean_text(_pick(payload, "productOrService", "product_service"), "Done-for-you starter implementation")
+	startup_budget = _clean_text(_pick(payload, "startupBudget", "budget"), "Lean launch budget under $500")
+	saas_mode = any(token in f"{business_idea} {product_or_service}".lower() for token in ["saas", "software", "app", "platform"])
+	domain_base = domain_to_check.replace('.com','') if domain_to_check.endswith('.com') else domain_to_check
+
+	blueprint = {
+		"executive_business_snapshot": {
+			"what_to_do": f"Launch {business_name} with one clear paid offer tied to a measurable customer outcome.",
+			"why_it_matters": "A focused launch prevents overwhelm and creates faster proof, reviews, and cash flow.",
+			"execution_order": ["Define one outcome", "Package first paid offer", "Sell pilot", "Deliver and document proof"]
+		},
+		"business_type_classification": {"primary_model": "Service-led startup" if not saas_mode else "SaaS startup", "go_to_market": "Direct outreach + content + referrals"},
+		"founder_readiness_level": {"level": "Beginner-ready", "support_note": "This blueprint is written for founders with no business background.", "first_skill_to_build": "Sales conversation confidence"},
+		"customer_problem_breakdown": {"core_problem": f"{target_customer} are struggling to solve {business_idea} quickly and reliably.", "cost_of_inaction": "Lost time, inconsistent revenue, and avoidable frustration.", "problem_signals": ["Using too many disconnected tools", "No repeatable process", "Low confidence in next steps"]},
+		"target_customer_profile": {"ideal_buyer": target_customer, "buying_trigger": "Urgent pain and desire for a faster path", "where_to_reach": ["Local communities", "LinkedIn", "Referral partners"]},
+		"market_positioning": {"positioning_statement": f"{business_name} is the beginner-friendly execution partner for {target_customer}.", "differentiators": ["Clear step order", "Fast time-to-value", "Simple language"]},
+		"core_promise": f"Deliver a visible business progress win in 14 days with {product_or_service}.",
+		"first_paid_offer": {"offer_name": "14-Day Launch Sprint", "deliverables": ["Audit", "Action plan", "Hands-on setup", "Performance review"], "starter_price_range": "$149-$499"},
+		"pricing_ladder": {"free": "Checklist + mini audit", "pro": "Implementation sprint", "elite": "Ongoing optimization and scale advisory", "founder": "Hands-on strategic partner tier"},
+		"revenue_model": {"primary": "Paid implementation", "recurring": "Monthly optimization retainers", "expansion": "Upsells, templates, and partner referrals"},
+		"business_name_strategy": {"rules": ["Use 2-3 clean words", "Avoid hard-to-spell phrases", "Match customer outcome"], "example": business_name},
+		"domain_strategy": {"primary_domain": domain_to_check, "alternatives": [f"{domain_base}hq.com", f"get{domain_base}.com"], "screening_rules": ["Easy to pronounce", "No hyphens", "No awkward spelling"]},
+		"legal_setup_roadmap": [{"step": 1, "action": "Choose entity structure", "why": "Liability and tax setup"}, {"step": 2, "action": "Apply for EIN", "why": "Required for banking and payment rails"}, {"step": 3, "action": "Check local/state licenses", "why": "Avoid fines and launch blockers"}],
+		"business_banking_setup": {"order": ["Open business checking", "Separate expenses", "Create simple cashflow tracker"]},
+		"payment_processing_setup": {"providers": ["Stripe", "Square"], "setup_order": ["Create account", "Connect bank", "Build invoice/payment links", "Test payment flow"]},
+		"website_landing_page_plan": {"sections": ["Problem", "Promise", "Offer", "Proof", "CTA"], "cta": "Book strategy call"},
+		"google_business_profile_setup": {"relevant_when": "Local or hybrid business", "steps": ["Claim listing", "Add services", "Upload photos", "Request first reviews"]},
+		"apple_maps_apple_business_connect_setup": {"relevant_when": "Local or hybrid business", "steps": ["Create Apple Business Connect account", "Verify location", "Add business details and offers"]},
+		"social_media_setup": {"priority_channels": ["LinkedIn", "Instagram", "YouTube Shorts/TikTok"], "setup_order": ["Brand bio", "Pinned offer post", "Weekly proof content"]},
+		"sales_script": {"script": "You shared [pain]. We solve that by [offer]. In 14 days you get [result]. If useful, we start with a pilot this week."},
+		"outreach_strategy": {"daily_activity": "10 targeted messages + 2 follow-ups", "weekly_target": "5 discovery calls", "sequence": ["Warm network", "Local partners", "Direct outbound"]},
+		"content_strategy": {"weekly_plan": ["2 pain-education posts", "1 proof post", "1 CTA post"], "goal": "Turn attention into booked calls"},
+		"launch_plan_30_days": {"week_1": "Positioning, offer packaging, sales script", "week_2": "Outreach and discovery calls", "week_3": "Close and deliver first clients", "week_4": "Collect proof and improve pricing"},
+		"operations_plan_90_days": {"focus": ["Document SOPs", "Track KPIs weekly", "Install follow-up automation"]},
+		"scale_plan_12_months": {"focus": ["Add referral partnerships", "Increase pricing after proof", "Hire support for repeat tasks"]},
+		"risk_flags": ["Overbuilding before validating demand", "Underpricing too long", "Skipping follow-up consistency"],
+		"beginner_mistakes_to_avoid": ["Trying to launch everything at once", "Waiting for perfect branding", "Not asking for the sale"],
+		"next_7_actions": ["Define one customer outcome", "Finalize offer scope", "Publish landing page", "Set up Stripe/Square", "Claim Google profile", "Set up Apple Business Connect", "Start outreach today"],
+		"upgrade_cta": {"title": "Upgrade for full strategist execution", "offer": "Elite Offer: First month only $99.", "button": "Unlock Elite"},
+		"sources": [{"name": "IRS EIN Online", "url": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers"}, {"name": "SBA business guide", "url": "https://www.sba.gov/business-guide"}, {"name": "Google Business Profile", "url": "https://www.google.com/business/"}, {"name": "Apple Business Connect", "url": "https://businessconnect.apple.com/"}]
+	}
+	if saas_mode:
+		blueprint["saas_strategy"] = {
+			"problem_the_software_solves": business_idea,
+			"who_pays_for_it": target_customer,
+			"why_they_pay": "To save time, reduce errors, and improve revenue predictability.",
+			"mvp_should_include": ["Core workflow", "Onboarding", "Billing", "Basic analytics"],
+			"what_not_to_build_yet": ["Complex integrations", "Advanced AI features", "Enterprise admin layers"],
+			"validate_demand_before_overbuilding": ["Pre-sell pilot access", "Run demos with 10 buyers", "Collect paid waitlist commitments"],
+			"tier_structure": {"free": "Limited usage", "pro": "Core value unlocked", "elite": "Automation + team features", "founder": "White-glove onboarding and support"},
+			"free_to_paid_conversion": "Trigger upgrade when users hit usage/value limits tied to outcomes.",
+			"recurring_revenue_model": "Monthly/annual subscriptions with expansion seats and premium support.",
+			"partnership_scaling": "Integrate with adjacent tools and co-market with agencies/communities."
+		}
+	return blueprint

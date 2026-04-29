@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services.rmie_engine import build_starter_business_blueprint
+from app.services.rmie_engine import build_starter_business_blueprint_with_fallback
 
 router = APIRouter()
 
@@ -89,7 +89,7 @@ ALLOWED_STRATEGIST_FOCUS = {
 }
 
 
-def clean_text(value: Any, fallback: str = "Not provided") -> str:
+def clean_text(value: Any, fallback: str = "Details will be defined during execution.") -> str:
     if value is None:
         return fallback
     cleaned = str(value).strip()
@@ -161,7 +161,7 @@ def starter_generate(request: StarterGenerateRequest):
         "marketLocation": clean_text(payload.get("marketLocation") or payload.get("location")),
         "skillLevel": clean_text(payload.get("skillLevel") or payload.get("skill_level"), "Beginner"),
         "timeAvailability": clean_text(
-            payload.get("timeAvailability") or payload.get("time_available"), "Not provided"
+            payload.get("timeAvailability") or payload.get("time_available"), "5-10 focused hours per week"
         ),
         "currentStage": clean_text(payload.get("currentStage") or payload.get("current_stage")),
         "skillsAndResources": clean_text(
@@ -170,9 +170,9 @@ def starter_generate(request: StarterGenerateRequest):
         "skillsResources": clean_text(
             payload.get("skillsResources") or payload.get("skillsAndResources") or payload.get("resources")
         ),
-        "budget": clean_text(payload.get("budget") or payload.get("startupBudget"), "Not provided"),
+        "budget": clean_text(payload.get("budget") or payload.get("startupBudget"), "Lean launch budget under $500"),
         "startupBudget": clean_text(
-            payload.get("startupBudget") or payload.get("budget"), "Not provided"
+            payload.get("startupBudget") or payload.get("budget"), "Lean launch budget under $500"
         ),
         "incomeGoal": clean_text(payload.get("incomeGoal") or payload.get("income_goal")),
         "biggestObstacle": clean_text(payload.get("biggestObstacle") or payload.get("obstacle")),
@@ -185,7 +185,7 @@ def starter_generate(request: StarterGenerateRequest):
         "strategistFocus": strategist_focus,
     }
 
-    blueprint = build_starter_business_blueprint(normalized)
+    blueprint = build_starter_business_blueprint_with_fallback(normalized)
     return {
         "success": True,
         "tier": "starter",
