@@ -37,7 +37,13 @@ def _pricing_direction(budget: str, delivery_preference: str) -> str:
 
 def _resolve_business_name(payload: dict) -> str:
 	proposed_business_name = _clean_text(_pick(payload, "businessName", "proposedBusinessName"), "")
-	return proposed_business_name or "Your Company Name"
+	if not proposed_business_name:
+		return "Your Business Concept"
+	bad_tokens = {"business", "company", "startup", "project", "idea", "saas", "rmie", "develop"}
+	parts = [part for part in re.split(r"[^a-zA-Z0-9]+", proposed_business_name) if part]
+	if len(parts) >= 4 or sum(1 for part in parts if part.lower() in bad_tokens) >= 2:
+		return "Your Business Concept"
+	return proposed_business_name
 
 
 def _resolve_access_level(payload: dict) -> str:
@@ -57,8 +63,13 @@ def _resolve_domain(payload: dict, business_name: str) -> str:
 	domain = _clean_text(_pick(payload, "domain", "suggestedDomain", "domainToCheck"), "")
 	if domain:
 		return domain
-	suggested = re.sub(r"[^a-z0-9]", "", business_name.lower())
-	return f"{suggested}.com" if suggested else ""
+	slug = re.sub(r"[^a-z0-9]", "", business_name.lower())
+	if not slug or business_name == "Your Business Concept":
+		idea_slug = re.sub(r"[^a-z0-9]", "", _pick(payload, "businessIdea", "idea", fallback="founderlaunch").lower())
+		slug = idea_slug[:18] or "founderlaunch"
+	if len(slug) > 18:
+		slug = slug[:18]
+	return f"{slug}.com"
 
 
 def _inject_business_name(value, business_name: str):
@@ -402,14 +413,40 @@ def _is_local_business(business_type: str, delivery_preference: str) -> bool:
 	return delivery_preference == "local" or "local" in type_text or "brick" in type_text or "service area" in type_text
 
 
+def _suggest_business_names(payload: dict, business_idea: str) -> list[str]:
+	keywords = [w.capitalize() for w in re.findall(r"[a-zA-Z]{4,}", business_idea)[:2]]
+	base = keywords[0] if keywords else "Founder"
+	second = keywords[1] if len(keywords) > 1 else "Flow"
+	return [
+		f"{base}Pilot",
+		f"{base}{second}",
+		f"{base}Growth",
+		f"{second}Launch",
+		f"{base}OS",
+	]
+
+
+def _build_domain_suggestions(payload: dict, business_name: str, business_idea: str) -> dict:
+	primary = _resolve_domain(payload, business_name)
+	base = re.sub(r"[^a-z0-9]", "", business_name.lower())
+	if not base or business_name == "Your Business Concept":
+		base = re.sub(r"[^a-z0-9]", "", business_idea.lower())[:12] or "founderlaunch"
+	alt_root = base[:12]
+	return {
+		"primary_com": primary,
+		"alternative": f"{alt_root}.co" if len(alt_root) < 10 else f"{alt_root}.ai",
+		"availability_warning": "Domain availability changes constantly. Check registrar availability before purchase.",
+	}
+
+
 def _build_strategist_engine(payload: dict) -> dict:
-	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "Not provided")
-	business_type = _clean_text(_pick(payload, "businessType", "category"), "Not provided")
-	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "Not provided")
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "")
+	business_type = _clean_text(_pick(payload, "businessType", "category"), "")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "")
 	location = _clean_text(_pick(payload, "location", "marketLocation"), "Online")
-	budget = _clean_text(_pick(payload, "budget", "startupBudget"), "Not provided")
+	budget = _clean_text(_pick(payload, "budget", "startupBudget"), "")
 	skill_level = _clean_text(_pick(payload, "skillLevel"), "Beginner")
-	time_availability = _clean_text(_pick(payload, "timeAvailability", "time_available"), "Not provided")
+	time_availability = _clean_text(_pick(payload, "timeAvailability", "time_available"), "")
 	urgency_level = _clean_text(payload.get("urgencyLevel", ""), "medium")
 	current_stage = _clean_text(payload.get("currentStage", ""), "idea")
 	access_tier = _resolve_access_level(payload)
@@ -529,14 +566,14 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 	access_level = _resolve_access_level(payload)
 	strategist_focus = _resolve_strategist_focus(payload, access_level)
 	payload = {**payload, "accessLevel": access_level, "accessTier": access_level, "strategistFocus": strategist_focus}
-	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "Not provided")
-	product_or_service = _clean_text(_pick(payload, "productOrService", "product_service"), "Not provided")
-	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "Not provided")
+	business_idea = _clean_text(_pick(payload, "businessIdea", "idea"), "")
+	product_or_service = _clean_text(_pick(payload, "productOrService", "product_service"), "")
+	target_customer = _clean_text(_pick(payload, "targetCustomer", "customer"), "")
 	market_location = _clean_text(_pick(payload, "marketLocation", "location"), "Online")
-	startup_budget = _clean_text(_pick(payload, "startupBudget", "budget"), "Not provided")
-	skills_resources = _clean_text(_pick(payload, "skillsResources", "skillsAndResources", "resources"), "Not provided")
-	income_goal = _clean_text(_pick(payload, "incomeGoal"), "Not provided")
-	biggest_obstacle = _clean_text(_pick(payload, "biggestObstacle", "obstacle"), "Not provided")
+	startup_budget = _clean_text(_pick(payload, "startupBudget", "budget"), "")
+	skills_resources = _clean_text(_pick(payload, "skillsResources", "skillsAndResources", "resources"), "")
+	income_goal = _clean_text(_pick(payload, "incomeGoal"), "")
+	biggest_obstacle = _clean_text(_pick(payload, "biggestObstacle", "obstacle"), "")
 	delivery_preference = _pick(payload, "deliveryPreference", fallback="both")
 	domain_to_check = _resolve_domain(payload, business_name)
 	strategist_engine = _build_strategist_engine(payload)
@@ -569,8 +606,10 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				"business_name": business_name,
 				"business_idea": business_idea,
 				"target_customer": target_customer,
-				"basic_offer_idea": product_or_service,
+				"basic_offer_idea": product_or_service or "Outcome-focused starter offer",
 				"domain": domain_to_check,
+				"suggested_business_names": _suggest_business_names(payload, business_idea),
+				"suggested_domains": _build_domain_suggestions(payload, business_name, business_idea),
 			},
 			"startup_requirements": [
 				{"task": f"Confirm the final business name for {business_name}", "priority": "High"},
@@ -585,14 +624,36 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			],
 			"next_steps_timeline": next_steps_timeline,
 			"licenses_and_compliance": [
-				{"note": "Basic starter blueprint only. Upgrade for legal/foundation strategist mode details."}
+				{"requirement": "Choose legal structure (LLC or sole proprietorship)", "why_it_matters": "Protects personal liability and tax setup.", "order": 1},
+				{"requirement": "Apply for EIN on IRS site", "why_it_matters": "Needed for banking and payroll.", "order": 2},
+				{"requirement": "Check state/local licenses and permits", "why_it_matters": "Prevents fines and launch delays.", "order": 3},
+				{"requirement": "Set up basic legal pages (privacy, terms, service agreement)", "why_it_matters": "Builds trust and reduces disputes.", "order": 4},
 			],
 			"tools_and_software": [
-				{"tool": "Basic docs + spreadsheet", "purpose": "Track outreach, offers, and next steps."}
+				{"tool": "HubSpot Free", "purpose": "Track leads, follow-ups, and deal stages."},
+				{"tool": "Stripe", "purpose": "Collect payments and recurring subscriptions."},
+				{"tool": "Notion", "purpose": "Store SOPs, scripts, and launch checklists."},
+				{"tool": "Calendly", "purpose": "Book sales calls without back-and-forth emails."},
 			],
 			"pricing_strategy": {
-				"direction": "Start with one basic offer and test willingness to pay with early buyers.",
+				"direction": "Pilot at $99-$299 for first 3 customers, then move to $299-$999 once results are documented.",
+				"free_to_paid_conversion": "Give a limited free audit, then upsell implementation with fixed deadline and bonus onboarding.",
+				"recurring_revenue": "Convert successful pilots into monthly subscription support with reporting and optimization.",
 			},
+			"target_customer": {"who": target_customer, "why_they_pay": "They have urgent revenue or workflow pain and need a fast, practical fix."},
+			"core_problem": "Founders waste time using disconnected tools and generic advice that does not produce measurable growth.",
+			"core_promise": "Deliver one measurable business development win in 14 days with clear scope and execution support.",
+			"market_positioning": "Execution-first SaaS business development system for early-stage founders who need speed, clarity, and outcomes.",
+			"first_offer": "14-day SaaS Growth Sprint: onboarding, pipeline setup, first outreach campaign, and conversion tracking dashboard.",
+			"revenue_model": "Subscription software plus optional onboarding service and monthly optimization advisory.",
+			"local_digital_presence_setup": {
+				"website": "Launch a one-page site with offer, proof, pricing, and booking CTA.",
+				"social_profiles": "Create LinkedIn + X + YouTube short-form proof content loop.",
+				"google_business_profile": "Set up when serving local or hybrid clients.",
+				"apple_business_connect": "Set up when serving local or hybrid clients.",
+			},
+			"sales_script": "Problem -> impact -> promise -> paid pilot CTA: 'You said pipeline inconsistency is costing revenue. In 14 days we build your first repeatable outbound + follow-up system. Want the pilot plan and timeline?'",
+			"content_strategy": "Weekly: 2 pain posts, 1 client lesson, 1 proof post, 1 direct CTA. Focus on founder workflow bottlenecks and measurable wins.",
 			"monetization_roadmap": monetization_roadmap,
 			"next_steps_timeline": next_steps_timeline,
 			"offer_positioning": offer_positioning,
@@ -609,7 +670,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 				"focus": "Keep operations simple with repeatable delivery checklists and customer follow-up cadence.",
 			},
 			"scale_plan_12_months": {
-				"focus": "Upgrade to Pro or Elite for strategist-led scaling roadmap and projections.",
+				"focus": "Build recurring revenue through onboarding SOPs, activation metrics, churn reduction, and expansion offers.",
 			},
 			"risk_flags": [
 				"Trying to scale before validating a clear first paid offer.",
@@ -619,7 +680,7 @@ def build_starter_business_blueprint(payload: dict) -> dict:
 			"ai_strategist_recommendation": {
 				"label": "Free Forever Starter Blueprint",
 				"strategist_focus": "basic",
-				"upgrade_prompt": "Upgrade to Pro to unlock strategist modes and Elite to unlock advanced projections and the 10M scaling roadmap.",
+				"upgrade_prompt": "Upgrade to Pro or Elite for deeper execution systems, conversion architecture, and advanced scale strategy.",
 			},
 			"upgradeHooks": {
 				"proReason": "Pro unlocks strategist modes for branding, monetization, marketing, operations, and legal/foundation planning.",
