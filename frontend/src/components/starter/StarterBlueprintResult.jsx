@@ -61,7 +61,6 @@ function ResultCard({ title, content }) {
   );
 }
 
-function UpgradeCta({ onUpgradePro, onSeeElite, upgradeData }) {
 function PartnerToolsCard() {
   const smartCreditAffiliateUrl = String(import.meta.env.VITE_SMARTCREDIT_AFFILIATE_URL || "").trim();
 
