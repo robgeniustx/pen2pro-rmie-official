@@ -113,7 +113,7 @@ function UpgradeCta({ onUpgradePro, onSeeElite, upgradeData = {} }) {
   return (
     <section className="starter-upsell starter-upsell--join-now">
       <h3>{upgradeData?.title || "Ready to unlock the full PEN2PRO business buildout?"}</h3>
-      <p>{upgradeData?.copy || "This free blueprint gives you the starting map. Elite unlocks deeper execution systems for launch and growth."}</p>
+      <p>{upgradeData?.copy || "Go beyond the starter roadmap and unlock the execution system. Pro gives you the strategy behind the business: outreach, content, customer acquisition, launch planning, CRM structure, follow-up scripts, weekly execution, and growth tracking. Free Forever gives you the foundation. Pro gives you the strategy. Elite gives you the full business buildout."}</p>
       <div className="starter-upsell__plans">
         <article className="starter-upsell__plan is-locked">
           <h4>Pro Plan</h4>
