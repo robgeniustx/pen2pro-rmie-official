@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import HomePage from "./pages/HomePage.jsx";
 import StarterPage from "./pages/StarterPage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 function getCurrentPath() {
   return window.location.pathname || "/";
@@ -49,6 +50,10 @@ function App() {
 
   if (pathname === "/starter") {
     return <StarterPage navigateTo={navigateTo} />;
+  }
+
+  if (pathname === "/launch") {
+    return <LandingPage navigateTo={navigateTo} />;
   }
 
   if (pathname === "/pricing") {

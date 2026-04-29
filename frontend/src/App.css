@@ -300,3 +300,18 @@
   .starter-result__cta-actions .starter-button,
   .starter-form__actions .starter-button { width: 100%; }
 }
+
+.starter-page__hero-stats {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.starter-page__hero-stats span {
+  border: 1px solid rgba(131, 171, 233, 0.35);
+  background: rgba(10, 30, 64, 0.65);
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #d6e8ff;
+  font-size: .86rem;
+}
