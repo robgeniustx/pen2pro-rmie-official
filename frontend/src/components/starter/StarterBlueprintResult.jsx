@@ -62,6 +62,40 @@ function ResultCard({ title, content }) {
 }
 
 function UpgradeCta({ onUpgradePro, onSeeElite, upgradeData }) {
+function PartnerToolsCard() {
+  const smartCreditAffiliateUrl = String(import.meta.env.VITE_SMARTCREDIT_AFFILIATE_URL || "").trim();
+
+  return (
+    <section className="starter-partner-tools" aria-label="PEN2PRO Partner Tools">
+      <p className="starter-partner-tools__eyebrow">PEN2PRO Partner Tools</p>
+      <article className="starter-result__bento-card starter-partner-tools__card">
+        <h3>Credit &amp; Funding Readiness</h3>
+        <p>Prepare your personal credit profile before applying for business funding.</p>
+        <ul className="starter-result__list">
+          <li>Monitor your credit profile</li>
+          <li>Review TransUnion, Experian, and Equifax data</li>
+          <li>Track score movement</li>
+          <li>Identify potential negative items</li>
+          <li>Prepare for business banking and funding applications</li>
+        </ul>
+        {smartCreditAffiliateUrl ? (
+          <a
+            className="starter-button starter-button--secondary starter-partner-tools__button"
+            href={smartCreditAffiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Start SmartCredit Trial
+          </a>
+        ) : (
+          <p className="starter-partner-tools__fallback">Partner link coming soon.</p>
+        )}
+      </article>
+    </section>
+  );
+}
+
+function UpgradeCta({ onUpgradePro, onSeeElite }) {
   return (
     <section className="starter-upsell starter-upsell--join-now">
       <h3>{upgradeData?.title || "Ready to unlock the full PEN2PRO business buildout?"}</h3>
@@ -154,6 +188,9 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
       </div>
 
       <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} upgradeData={upgradeData} />
+      <PartnerToolsCard />
+
+      <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />
 
       <div className="starter-result__actions">
         <button type="button" className="starter-button starter-button--ghost" onClick={onStartAnother}>
