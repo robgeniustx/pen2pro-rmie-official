@@ -121,7 +121,7 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectio
   const accessLevel = values.accessLevel || "free";
   const isLockedPro = accessLevel === "pro" && !hasProAccess;
   const isLockedElite = accessLevel === "elite" && !hasEliteAccess;
-  const generateButtonLabel = isLockedPro ? "Upgrade to Pro" : isLockedElite ? "Unlock Elite" : "Generate Blueprint";
+  const generateButtonLabel = isLockedPro ? "Start Pro Strategy" : isLockedElite ? "Unlock Pro Execution" : "Activate My Launch Strategy";
 
   const openRegistrarSearch = () => {
     const domain = (domainToCheck || "").trim();
@@ -242,6 +242,10 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectio
           {!isPaidTier && (
             <div className="starter-tier-notice" role="status">
               <strong>Unlock the Strategist Level.</strong> Free Forever gives you the foundation. Pro unlocks outreach, content, launch planning, CRM, follow-up, and customer acquisition. Upgrade to Pro to continue.
+              <strong>Strategist Level Locked</strong>
+              <span>You've reached the end of the Free Forever blueprint.</span>
+              <span>Your foundation is built. Now unlock the strategy layer: outreach, content, customer acquisition, launch planning, CRM pipeline, follow-up scripts, and execution tracking.</span>
+              <span>Upgrade to Pro to continue building your PEN2PRO roadmap.</span>
             </div>
           )}
         </div>

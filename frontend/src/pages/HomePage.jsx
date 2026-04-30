@@ -160,6 +160,10 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
     navigateTo("/pricing");
   };
 
+  const handleExploreLaunch = () => {
+    navigateTo("/launch");
+  };
+
   const handleSampleRoadmap = () => {
     // TODO: Connect this action to a future sample roadmap demo modal.
     setPendingAction("Sample roadmap preview modal hook is ready.");
@@ -217,6 +221,16 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
     <div className="homepage-shell">
       <Header onPrimaryCta={handleStartRoadmap} onNavClick={handleNavClick} activeNav={activeNav} />
       <main>
+        <section className="section" aria-label="New launch page">
+          <div className="container" style={{display:"grid",gap:"12px",padding:"14px",border:"1px solid var(--border)",borderRadius:"16px",background:"var(--surface)"}}>
+            <p className="eyebrow">NEW</p>
+            <h2>Explore the new premium landing experience</h2>
+            <p>We introduced a focused launch route with a cleaner conversion funnel and improved mobile hierarchy.</p>
+            <div>
+              <button className="btn btn-primary" onClick={handleExploreLaunch}>Open /launch</button>
+            </div>
+          </div>
+        </section>
         <HeroSection
           backendMessage={backendMessage}
           onPrimaryCta={handleStartRoadmap}

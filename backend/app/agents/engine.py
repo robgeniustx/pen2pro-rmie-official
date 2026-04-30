@@ -275,11 +275,22 @@ class Pen2ProEngine:
 
     def __init__(self) -> None:
         self.openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-        self.openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        default_model = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
+        self.model_by_tier: dict[str, str] = {
+            "free": os.getenv("OPENAI_MODEL_FREE", default_model),
+            "pro": os.getenv("OPENAI_MODEL_PRO", default_model),
+            "elite": os.getenv("OPENAI_MODEL_ELITE", default_model),
+            "founder": os.getenv("OPENAI_MODEL_FOUNDER", default_model),
+        }
 
-    def _get_llm(self) -> Any:
+    def _resolve_model(self, user_tier: str | None) -> str:
+        tier = (user_tier or "").lower()
+        return self.model_by_tier.get(tier, self.model_by_tier["free"])
+
+    def _get_llm(self, user_tier: str | None) -> Any:
+        selected_model = self._resolve_model(user_tier)
         return LLM(
-            model=f"openai/{self.openai_model}",
+            model=f"openai/{selected_model}",
             api_key=self.openai_api_key,
         )
 
@@ -305,7 +316,7 @@ class Pen2ProEngine:
 
     def _run_agents(self, intake: Any, brief: str) -> dict[str, Any]:
         """Run enabled agents sequentially, accumulating results."""
-        llm = self._get_llm()
+        llm = self._get_llm(intake.user_tier)
         allowed = set(AGENT_TIERS.get(intake.user_tier, AGENT_TIERS["free"]))
         results: dict[str, Any] = {}
 
@@ -399,7 +410,7 @@ class Pen2ProEngine:
                 "crewai_available": CREWAI_AVAILABLE,
                 "llm_connected": can_use_llm,
                 "agents_run": list(sections.keys()),
-                "model": self.openai_model if can_use_llm else "none",
+                "model": self._resolve_model(intake.user_tier) if can_use_llm else "none",
             },
         }
 
