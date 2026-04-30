@@ -17,7 +17,7 @@ function PricingSection({ plans, isLoading, onSelectPlan }) {
         ) : (
           <div className="card-grid card-grid-3 pricing-grid">
             {plans.map((plan) => {
-              const isBestValue = Boolean(plan.featured) || plan.name === "Pro";
+              const isBestValue = Boolean(plan.featured) || plan.name === "Strategist Level";
               const marketingStrategy = planMarketingStrategies[plan.name];
               const priceLabel = plan.display_price || `$${plan.price}`;
               const billingPeriod = plan.billing_period ?? "/month";

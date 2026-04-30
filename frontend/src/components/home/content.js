@@ -194,13 +194,13 @@ export const trustBadges = [
 ];
 
 export const planDescriptions = {
-  Starter: "Great for validating your idea and mapping first steps.",
-  Pro: "Best-value plan for founders ready to launch with momentum and social growth support.",
-  Elite: "Full-depth support for ambitious founders scaling with confidence.",
+  Foundation: "Great for validating your idea and mapping first steps.",
+  "Strategist Level": "Best-value plan for founders ready to launch with momentum and social growth support.",
+  "Full Business Buildout": "Full-depth support for ambitious founders scaling with confidence.",
 };
 
 export const planMarketingStrategies = {
-  Pro: {
+  "Strategist Level": {
     title: "Social Growth Strategy",
     channels: [
       "Instagram: content pillars, Reels cadence, and DM conversion workflow",

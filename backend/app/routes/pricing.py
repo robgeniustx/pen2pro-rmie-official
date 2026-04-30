@@ -7,7 +7,7 @@ def pricing():
     return {
         "plans": [
             {
-                "name": "Starter",
+                "name": "Foundation",
                 "price": 0,
                 "display_price": "Free forever",
                 "billing_period": "",
@@ -24,13 +24,13 @@ def pricing():
                 "featured": False,
             },
             {
-                "name": "Pro",
+                "name": "Strategist Level",
                 "price": 99,
                 "display_price": "$99",
                 "billing_period": "/month",
                 "tagline": "Best-value plan for founders ready to launch and grow.",
                 "features": [
-                    "Everything in Starter",
+                    "Everything in Foundation",
                     "Unlimited roadmap workspaces",
                     "Social growth strategy toolkit",
                     "Pricing and offer optimization prompts",
@@ -38,24 +38,24 @@ def pricing():
                     "Priority support",
                 ],
                 "badge_text": "Most Popular",
-                "cta_label": "Go Pro",
+                "cta_label": "Choose Strategist Level",
                 "featured": True,
             },
             {
-                "name": "Elite",
+                "name": "Full Business Buildout",
                 "price": 249,
                 "display_price": "$249",
                 "billing_period": "/month",
                 "tagline": "Advanced strategic support for scaling teams.",
                 "features": [
-                    "Everything in Pro",
+                    "Everything in Strategist Level",
                     "Advanced growth and scale planning",
                     "Investor-ready planning outputs",
                     "Dedicated strategy review cadence",
                     "Fast-lane support response",
                 ],
                 "badge_text": "Scale Fast",
-                "cta_label": "Go Elite",
+                "cta_label": "Choose Full Business Buildout",
                 "featured": False,
             }
         ]
