@@ -90,6 +90,7 @@ function StarterPage({ navigateTo }) {
 
   const hasResult = Boolean(blueprintResponse);
   const hasError = Boolean(generationError);
+  const displayTier = (blueprintResponse?.tier || testTier || "free").toString();
 
   const pageSubtitle = useMemo(() => "Turn your idea into a clear PEN2PRO business starter plan in minutes.", []);
   const hasPaidTierAccess = useMemo(() => (values.accessLevel === "pro" && hasProAccess) || (values.accessLevel === "elite" && hasEliteAccess), [values.accessLevel]);
@@ -273,7 +274,6 @@ function StarterPage({ navigateTo }) {
     setGenerationError("");
     setBlueprintResponse(null);
 
-    console.info("PEN2PRO starter form submission:", payload);
 
     try {
       const response = await generateStarterBlueprint(payload);
@@ -413,7 +413,7 @@ function StarterPage({ navigateTo }) {
           <>
             {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
             <div className="starter-state-card starter-state-card--idle" role="status">
-              <p><strong>Testing Tier:</strong> {testTier.charAt(0).toUpperCase() + testTier.slice(1)}</p>
+              <p><strong>Testing Tier:</strong> {displayTier.charAt(0).toUpperCase() + displayTier.slice(1)}</p>
             </div>
             <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />
           </>

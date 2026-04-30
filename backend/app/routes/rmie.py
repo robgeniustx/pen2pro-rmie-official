@@ -80,7 +80,7 @@ class StarterGenerateRequest(BaseModel):
 
 
 ALLOWED_ACCESS_LEVELS = {"free", "pro", "elite"}
-ALLOWED_TEST_TIERS = {"free", "pro", "elite", "founder"}
+ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder"]
 ALLOWED_STRATEGIST_FOCUS = {
     "startup",
     "brand",
