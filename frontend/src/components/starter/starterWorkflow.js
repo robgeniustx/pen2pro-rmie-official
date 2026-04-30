@@ -87,7 +87,7 @@ export function getRecommendedNextAction(formState, accessLevel, { hasPaidTierAc
   const checklist = getChecklistItems(formState, accessLevel, { hasPaidTierAccess });
   const firstIncomplete = checklist.find((item) => item.state === "incomplete");
   if (firstIncomplete) return `Next: ${firstIncomplete.label}.`;
-  if (accessLevel === "free") return "Upgrade to Pro or Elite to unlock strategist focus and deeper guidance.";
+  if (accessLevel === "free") return "Unlock the Strategist Level: Upgrade to Pro to continue with outreach, content, launch planning, CRM, follow-up, and customer acquisition.";
   return "Generate your blueprint now — your core inputs are complete.";
 }
 
