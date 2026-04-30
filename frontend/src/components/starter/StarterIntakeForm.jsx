@@ -241,7 +241,7 @@ function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectio
           )}
           {!isPaidTier && (
             <div className="starter-tier-notice" role="status">
-              Strategist focus is locked on Free Forever. Upgrade to Pro or Elite for deeper strategist guidance.
+              <strong>Unlock the Strategist Level.</strong> Free Forever gives you the foundation. Pro unlocks outreach, content, launch planning, CRM, follow-up, and customer acquisition. Upgrade to Pro to continue.
             </div>
           )}
         </div>
