@@ -36,6 +36,14 @@ const initialValues = {
 
 const hasProAccess = false;
 const hasEliteAccess = false;
+const ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder"];
+
+function getTestTierFromQuery() {
+  if (typeof window === "undefined") return "free";
+  const params = new URLSearchParams(window.location.search);
+  const requestedTier = (params.get("tier") || "free").toLowerCase();
+  return ALLOWED_TEST_TIERS.includes(requestedTier) ? requestedTier : "free";
+}
 
 function getValidationErrorForAccessLevel(values, accessLevel) {
   if (accessLevel === "free") {
@@ -77,6 +85,7 @@ function StarterPage({ navigateTo }) {
   const [generationError, setGenerationError] = useState("");
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [blueprintResponse, setBlueprintResponse] = useState(null);
+  const [testTier, setTestTier] = useState(() => getTestTierFromQuery());
   const resultPanelRef = useRef(null);
 
   const hasResult = Boolean(blueprintResponse);
@@ -128,6 +137,10 @@ function StarterPage({ navigateTo }) {
       strategistFocus: nextAccessLevel === "free" ? "basic" : current.strategistFocus || "startup",
     }));
   };
+
+  useEffect(() => {
+    setTestTier(getTestTierFromQuery());
+  }, []);
 
   useEffect(() => {
     try {
@@ -251,6 +264,7 @@ function StarterPage({ navigateTo }) {
       startupBudget: values.startupBudget,
       skillsResources: values.skillsResources,
       tier: "starter",
+      userTier: testTier,
     };
 
     console.info("PEN2PRO starter form submission:", payload);
@@ -398,6 +412,9 @@ function StarterPage({ navigateTo }) {
         {hasResult && (
           <>
             {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
+            <div className="starter-state-card starter-state-card--idle" role="status">
+              <p><strong>Testing Tier:</strong> {testTier.charAt(0).toUpperCase() + testTier.slice(1)}</p>
+            </div>
             <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />
           </>
         )}

@@ -255,9 +255,6 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
     ["Compliance Calendar", "compliance_calendar", "elite"],
     ["AI Business Coach Next Steps", "ai_business_coach_next_steps", "elite"],
   ];
-  const accessLevel = String(read(blueprint, "accessLevel", intakeValues?.accessLevel || "free")).toLowerCase();
-  const accessRank = ACCESS_RANK[accessLevel] ?? 0;
-
   const freeStopKey = "sales_script";
   const proStopKey = "kpi_scorecard";
   const freeVisibleSections = sections.filter(([, key]) => {
@@ -286,15 +283,6 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
       <div className="starter-result__bento-grid">
         {visibleSections.map(([title, key]) => (
           <ResultCard key={key} title={title} content={asText(read(blueprint, key, ""))} />
-        {sections.map(([title, key, minimumTier]) => (
-          <ResultCard
-            key={key}
-            title={title}
-            content={asText(read(blueprint, key, ""))}
-            locked={accessRank < ACCESS_RANK[minimumTier]}
-            onUpgradePro={onUpgradePro}
-            onSeeElite={onSeeElite}
-          />
         ))}
         {isFree && <LockedUpgradeCard onUpgradePro={onUpgradePro} />}
         <PartnerCard />
@@ -302,8 +290,6 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
 
       <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} upgradeData={upgradeData} />
       <PartnerToolsCard />
-
-      <UpgradeCta onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />
 
       <div className="starter-result__actions">
         <button type="button" className="starter-button starter-button--ghost" onClick={onStartAnother}>
