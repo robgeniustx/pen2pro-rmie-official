@@ -61,6 +61,16 @@ function ResultCard({ title, content }) {
   );
 }
 
+function LockedUpgradeCard({ onUpgradePro }) {
+  return (
+    <article className="starter-result__bento-card starter-upsell__plan is-locked" aria-label="Upgrade required">
+      <h3>Unlock the Strategist Level</h3>
+      <p>Free Forever gives you the foundation. Pro unlocks the execution strategy: outreach, content, launch planning, CRM, follow-up, and customer acquisition.</p>
+      <button className="starter-button starter-button--secondary" type="button" onClick={onUpgradePro}>Upgrade to Pro</button>
+    </article>
+  );
+}
+
 function PartnerToolsCard() {
   const smartCreditAffiliateUrl = String(import.meta.env.VITE_SMARTCREDIT_AFFILIATE_URL || "").trim();
 
@@ -135,6 +145,10 @@ function PartnerCard() {
 
 export default function StarterBlueprintResult({ response, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprint = useMemo(() => normalizeBlueprint(response), [response]);
+  const accessLevel = (intakeValues?.accessLevel || "free").toLowerCase();
+  const isFree = accessLevel === "free";
+  const isPro = accessLevel === "pro";
+  const isElite = accessLevel === "elite";
   const sections = [
     ["Executive Business Snapshot", "executive_business_snapshot"],
     ["Business Type Classification", "business_type_classification"],
@@ -158,6 +172,7 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
     ["Sales Script", "sales_script"],
     ["Outreach Strategy", "outreach_strategy"],
     ["Content Strategy", "content_strategy"],
+    ["Simple KPI Tracker", "kpi_scorecard"],
     ["30-Day Launch Plan", "launch_plan_30_days"],
     ["90-Day Operations Plan", "operations_plan_90_days"],
     ["12-Month Scale Plan", "scale_plan_12_months"],
@@ -167,6 +182,20 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
     ["Next 7 Actions", "next_7_actions"],
     ["Upgrade CTA", "upgrade_cta"],
   ];
+
+  const freeStopKey = "sales_script";
+  const proStopKey = "kpi_scorecard";
+  const freeVisibleSections = sections.filter(([, key]) => {
+    const index = sections.findIndex(([, sectionKey]) => sectionKey === key);
+    const freeStopIndex = sections.findIndex(([, sectionKey]) => sectionKey === freeStopKey);
+    return index <= freeStopIndex;
+  });
+  const proVisibleSections = sections.filter(([, key]) => {
+    const index = sections.findIndex(([, sectionKey]) => sectionKey === key);
+    const proStopIndex = sections.findIndex(([, sectionKey]) => sectionKey === proStopKey);
+    return index <= proStopIndex;
+  });
+  const visibleSections = isFree ? freeVisibleSections : isPro ? proVisibleSections : isElite ? sections : freeVisibleSections;
 
   const businessName = asText(read(blueprint, "business_snapshot.business_name", read(blueprint, "businessIdentity.displayBusinessName", intakeValues?.proposedBusinessName || "Your Business")), "Your Business");
   const upgradeData = read(blueprint, "upgrade_cta", {});
@@ -180,9 +209,10 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
       </header>
 
       <div className="starter-result__bento-grid">
-        {sections.map(([title, key]) => (
+        {visibleSections.map(([title, key]) => (
           <ResultCard key={key} title={title} content={asText(read(blueprint, key, ""))} />
         ))}
+        {isFree && <LockedUpgradeCard onUpgradePro={onUpgradePro} />}
         <PartnerCard />
       </div>
 
