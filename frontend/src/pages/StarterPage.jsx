@@ -36,7 +36,10 @@ const initialValues = {
 
 const hasProAccess = false;
 const hasEliteAccess = false;
-const ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder"];
+const ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder", "strategist"];
+
+// DEV/TESTING ONLY: URL tier override allows testing tier outputs before Stripe gating is finalized.
+// Remove or protect this before production launch.
 
 function getTestTierFromQuery() {
   if (typeof window === "undefined") return "free";
