@@ -44,8 +44,9 @@ const ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder", "strategist"];
 function getTestTierFromQuery() {
   if (typeof window === "undefined") return "free";
   const params = new URLSearchParams(window.location.search);
-  const requestedTier = (params.get("tier") || "free").toLowerCase();
-  return ALLOWED_TEST_TIERS.includes(requestedTier) ? requestedTier : "free";
+  const rawTier = params.get("tier") || "free";
+  const testTier = ALLOWED_TEST_TIERS.includes(rawTier.toLowerCase()) ? rawTier.toLowerCase() : "free";
+  return testTier;
 }
 
 function getValidationErrorForAccessLevel(values, accessLevel) {
@@ -89,6 +90,10 @@ function StarterPage({ navigateTo }) {
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [blueprintResponse, setBlueprintResponse] = useState(null);
   const [testTier, setTestTier] = useState(() => getTestTierFromQuery());
+  const isTierTestMode = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).has("tier");
+  }, [testTier]);
   const resultPanelRef = useRef(null);
 
   const hasResult = Boolean(blueprintResponse);
@@ -125,12 +130,12 @@ function StarterPage({ navigateTo }) {
   };
 
   const handleAccessLevelChange = (nextAccessLevel) => {
-    if (nextAccessLevel === "pro" && !hasProAccess) {
+    if (!isTierTestMode && nextAccessLevel === "pro" && !hasProAccess) {
       handlePricingRedirect();
       return;
     }
 
-    if (nextAccessLevel === "elite" && !hasEliteAccess) {
+    if (!isTierTestMode && nextAccessLevel === "elite" && !hasEliteAccess) {
       handlePricingRedirect();
       return;
     }
@@ -187,10 +192,10 @@ function StarterPage({ navigateTo }) {
   }, [hasResult]);
 
   useEffect(() => {
-    if ((values.accessLevel === "pro" && !hasProAccess) || (values.accessLevel === "elite" && !hasEliteAccess)) {
+    if (!isTierTestMode && ((values.accessLevel === "pro" && !hasProAccess) || (values.accessLevel === "elite" && !hasEliteAccess))) {
       handlePricingRedirect();
     }
-  }, [values.accessLevel]);
+  }, [isTierTestMode, values.accessLevel]);
 
   const handleChange = (field, value) => {
     if (field === "accessLevel") {
@@ -225,12 +230,12 @@ function StarterPage({ navigateTo }) {
     setGenerationError("");
 
     const normalizedAccessLevel = values.accessLevel || "free";
-    if (normalizedAccessLevel === "pro" && !hasProAccess) {
+    if (!isTierTestMode && normalizedAccessLevel === "pro" && !hasProAccess) {
       handlePricingRedirect();
       return;
     }
 
-    if (normalizedAccessLevel === "elite" && !hasEliteAccess) {
+    if (!isTierTestMode && normalizedAccessLevel === "elite" && !hasEliteAccess) {
       handlePricingRedirect();
       return;
     }
@@ -274,6 +279,7 @@ function StarterPage({ navigateTo }) {
       userTier: testTier,
     };
 
+    console.log("Submitting PEN2PRO blueprint with tier:", testTier);
     console.info("PEN2PRO starter form submission:", payload);
 
     setIsGenerating(true);
@@ -366,6 +372,7 @@ function StarterPage({ navigateTo }) {
         {!hasResult && (
           <section className="starter-workspace starter-reveal">
             <div className="starter-workspace__main starter-page__panel">
+              <div className="text-sm font-semibold">Testing Tier: {testTier.toUpperCase()}</div>
               <StarterIntakeForm
                 values={values}
                 errors={errors}
@@ -419,7 +426,7 @@ function StarterPage({ navigateTo }) {
           <>
             {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
             <div className="starter-state-card starter-state-card--idle" role="status">
-              <p><strong>Testing Tier:</strong> {displayTier.charAt(0).toUpperCase() + displayTier.slice(1)}</p>
+              <p><strong>Testing Tier:</strong> {String(blueprintResponse?.tier || testTier || "free").toUpperCase()}</p>
               {blueprintResponse?.model ? <p><strong>Testing Model:</strong> {blueprintResponse.model}</p> : null}
             </div>
             <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />

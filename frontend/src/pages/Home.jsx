@@ -58,8 +58,10 @@ function Home({ navigateTo }) {
       cta_label: plan.name === "Starter" ? "Get Started Free" : "Join Upgrade Waitlist",
     });
 
-    if (plan.name === "Starter") {
-      navigateTo("/starter");
+    const tierByPlanName = { starter: "free", pro: "pro", elite: "elite", founder: "founder", strategist: "strategist" };
+    const selectedTier = tierByPlanName[String(plan.name || "").toLowerCase()];
+    if (selectedTier) {
+      navigateTo(`/starter?tier=${selectedTier}`);
       return;
     }
 

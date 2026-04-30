@@ -184,8 +184,18 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
       tagline.includes("free forever") ||
       starterCtaKeywords.some((keyword) => ctaText.includes(keyword));
 
-    if (isStarterFlowPlan) {
-      navigateTo("/starter");
+    const tierByPlanName = {
+      starter: "free",
+      free: "free",
+      pro: "pro",
+      elite: "elite",
+      founder: "founder",
+      strategist: "strategist",
+    };
+    const selectedTier = tierByPlanName[planName];
+
+    if (isStarterFlowPlan || selectedTier) {
+      navigateTo(`/starter?tier=${selectedTier || "free"}`);
       return;
     }
 
@@ -194,7 +204,7 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
   };
 
   const handleFooterCta = () => {
-    navigateTo("/starter");
+    navigateTo("/starter?tier=free");
   };
 
   const handleFounderTierSelect = async (tier) => {

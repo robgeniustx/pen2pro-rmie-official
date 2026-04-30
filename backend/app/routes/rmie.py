@@ -129,9 +129,10 @@ def normalize_user_tier(value: Any) -> str:
 @router.post("/rmie/starter-generate")
 def starter_generate(request: StarterGenerateRequest):
     payload = request.model_dump() if hasattr(request, "model_dump") else request.dict()
-    allowed_tiers = ["free", "pro", "elite", "founder"]
-    requested_tier = payload.get("userTier")
-    requested_tier = requested_tier.lower() if isinstance(requested_tier, str) else "free"
+    business_idea = clean_optional_text(payload.get("businessIdea") or payload.get("idea"))
+    user_tier = payload.get("userTier")
+    allowed_tiers = ["free", "pro", "elite", "founder", "strategist"]
+    requested_tier = user_tier.lower() if isinstance(user_tier, str) else "free"
     tier = requested_tier if requested_tier in allowed_tiers else "free"
 
     access_level = normalize_access_level(
@@ -142,7 +143,6 @@ def starter_generate(request: StarterGenerateRequest):
         payload.get("strategistFocus") or payload.get("strategistMode"),
     )
 
-    business_idea = clean_optional_text(payload.get("businessIdea") or payload.get("idea"))
     if not business_idea:
         raise HTTPException(
             status_code=400,
@@ -206,19 +206,33 @@ def starter_generate(request: StarterGenerateRequest):
         "strategist": os.getenv("OPENAI_MODEL_STRATEGIST", os.getenv("OPENAI_MODEL_ELITE", "gpt-5.4-mini")),
     }
     selected_model = model_by_tier.get(tier, "gpt-5.4-mini")
+    print("PEN2PRO blueprint request received")
+    print("Business idea:", business_idea)
+    print("Requested userTier:", user_tier)
+    print("Resolved tier:", tier)
+    print("Selected model:", selected_model)
 
     tier_instructions = {
-        "free": """Build a valuable but limited startup blueprint.
-Include only these sections in order:
+        "free": """
+FREE FOREVER OUTPUT:
+Give a valuable but limited startup blueprint.
+
+Include only:
 1. Business Snapshot
 2. Target Customer
 3. Startup Requirements
 4. Licenses & Compliance
 5. Basic Offer Structure
 6. Basic Sales Script
-Stop after Basic Sales Script.
-Do not include outreach strategy, advanced monetization, entity structuring, trademark guidance, advanced branding, social media marketing plan, business credit, funding roadmap, funnel strategy, or scaling roadmap.""",
-        "pro": """Include everything in Free, plus:
+
+Stop after the Basic Sales Script.
+Do not include outreach strategy, monetization strategy, pricing ladder, entity structure, branding, trademark checklist, social media marketing plan, business credit, funding, full funnel, 90-day plan, or scaling roadmap.
+""",
+        "pro": """
+PRO OUTPUT:
+Give a stronger paid-tier business development blueprint.
+
+Include everything in Free, plus:
 1. Outreach Strategy
 2. Monetization Strategy
 3. Pricing Ladder
@@ -227,8 +241,15 @@ Do not include outreach strategy, advanced monetization, entity structuring, tra
 6. CRM/Follow-Up Strategy
 7. Basic Brand Positioning
 8. Revenue Pathway
-Make Pro clearly stronger than Free.""",
-        "elite": """Include everything in Free and Pro, plus:
+
+Do not stop after the Sales Script.
+Make this clearly stronger, longer, and more useful than Free.
+""",
+        "elite": """
+ELITE OUTPUT:
+Give a premium strategist-level business blueprint.
+
+Include everything in Free and Pro, plus:
 1. Entity Structure Options: LLC, S-Corp, C-Corp, 501(c)(3) if applicable
 2. Business Name Ideas
 3. Tagline Options
@@ -240,13 +261,20 @@ Make Pro clearly stronger than Free.""",
 9. Trademark Readiness Checklist
 10. Full Sales Funnel
 11. Social Media Marketing Plan
-12. Funding/Business Credit Roadmap
+12. Funding and Business Credit Roadmap
 13. Operations System
 14. 90-Day Scaling Plan
 15. High-Ticket Offer Strategy
 16. Founder-Level Action Plan
-Make Elite feel like a premium strategist-level business plan.""",
-        "founder": """Include everything in Elite, plus:
+
+Do not stop after the Sales Script.
+Make this feel like a serious paid strategist built it.
+""",
+        "founder": """
+FOUNDER OUTPUT:
+Give the highest founder-level blueprint.
+
+Include everything in Elite, plus:
 1. Advanced Monetization Strategy
 2. Multiple Revenue Streams
 3. Automation Opportunities
@@ -257,32 +285,39 @@ Make Elite feel like a premium strategist-level business plan.""",
 8. Long-Term Scale Roadmap
 9. Full Execution Timeline
 10. CEO-Level Next Steps
-Make Founder feel like an executive business development plan.""",
-        "strategist": """This is the highest testing mode and should unlock the deepest PEN2PRO output.
+
+Do not stop after the Sales Script.
+Make this feel like an executive business development plan.
+""",
+        "strategist": """
+STRATEGIST OUTPUT:
+This is the deepest internal testing mode.
 
 Include everything in Founder, plus:
-1. Market positioning diagnosis
-2. Competitive advantage breakdown
-3. Offer architecture
-4. Core offer, upsell, downsell, and recurring revenue options
-5. Buyer psychology
-6. Conversion strategy
-7. Funnel stages
-8. 7-day launch sprint
-9. 30-day revenue sprint
-10. 90-day scale sprint
-11. Sales script
-12. Objection handling script
-13. Content strategy
-14. Paid and organic lead strategy
-15. Business credit and funding preparation
-16. Team/system roadmap
-17. KPI dashboard recommendations
-18. Risk warnings
-19. Next best actions
-20. Executive summary
+1. Market Positioning Diagnosis
+2. Competitive Advantage Breakdown
+3. Offer Architecture
+4. Core Offer, Upsell, Downsell, and Recurring Revenue Options
+5. Buyer Psychology
+6. Conversion Strategy
+7. Funnel Stages
+8. 7-Day Launch Sprint
+9. 30-Day Revenue Sprint
+10. 90-Day Scale Sprint
+11. Sales Script
+12. Objection Handling Script
+13. Content Strategy
+14. Paid and Organic Lead Strategy
+15. Business Credit and Funding Preparation
+16. Team/System Roadmap
+17. KPI Dashboard Recommendations
+18. Risk Warnings
+19. Next Best Actions
+20. Executive Summary
 
-Strategist output must be the strongest, deepest, most useful version. It should be specific, practical, and structured like a serious business development consultant wrote it.""",
+Do not stop after the Sales Script.
+Make this the strongest, deepest, most specific PEN2PRO output.
+""",
     }
 
     prompt = f"""
@@ -294,8 +329,6 @@ Business idea:
 {business_idea}
 
 Selected tier:
-{user_tier}
-User tier:
 {tier}
 
 {tier_instructions[tier]}
@@ -338,8 +371,6 @@ Output rules:
 
     return {
         "success": True,
-        "tier": user_tier,
-        # DEV/TESTING ONLY: model is returned for verification. Remove this from production response later.
         "tier": tier,
         "model": selected_model,
         "accessLevel": access_level,
