@@ -141,6 +141,9 @@ function StarterPage({ navigateTo }) {
 
   useEffect(() => {
     setTestTier(getTestTierFromQuery());
+    const handlePopState = () => setTestTier(getTestTierFromQuery());
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   useEffect(() => {
@@ -414,6 +417,7 @@ function StarterPage({ navigateTo }) {
             {generationError && <div className="starter-state-card starter-state-card--error" role="alert"><h2>Some blueprint sections are unavailable</h2><p>{generationError}</p></div>}
             <div className="starter-state-card starter-state-card--idle" role="status">
               <p><strong>Testing Tier:</strong> {displayTier.charAt(0).toUpperCase() + displayTier.slice(1)}</p>
+              {blueprintResponse?.model ? <p><strong>Testing Model:</strong> {blueprintResponse.model}</p> : null}
             </div>
             <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />
           </>

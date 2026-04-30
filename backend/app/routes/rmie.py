@@ -129,7 +129,10 @@ def normalize_user_tier(value: Any) -> str:
 @router.post("/rmie/starter-generate")
 def starter_generate(request: StarterGenerateRequest):
     payload = request.model_dump() if hasattr(request, "model_dump") else request.dict()
-    user_tier = normalize_user_tier(payload.get("userTier"))
+    allowed_tiers = ["free", "pro", "elite", "founder"]
+    requested_tier = payload.get("userTier")
+    requested_tier = requested_tier.lower() if isinstance(requested_tier, str) else "free"
+    tier = requested_tier if requested_tier in allowed_tiers else "free"
 
     access_level = normalize_access_level(
         payload.get("accessLevel") or payload.get("accessTier") or payload.get("tierAccess")
@@ -201,7 +204,7 @@ def starter_generate(request: StarterGenerateRequest):
         "elite": os.getenv("OPENAI_MODEL_ELITE", "gpt-5.4-mini"),
         "founder": os.getenv("OPENAI_MODEL_ELITE", "gpt-5.4-mini"),
     }
-    selected_model = model_by_tier.get(user_tier, "gpt-5.4-mini")
+    selected_model = model_by_tier.get(tier, "gpt-5.4-mini")
 
     tier_instructions = {
         "free": """Build a valuable but limited startup blueprint.
@@ -265,9 +268,9 @@ Business idea:
 {business_idea}
 
 User tier:
-{user_tier}
+{tier}
 
-{tier_instructions[user_tier]}
+{tier_instructions[tier]}
 
 Output rules:
 - Be specific.
@@ -299,7 +302,7 @@ Output rules:
 
     return {
         "success": True,
-        "tier": user_tier,
+        "tier": tier,
         "model": selected_model,
         "accessLevel": access_level,
         "accessTier": access_level,
