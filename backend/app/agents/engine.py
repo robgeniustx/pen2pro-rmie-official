@@ -275,7 +275,7 @@ class Pen2ProEngine:
 
     def __init__(self) -> None:
         self.openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
-        default_model = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
+        default_model = "gpt-5.4-mini"
         self.model_by_tier: dict[str, str] = {
             "free": os.getenv("OPENAI_MODEL_FREE", default_model),
             "pro": os.getenv("OPENAI_MODEL_PRO", default_model),
