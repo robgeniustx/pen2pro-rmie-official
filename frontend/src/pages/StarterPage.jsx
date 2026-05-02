@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import StarterIntakeForm from "../components/starter/StarterIntakeForm.jsx";
 import StarterBlueprintResult from "../components/starter/StarterBlueprintResult.jsx";
@@ -118,20 +118,6 @@ function getFieldErrors(values, accessLevel) {
   }, {});
 }
 
-function getReadableError(error) {
-  if (!error) return "Blueprint generation failed. Please try again.";
-  if (typeof error === "string") return error;
-  if (error.message) return error.message;
-  if (error.detail) return typeof error.detail === "string" ? error.detail : JSON.stringify(error.detail);
-  if (error.error) return typeof error.error === "string" ? error.error : JSON.stringify(error.error);
-
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return "Blueprint generation failed. Please try again.";
-  }
-}
-
 function StarterPage({ navigateTo }) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
@@ -140,17 +126,11 @@ function StarterPage({ navigateTo }) {
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [blueprintResponse, setBlueprintResponse] = useState(null);
   const [testTier, setTestTier] = useState(() => getTestTierFromQuery());
-  const isTierTestMode = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return new URLSearchParams(window.location.search).has("tier");
-  }, [testTier]);
+  const isTierTestMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("tier");
   const resultPanelRef = useRef(null);
 
   const hasResult = Boolean(blueprintResponse);
   const hasError = Boolean(generationError);
-  const displayTier = (blueprintResponse?.tier || testTier || "free").toString();
-
-  const pageSubtitle = useMemo(() => "Turn your idea into a clear PEN2PRO business starter plan in minutes.", []);
   const tierConfig = TIER_CONFIG[testTier] || TIER_CONFIG.free;
   const hasPaidTierAccess = useMemo(() => (values.accessLevel === "pro" && hasProAccess) || (values.accessLevel === "elite" && hasEliteAccess), [values.accessLevel]);
   const progress = useMemo(() => getProgressSummary(values, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
@@ -158,7 +138,7 @@ function StarterPage({ navigateTo }) {
   const nextAction = useMemo(() => getRecommendedNextAction(values, values.accessLevel, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
   const freeRequiredComplete = useMemo(() => freeRequiredFields.every((field) => String(values[field] || "").trim()), [values]);
 
-  const handlePricingRedirect = () => navigateTo("/pricing");
+  const handlePricingRedirect = useCallback(() => navigateTo("/pricing"), [navigateTo]);
 
   const handleEliteUpgrade = async () => {
     try {
@@ -248,7 +228,7 @@ function StarterPage({ navigateTo }) {
     if (!isTierTestMode && ((values.accessLevel === "pro" && !hasProAccess) || (values.accessLevel === "elite" && !hasEliteAccess))) {
       handlePricingRedirect();
     }
-  }, [isTierTestMode, values.accessLevel]);
+  }, [isTierTestMode, values.accessLevel, handlePricingRedirect]);
 
   const handleChange = (field, value) => {
     if (field === "accessLevel") {
