@@ -149,11 +149,11 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
   };
 
   const handleStartRoadmap = () => {
-    navigateTo("/starter");
+    navigateTo("/starter?tier=free");
   };
 
   const handleFreeForever = () => {
-    navigateTo("/starter");
+    navigateTo("/starter?tier=free");
   };
 
   const handleSeePricing = () => {

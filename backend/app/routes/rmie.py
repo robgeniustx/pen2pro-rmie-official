@@ -130,7 +130,7 @@ def normalize_user_tier(value: Any) -> str:
 def starter_generate(request: StarterGenerateRequest):
     payload = request.model_dump() if hasattr(request, "model_dump") else request.dict()
     business_idea = clean_optional_text(payload.get("businessIdea") or payload.get("idea"))
-    user_tier = payload.get("userTier")
+    user_tier = payload.get("userTier") or payload.get("tier")
     allowed_tiers = ["free", "pro", "elite", "founder", "strategist"]
     requested_tier = user_tier.lower() if isinstance(user_tier, str) else "free"
     tier = requested_tier if requested_tier in allowed_tiers else "free"
@@ -150,7 +150,7 @@ def starter_generate(request: StarterGenerateRequest):
         )
 
     normalized = {
-        "tier": "starter",
+        "tier": tier,
         "businessName": clean_text(
             payload.get("businessName") or payload.get("proposedBusinessName"), "your business"
         ),
@@ -196,6 +196,7 @@ def starter_generate(request: StarterGenerateRequest):
         "accessLevel": access_level,
         "accessTier": access_level,
         "strategistFocus": strategist_focus,
+        "outputDepth": clean_text(payload.get("outputDepth"), "basic"),
     }
 
     model_by_tier = {

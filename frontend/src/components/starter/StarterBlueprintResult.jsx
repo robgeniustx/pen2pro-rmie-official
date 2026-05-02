@@ -158,116 +158,17 @@ function PartnerCard() {
   );
 }
 
-export default function StarterBlueprintResult({ response, intakeValues, onUpgradePro, onSeeElite, onStartAnother }) {
+export default function StarterBlueprintResult({ response, intakeValues, tier = "free", onUpgradePro, onSeeElite, onStartAnother }) {
   const blueprint = useMemo(() => normalizeBlueprint(response), [response]);
-  const accessLevel = (intakeValues?.accessLevel || "free").toLowerCase();
-  const isFree = accessLevel === "free";
-  const isPro = accessLevel === "pro";
-  const isElite = accessLevel === "elite";
-  const sections = [
-    ["Executive Business Snapshot", "executive_business_snapshot"],
-    ["Business Type Classification", "business_type_classification"],
-    ["Founder Readiness Level", "founder_readiness_level"],
-    ["Customer Problem Breakdown", "customer_problem_breakdown"],
-    ["Target Customer Profile", "target_customer_profile"],
-    ["Market Positioning", "market_positioning"],
-    ["Core Promise", "core_promise"],
-    ["First Paid Offer", "first_paid_offer"],
-    ["Pricing Ladder", "pricing_ladder"],
-    ["Revenue Model", "revenue_model"],
-    ["Business Name Strategy", "business_name_strategy"],
-    ["Domain Strategy", "domain_strategy"],
-    ["Legal Setup Roadmap", "legal_setup_roadmap"],
-    ["Business Banking Setup", "business_banking_setup"],
-    ["Payment Processing Setup", "payment_processing_setup"],
-    ["Website / Landing Page Plan", "website_landing_page_plan"],
-    ["Google Business Profile Setup", "google_business_profile_setup"],
-    ["Apple Maps / Apple Business Connect Setup", "apple_maps_apple_business_connect_setup"],
-    ["Social Media Setup", "social_media_setup"],
-    ["Sales Script", "sales_script"],
-    ["Outreach Strategy", "outreach_strategy"],
-    ["Content Strategy", "content_strategy"],
-    ["Simple KPI Tracker", "kpi_scorecard"],
-    ["30-Day Launch Plan", "launch_plan_30_days"],
-    ["90-Day Operations Plan", "operations_plan_90_days"],
-    ["12-Month Scale Plan", "scale_plan_12_months"],
-    ["Credit & Funding Readiness", "credit_funding_readiness"],
-    ["Risk Flags", "risk_flags"],
-    ["Beginner Mistakes to Avoid", "beginner_mistakes_to_avoid"],
-    ["Next 7 Actions", "next_7_actions"],
-    ["Upgrade CTA", "upgrade_cta"],
-    ["Executive Business Snapshot", "executive_business_snapshot", "free"],
-    ["Business Type Classification", "business_type_classification", "free"],
-    ["Founder Readiness Level", "founder_readiness_level", "free"],
-    ["Customer Problem Breakdown", "customer_problem_breakdown", "free"],
-    ["Target Customer Profile", "target_customer_profile", "free"],
-    ["Market Positioning", "market_positioning", "free"],
-    ["Core Promise", "core_promise", "free"],
-    ["First Paid Offer", "first_paid_offer", "free"],
-    ["Pricing Ladder", "pricing_ladder", "free"],
-    ["Business Name Strategy", "business_name_strategy", "free"],
-    ["Domain Strategy", "domain_strategy", "free"],
-    ["Legal Setup Roadmap", "legal_setup_roadmap", "free"],
-    ["Business Banking Setup", "business_banking_setup", "free"],
-    ["Payment Processing Setup", "payment_processing_setup", "free"],
-    ["Website / Landing Page Plan", "website_landing_page_plan", "free"],
-    ["Google Business Profile Setup", "google_business_profile_setup", "free"],
-    ["Apple Maps / Apple Business Connect Setup", "apple_maps_apple_business_connect_setup", "free"],
-    ["Social Media Setup", "social_media_setup", "free"],
-    ["Sales Script", "sales_script", "free"],
-    ["Outreach Strategy", "outreach_strategy", "pro"],
-    ["Content Strategy", "content_strategy", "pro"],
-    ["30-Day Launch Plan", "launch_plan_30_days", "pro"],
-    ["90-Day Operations Plan", "operations_plan_90_days", "pro"],
-    ["Risk Flags", "risk_flags", "pro"],
-    ["Beginner Mistakes to Avoid", "beginner_mistakes_to_avoid", "pro"],
-    ["Next 7 Actions", "next_7_actions", "pro"],
-    ["Weekly Execution Checklist", "weekly_execution_checklist", "pro"],
-    ["Lead Follow-Up Script", "lead_follow_up_script", "pro"],
-    ["Basic CRM Pipeline", "basic_crm_pipeline", "pro"],
-    ["Customer Acquisition Plan", "customer_acquisition_plan", "pro"],
-    ["Local Partner Strategy", "local_partner_strategy", "pro"],
-    ["Review/Testimonial Collection Plan", "review_testimonial_collection_plan", "pro"],
-    ["Simple KPI Tracker", "simple_kpi_tracker", "pro"],
-    ["Entity Structure Strategy", "entity_structure_strategy", "elite"],
-    ["LLC Development Roadmap", "llc_development_roadmap", "elite"],
-    ["S-Corp Election Readiness", "s_corp_election_readiness", "elite"],
-    ["C-Corp Development Considerations", "c_corp_development_considerations", "elite"],
-    ["501(c)(3) Nonprofit Development Roadmap", "nonprofit_development_roadmap", "elite"],
-    ["Trademark Registration Roadmap", "trademark_registration_roadmap", "elite"],
-    ["Brand Identity System", "brand_identity_system", "elite"],
-    ["Logo Direction", "logo_direction", "elite"],
-    ["Social Media Marketing System", "social_media_marketing_system", "elite"],
-    ["Paid Ad Readiness", "paid_ad_readiness", "elite"],
-    ["Business Credit Readiness", "business_credit_readiness", "elite"],
-    ["Funding Readiness", "funding_readiness", "elite"],
-    ["Grant Readiness", "grant_readiness", "elite"],
-    ["Government Contracting Readiness", "government_contracting_readiness", "elite"],
-    ["CRM Automation Plan", "crm_automation_plan", "elite"],
-    ["Email/SMS Campaign Strategy", "email_sms_campaign_strategy", "elite"],
-    ["Payment + Subscription Monetization System", "payment_subscription_monetization_system", "elite"],
-    ["Hiring / Contractor Setup", "hiring_contractor_setup", "elite"],
-    ["SOP Development", "sop_development", "elite"],
-    ["12-Month Scale Plan", "scale_plan_12_months", "elite"],
-    ["Strategic Partnership Plan", "strategic_partnership_plan", "elite"],
-    ["Investor/Lender-Ready Summary", "investor_lender_ready_summary", "elite"],
-    ["Business Risk Protection Plan", "business_risk_protection_plan", "elite"],
-    ["Compliance Calendar", "compliance_calendar", "elite"],
-    ["AI Business Coach Next Steps", "ai_business_coach_next_steps", "elite"],
-  ];
-  const freeStopKey = "sales_script";
-  const proStopKey = "kpi_scorecard";
-  const freeVisibleSections = sections.filter(([, key]) => {
-    const index = sections.findIndex(([, sectionKey]) => sectionKey === key);
-    const freeStopIndex = sections.findIndex(([, sectionKey]) => sectionKey === freeStopKey);
-    return index <= freeStopIndex;
-  });
-  const proVisibleSections = sections.filter(([, key]) => {
-    const index = sections.findIndex(([, sectionKey]) => sectionKey === key);
-    const proStopIndex = sections.findIndex(([, sectionKey]) => sectionKey === proStopKey);
-    return index <= proStopIndex;
-  });
-  const visibleSections = isFree ? freeVisibleSections : isPro ? proVisibleSections : isElite ? sections : freeVisibleSections;
+  const normalizedTier = ["free", "pro", "elite", "founder"].includes(String(tier).toLowerCase()) ? String(tier).toLowerCase() : "free";
+  const isFree = normalizedTier === "free";
+  const isPro = normalizedTier === "pro";
+  const sectionMap = {
+    free: [["Executive Business Snapshot", "executive_business_snapshot"], ["Business Type Classification", "business_type_classification"], ["Customer Problem Breakdown", "customer_problem_breakdown"], ["Target Customer Profile", "target_customer_profile"], ["Core Promise", "core_promise"], ["First 7 Days Action Plan", "next_7_actions"]],
+    pro: [["Executive Business Snapshot", "executive_business_snapshot"], ["Business Type Classification", "business_type_classification"], ["Customer Problem Breakdown", "customer_problem_breakdown"], ["Target Customer Profile", "target_customer_profile"], ["Market Positioning", "market_positioning"], ["Core Promise", "core_promise"], ["Offer Strategy", "first_paid_offer"], ["Pricing Strategy", "pricing_ladder"], ["Social Media Setup", "social_media_setup"], ["Sales Script", "sales_script"], ["30-Day Launch Plan", "launch_plan_30_days"], ["Upgrade Path", "upgrade_cta"]],
+    elite: [["Executive Business Snapshot", "executive_business_snapshot"], ["Founder Readiness Level", "founder_readiness_level"], ["Business Type Classification", "business_type_classification"], ["Customer Problem Breakdown", "customer_problem_breakdown"], ["Target Customer Profile", "target_customer_profile"], ["Market Positioning", "market_positioning"], ["Core Promise", "core_promise"], ["Offer Strategy", "first_paid_offer"], ["Pricing Strategy", "pricing_ladder"], ["Sales Funnel", "customer_acquisition_plan"], ["Social Media Setup", "social_media_setup"], ["Sales Script", "sales_script"], ["Monetization Plan", "revenue_model"], ["Automation Plan", "crm_automation_plan"], ["Competitor Strategy", "local_partner_strategy"], ["Brand Positioning", "brand_identity_system"], ["90-Day Execution Plan", "operations_plan_90_days"], ["Founder Action Plan", "founder_action_plan"], ["App Improvement Opportunities", "ai_business_coach_next_steps"]],
+  };
+  const visibleSections = sectionMap[normalizedTier] || sectionMap.elite;
 
   const businessName = asText(read(blueprint, "business_snapshot.business_name", read(blueprint, "businessIdentity.displayBusinessName", intakeValues?.proposedBusinessName || "Your Business")), "Your Business");
   const upgradeData = read(blueprint, "upgrade_cta", {});
@@ -284,7 +185,8 @@ export default function StarterBlueprintResult({ response, intakeValues, onUpgra
         {visibleSections.map(([title, key]) => (
           <ResultCard key={key} title={title} content={asText(read(blueprint, key, ""))} />
         ))}
-        {isFree && <LockedUpgradeCard onUpgradePro={onUpgradePro} />}
+        {isFree && ["Sales Script", "Monetization Plan", "30-Day Launch Plan", "Automation Plan"].map((section) => <ResultCard key={section} title={section} locked onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />)}
+        {isPro && ["Advanced Automation Plan", "90-Day Execution Plan", "Investor-Ready Snapshot"].map((section) => <ResultCard key={section} title={section} locked onUpgradePro={onUpgradePro} onSeeElite={onSeeElite} />)}
         <PartnerCard />
       </div>
 
