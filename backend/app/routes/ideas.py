@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 class StarterBlueprintRequest(BaseModel):
-    idea: str = Field(..., min_length=8, max_length=240)
+    idea: str = Field(..., min_length=8, max_length=4000)
     business_name: str = Field(default="", max_length=120)
     audience: str = Field(default="", max_length=140)
     revenue_goal: str = Field(default="", max_length=80)

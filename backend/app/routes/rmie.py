@@ -25,8 +25,8 @@ class StarterGenerateRequest(BaseModel):
     suggestedDomain: str | None = Field(default=None, max_length=220)
     domainToCheck: str | None = Field(default=None, max_length=220)
 
-    businessIdea: str | None = Field(default=None, max_length=240)
-    idea: str | None = Field(default=None, max_length=240)
+    businessIdea: str | None = Field(default=None, max_length=4000)
+    idea: str | None = Field(default=None, max_length=4000)
 
     category: str | None = None
     businessType: str | None = Field(default=None, max_length=140)
@@ -49,9 +49,9 @@ class StarterGenerateRequest(BaseModel):
     currentStage: str | None = Field(default=None, max_length=80)
     current_stage: str | None = Field(default=None, max_length=80)
 
-    skillsAndResources: str | None = Field(default=None, max_length=240)
-    skillsResources: str | None = Field(default=None, max_length=240)
-    resources: str | None = Field(default=None, max_length=240)
+    skillsAndResources: str | None = Field(default=None, max_length=4000)
+    skillsResources: str | None = Field(default=None, max_length=4000)
+    resources: str | None = Field(default=None, max_length=4000)
 
     budget: str | None = Field(default=None, max_length=120)
     startupBudget: str | None = Field(default=None, max_length=120)
@@ -59,8 +59,8 @@ class StarterGenerateRequest(BaseModel):
     incomeGoal: str | None = Field(default=None, max_length=120)
     income_goal: str | None = Field(default=None, max_length=120)
 
-    biggestObstacle: str | None = Field(default=None, max_length=240)
-    obstacle: str | None = Field(default=None, max_length=240)
+    biggestObstacle: str | None = Field(default=None, max_length=4000)
+    obstacle: str | None = Field(default=None, max_length=4000)
 
     urgencyLevel: str | None = Field(default=None, max_length=20)
     urgency_level: str | None = Field(default=None, max_length=20)
