@@ -36,7 +36,57 @@ const initialValues = {
 
 const hasProAccess = false;
 const hasEliteAccess = false;
-const ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder", "strategist"];
+const ALLOWED_TEST_TIERS = ["free", "pro", "elite", "founder"];
+const TIER_CONFIG = {
+  free: {
+    label: "Free Starter Blueprint",
+    badge: "Free",
+    headline: "Build your first business roadmap for free.",
+    subheadline: "Get a simple PEN2PRO roadmap to clarify your idea and next steps.",
+    maxSections: 6,
+    outputDepth: "basic",
+    ctaText: "Upgrade to Pro for a deeper business plan",
+    ctaLink: "/pricing",
+    generateButtonText: "Generate Free Blueprint",
+    lockedSections: ["Sales Script", "Monetization Plan", "30-Day Launch Plan", "Automation Plan"],
+  },
+  pro: {
+    label: "Pro Business Blueprint",
+    badge: "Pro",
+    headline: "Build a deeper business plan with PEN2PRO Pro.",
+    subheadline: "Get pricing, positioning, customer targeting, and launch strategy.",
+    maxSections: 12,
+    outputDepth: "detailed",
+    ctaText: "Upgrade to Elite for execution strategy",
+    ctaLink: "/pricing",
+    generateButtonText: "Generate Pro Blueprint",
+    lockedSections: ["Advanced Automation Plan", "90-Day Execution Plan", "Investor-Ready Snapshot"],
+  },
+  elite: {
+    label: "Elite Execution Blueprint",
+    badge: "Elite",
+    headline: "Build an advanced execution plan with PEN2PRO Elite.",
+    subheadline: "Get a high-level business strategy, sales funnel, launch system, and founder roadmap.",
+    maxSections: 20,
+    outputDepth: "advanced",
+    ctaText: "Go to Dashboard",
+    ctaLink: "/dashboard",
+    generateButtonText: "Generate Elite Execution Plan",
+    lockedSections: [],
+  },
+  founder: {
+    label: "Founder Lifetime Blueprint",
+    badge: "Founder",
+    headline: "Build with full lifetime PEN2PRO access.",
+    subheadline: "Get every available strategist section and future-ready execution plan.",
+    maxSections: 25,
+    outputDepth: "founder",
+    ctaText: "Go to Dashboard",
+    ctaLink: "/dashboard",
+    generateButtonText: "Generate Founder Lifetime Blueprint",
+    lockedSections: [],
+  },
+};
 
 // DEV/TESTING ONLY: URL tier override allows testing tier outputs before Stripe gating is finalized.
 // Remove or protect this before production launch.
@@ -101,16 +151,14 @@ function StarterPage({ navigateTo }) {
   const displayTier = (blueprintResponse?.tier || testTier || "free").toString();
 
   const pageSubtitle = useMemo(() => "Turn your idea into a clear PEN2PRO business starter plan in minutes.", []);
+  const tierConfig = TIER_CONFIG[testTier] || TIER_CONFIG.free;
   const hasPaidTierAccess = useMemo(() => (values.accessLevel === "pro" && hasProAccess) || (values.accessLevel === "elite" && hasEliteAccess), [values.accessLevel]);
   const progress = useMemo(() => getProgressSummary(values, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
   const checklistItems = useMemo(() => getChecklistItems(values, values.accessLevel, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
   const nextAction = useMemo(() => getRecommendedNextAction(values, values.accessLevel, { hasPaidTierAccess }), [hasPaidTierAccess, values]);
   const freeRequiredComplete = useMemo(() => freeRequiredFields.every((field) => String(values[field] || "").trim()), [values]);
 
-  const handlePricingRedirect = () => {
-    navigateTo("/pricing#pricing");
-    navigateTo("/pricing");
-  };
+  const handlePricingRedirect = () => navigateTo("/pricing");
 
   const handleEliteUpgrade = async () => {
     try {
@@ -153,6 +201,11 @@ function StarterPage({ navigateTo }) {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+  useEffect(() => {
+    setValues((current) => ({ ...current, accessLevel: testTier === "founder" ? "elite" : testTier }));
+    console.log("Starter tier:", testTier);
+    console.log("Starter config:", TIER_CONFIG[testTier] || TIER_CONFIG.free);
+  }, [testTier]);
 
   useEffect(() => {
     try {
@@ -266,8 +319,8 @@ function StarterPage({ navigateTo }) {
       biggestObstacle: values.biggestObstacle,
       urgencyLevel: values.urgencyLevel || "medium",
       deliveryPreference: values.deliveryPreference || "both",
-      accessLevel: "free",
-      strategistFocus: "basic",
+      accessLevel: testTier === "founder" ? "elite" : testTier,
+      strategistFocus: testTier === "free" ? "basic" : "startup",
       proposedBusinessName: String(values.proposedBusinessName || "").trim() || "your business",
       domainToCheck: String(values.domainToCheck || "").trim(),
       businessType: values.businessType,
@@ -275,8 +328,9 @@ function StarterPage({ navigateTo }) {
       budget: values.budget,
       startupBudget: values.startupBudget,
       skillsResources: values.skillsResources,
-      tier: "starter",
+      tier: testTier,
       userTier: testTier,
+      outputDepth: tierConfig.outputDepth,
     };
 
     console.log("Submitting PEN2PRO blueprint with tier:", testTier);
@@ -358,9 +412,10 @@ function StarterPage({ navigateTo }) {
 
       <main className="starter-page__content">
         <section className="starter-page__hero starter-reveal">
-          <p className="starter-page__eyebrow">PEN2PRO STARTER</p>
-          <h1>Starter Blueprint Access</h1>
-          <p className="starter-page__subtitle">{pageSubtitle}</p>
+          <p className="starter-page__eyebrow">PEN2PRO STARTER · {tierConfig.badge}</p>
+          <h1>{tierConfig.headline}</h1>
+          <p className="starter-page__subtitle">{tierConfig.subheadline}</p>
+          <p><strong>Current Plan:</strong> {tierConfig.badge}</p>
           <p className="starter-page__reassurance">Premium guidance, structured execution, and clear upgrade paths from Free Forever to Elite 10M Strategist.</p>
           <div className="starter-page__hero-stats">
             <span>✅ Structured output blocks</span>
@@ -372,7 +427,7 @@ function StarterPage({ navigateTo }) {
         {!hasResult && (
           <section className="starter-workspace starter-reveal">
             <div className="starter-workspace__main starter-page__panel">
-              <div className="text-sm font-semibold">Testing Tier: {testTier.toUpperCase()}</div>
+              <div className="text-sm font-semibold">Current Plan: {tierConfig.badge}</div>
               <StarterIntakeForm
                 values={values}
                 errors={errors}
@@ -384,6 +439,7 @@ function StarterPage({ navigateTo }) {
                 onClearDraft={handleClearDraft}
                 hasProAccess={hasProAccess}
                 hasEliteAccess={hasEliteAccess}
+                generateButtonText={tierConfig.generateButtonText}
               />
               <div ref={resultPanelRef} />
               {!hasAttemptedGeneration && !hasResult && !isGenerating && !hasError && (
@@ -429,7 +485,7 @@ function StarterPage({ navigateTo }) {
               <p><strong>Testing Tier:</strong> {String(blueprintResponse?.tier || testTier || "free").toUpperCase()}</p>
               {blueprintResponse?.model ? <p><strong>Testing Model:</strong> {blueprintResponse.model}</p> : null}
             </div>
-            <StarterBlueprintResult response={blueprintResponse} intakeValues={values} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />
+            <StarterBlueprintResult response={blueprintResponse} intakeValues={values} tier={testTier} tierConfig={tierConfig} onUpgradePro={() => navigateTo("/pricing")} onSeeElite={handleEliteUpgrade} onStartAnother={handleStartAnother} />
           </>
         )}
       </main>

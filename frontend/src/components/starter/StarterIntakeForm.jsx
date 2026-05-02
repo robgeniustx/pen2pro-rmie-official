@@ -114,14 +114,14 @@ function StepCard({ step, title, helper, status, children }) {
   );
 }
 
-function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectionStatuses, onSaveDraft, onClearDraft, hasProAccess, hasEliteAccess }) {
+function StarterIntakeForm({ values, errors, loading, onChange, onSubmit, sectionStatuses, onSaveDraft, onClearDraft, hasProAccess, hasEliteAccess, generateButtonText = "Generate Blueprint" }) {
   const suggestedDomain = generateSuggestedDomain(values.proposedBusinessName);
   const domainToCheck = values.domainToCheck || suggestedDomain;
   const isPaidTier = ["pro", "elite"].includes(values.accessLevel);
   const accessLevel = values.accessLevel || "free";
   const isLockedPro = accessLevel === "pro" && !hasProAccess;
   const isLockedElite = accessLevel === "elite" && !hasEliteAccess;
-  const generateButtonLabel = isLockedPro ? "Start Pro Strategy" : isLockedElite ? "Unlock Pro Execution" : "Activate My Launch Strategy";
+  const generateButtonLabel = isLockedPro ? "Start Pro Strategy" : isLockedElite ? "Unlock Pro Execution" : generateButtonText;
 
   const openRegistrarSearch = () => {
     const domain = (domainToCheck || "").trim();
