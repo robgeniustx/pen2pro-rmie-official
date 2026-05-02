@@ -1,4 +1,5 @@
 import { buildLocalStarterBlueprint } from "./localBlueprintEngine.js";
+import { sanitizeStarterBlueprint } from "./blueprintSchema.js";
 
 const rawApiBase = import.meta.env.VITE_API_BASE_URL || "";
 export const apiBase = rawApiBase.replace(/\/+$/, "");
@@ -153,9 +154,12 @@ function normalizeBlueprintResponse(data) {
   }
 
   if (blueprintPayload && typeof blueprintPayload === "object") {
+    const validatedBlueprint = sanitizeStarterBlueprint(blueprintPayload);
+
+    // TODO: Tighten this path once backend consistently returns section objects with title/body pairs.
     return {
       ...data,
-      blueprint: blueprintPayload,
+      blueprint: validatedBlueprint || blueprintPayload,
     };
   }
 
