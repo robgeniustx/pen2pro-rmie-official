@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "../components/home/Header";
 import HeroSection from "../components/home/HeroSection";
 import HowItWorks from "../components/home/HowItWorks";
@@ -19,13 +19,13 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
   const [pendingAction, setPendingAction] = useState("");
   const [activeNav, setActiveNav] = useState("#roadmap-preview");
 
-  const navSectionMap = {
+  const navSectionMap = useMemo(() => ({
     "#roadmap-preview": "#roadmap-preview",
     "#features": "#features",
     "#pricing": "#pricing",
     "#founders": "#founders",
     "#about": "#about",
-  };
+  }), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,7 +62,7 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [navSectionMap]);
 
   useEffect(() => {
     const sectionEntries = Object.entries(navSectionMap);
@@ -97,7 +97,7 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [navSectionMap]);
 
 
   useEffect(() => {
@@ -156,9 +156,6 @@ function HomePage({ navigateTo, currentPath = "/", initialSection = "" }) {
     navigateTo("/starter?tier=free");
   };
 
-  const handleSeePricing = () => {
-    navigateTo("/pricing");
-  };
 
   const handleExploreLaunch = () => {
     navigateTo("/launch");

@@ -17,7 +17,7 @@ export function buildLocalStarterBlueprint(payload = {}) {
     business_type_classification: { primary_model: "Service-led startup", go_to_market: "Outreach + proof content + referrals" },
     founder_readiness_level: { level: "Beginner-ready", support_note: "Built for founders with no prior business education.", first_skill_to_build: "Confident sales conversations" },
     customer_problem_breakdown: { core_problem: `${customer} are struggling to solve ${idea} reliably.`, cost_of_inaction: "Lost time, lost revenue, and delayed growth.", problem_signals: ["No repeatable workflow", "Inconsistent lead flow", "Unclear next steps"] },
-    target_customer_profile: { ideal_buyer: customer, buying_trigger: "They need a practical result fast.", where_to_reach: ["LinkedIn", "Local communities", "Referral partners"] },
+    target_customer_profile: { ideal_buyer: customer, buying_trigger: "They need a practical result fast.", where_to_reach: ["LinkedIn", "Local communities", "Referral partners"], market_scope: location },
     market_positioning: { positioning_statement: `${businessName} is the beginner-friendly execution partner for ${customer}.`, differentiators: ["Simple action order", "Fast time-to-value", "Founder-friendly language"] },
     core_promise: `Deliver a visible progress win in 14 days with ${offer}.`,
     first_paid_offer: { offer_name: "14-Day Launch Sprint", deliverables: ["Audit", "Action plan", "Hands-on setup", "Review"], starter_price_range: "$149-$499" },

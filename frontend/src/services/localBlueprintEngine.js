@@ -13,7 +13,6 @@ export function buildLocalStarterBlueprint(payload = {}) {
   const businessIdea = safe(payload.businessIdea, "A practical founder-led business offer");
   const targetCustomer = safe(payload.targetCustomer, "Local and online buyers");
   const location = safe(payload.location || payload.marketLocation, "your market");
-  const productOrService = safe(payload.productOrService, "a scoped starter offer");
   const startupBudget = safe(payload.startupBudget || payload.budget, "lean budget");
   const currentStage = safe(payload.currentStage, "idea");
   const domain = safe(payload.domainToCheck || payload.domain, `${businessName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`);
@@ -46,7 +45,7 @@ export function buildLocalStarterBlueprint(payload = {}) {
     ],
     pricing_strategy: {
       direction: `Launch with a ${launchPrice} paid pilot, then increase pricing after 2-3 proof-backed wins.`,
-      model: "Starter / Standard / Premium with fixed scope and outcomes",
+      model: `Starter / Standard / Premium with fixed scope and outcomes for ${targetCustomer} in ${location}.`,
     },
     launch_plan_30_days: {
       week_1: `Define ${businessName}'s offer stack, sales script, and qualification criteria.`,
